@@ -43,6 +43,7 @@ model User {
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   guardianPermissions Json?   @map("guardian_permissions") @db.JsonB
+  playSettings        Json?   @map("play_settings") @db.JsonB
 
   family            Family?           @relation("FamilyMembers", fields: [familyId], references: [id])
   ownedFamilies     Family[]          @relation("FamilyOwner")
@@ -53,6 +54,8 @@ model User {
   completions          QuestCompletion[] @relation("ChildCompletions")
   approvedCompletions  QuestCompletion[] @relation("ApprovedCompletions")
   timeBank             TimeBank?         @relation("ChildTimeBank")
+  playSessions         PlaySession[]     @relation("ChildPlaySessions")
+  approvedSessions     PlaySession[]     @relation("ApprovedPlaySessions")
 
   @@map("users")
 }
@@ -177,4 +180,23 @@ model TimeBank {
   child User @relation("ChildTimeBank", fields: [childId], references: [id])
 
   @@map("time_banks")
+}
+
+model PlaySession {
+  id                 String    @id @default(uuid()) @db.Uuid
+  childId            String    @map("child_id") @db.Uuid
+  requestedMinutes   Int       @map("requested_minutes")
+  status             String    @default("requested") @db.VarChar(20)
+  approvedByUserId   String?   @map("approved_by_user_id") @db.Uuid
+  startedAt          DateTime? @map("started_at") @db.Timestamptz()
+  pausedAt           DateTime? @map("paused_at") @db.Timestamptz()
+  totalPausedSeconds Int       @default(0) @map("total_paused_seconds")
+  endedAt            DateTime? @map("ended_at") @db.Timestamptz()
+  lastSyncedAt       DateTime? @map("last_synced_at") @db.Timestamptz()
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  child      User  @relation("ChildPlaySessions", fields: [childId], references: [id])
+  approvedBy User? @relation("ApprovedPlaySessions", fields: [approvedByUserId], references: [id])
+
+  @@map("play_sessions")
 }

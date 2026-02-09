@@ -10,10 +10,13 @@ import { QuestModule } from './quest/quest.module';
 import { CompletionModule } from './completion/completion.module';
 import { TimeBankModule } from './time-bank/time-bank.module';
 import { UploadModule } from './upload/upload.module';
+import { PlaySessionModule } from './play-session/play-session.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -40,6 +43,7 @@ import { UploadModule } from './upload/upload.module';
     CompletionModule,
     TimeBankModule,
     UploadModule,
+    PlaySessionModule,
   ],
 })
 export class AppModule {}
