@@ -66,6 +66,13 @@ export default function ChildTabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="quest-detail"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

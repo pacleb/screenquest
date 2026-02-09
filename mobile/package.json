@@ -21,6 +21,7 @@
     "expo": "~51.0.0",
     "expo-clipboard": "^8.0.8",
     "expo-constants": "~16.0.0",
+    "expo-image-picker": "^17.0.10",
     "expo-linking": "~6.3.0",
     "expo-router": "~3.5.0",
     "expo-secure-store": "~13.0.0",

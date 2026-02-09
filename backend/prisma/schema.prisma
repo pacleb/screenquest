@@ -48,8 +48,11 @@ model User {
   ownedFamilies     Family[]          @relation("FamilyOwner")
   refreshTokens     RefreshToken[]
   invitesSent       FamilyInvite[]
-  createdQuests     Quest[]           @relation("QuestCreator")
-  questAssignments  QuestAssignment[] @relation("ChildAssignments")
+  createdQuests        Quest[]           @relation("QuestCreator")
+  questAssignments     QuestAssignment[] @relation("ChildAssignments")
+  completions          QuestCompletion[] @relation("ChildCompletions")
+  approvedCompletions  QuestCompletion[] @relation("ApprovedCompletions")
+  timeBank             TimeBank?         @relation("ChildTimeBank")
 
   @@map("users")
 }
@@ -126,6 +129,7 @@ model Quest {
   createdBy    User             @relation("QuestCreator", fields: [createdByUserId], references: [id])
   libraryQuest QuestLibrary?    @relation(fields: [libraryQuestId], references: [id])
   assignments  QuestAssignment[]
+  completions  QuestCompletion[]
 
   @@map("quests")
 }
@@ -140,4 +144,37 @@ model QuestAssignment {
 
   @@unique([questId, childId])
   @@map("quest_assignments")
+}
+
+model QuestCompletion {
+  id               String    @id @default(uuid()) @db.Uuid
+  questId          String    @map("quest_id") @db.Uuid
+  childId          String    @map("child_id") @db.Uuid
+  status           String    @default("pending") @db.VarChar(20)
+  proofImageUrl    String?   @map("proof_image_url") @db.VarChar(500)
+  approvedByUserId String?   @map("approved_by_user_id") @db.Uuid
+  earnedMinutes    Int       @map("earned_minutes")
+  stackingType     String    @map("stacking_type") @db.VarChar(20)
+  expiresAt        DateTime? @map("expires_at") @db.Timestamptz()
+  parentNote       String?   @map("parent_note") @db.Text
+  completedAt      DateTime  @default(now()) @map("completed_at") @db.Timestamptz()
+  reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz()
+
+  quest      Quest @relation(fields: [questId], references: [id])
+  child      User  @relation("ChildCompletions", fields: [childId], references: [id])
+  approvedBy User? @relation("ApprovedCompletions", fields: [approvedByUserId], references: [id])
+
+  @@map("quest_completions")
+}
+
+model TimeBank {
+  id                         String   @id @default(uuid()) @db.Uuid
+  childId                    String   @unique @map("child_id") @db.Uuid
+  stackableBalanceMinutes    Int      @default(0) @map("stackable_balance_minutes")
+  nonStackableBalanceMinutes Int      @default(0) @map("non_stackable_balance_minutes")
+  lastUpdated                DateTime @default(now()) @map("last_updated") @db.Timestamptz()
+
+  child User @relation("ChildTimeBank", fields: [childId], references: [id])
+
+  @@map("time_banks")
 }

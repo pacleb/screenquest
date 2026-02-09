@@ -7,6 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { FamilyModule } from './family/family.module';
 import { UserModule } from './user/user.module';
 import { QuestModule } from './quest/quest.module';
+import { CompletionModule } from './completion/completion.module';
+import { TimeBankModule } from './time-bank/time-bank.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -34,6 +37,9 @@ import { QuestModule } from './quest/quest.module';
     FamilyModule,
     UserModule,
     QuestModule,
+    CompletionModule,
+    TimeBankModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
