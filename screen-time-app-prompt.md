@@ -47,8 +47,15 @@ Build a cross-platform mobile app called **"ScreenQuest"** that lets children ea
 
 ### 4.1 Quest Management (Parent Side)
 
-- Parents can **create, edit, delete, and archive** quests
-- **Free plan:** up to **3 quests**. **Premium plan:** **unlimited quests**.
+- Parents can **create quests from scratch** or **pick from a built-in Quest Library**
+- **Built-in Quest Library** (available on ALL plans, free and premium):
+  - A pre-populated catalog of common, age-appropriate quests organized by category
+  - Examples: "Clean your room" (Chores), "Read for 30 minutes" (Reading), "Do math homework" (Studying), "Play outside for 30 minutes" (Exercise), "Help with dishes" (Helping Others), "Practice piano" (Creative)
+  - Parent selects a quest from the library → it pre-fills name, icon, and category → parent just sets the time reward, stacking type, and assigns to child(ren)
+  - Parent can **customize any library quest** before adding it (rename, change reward, etc.)
+- Parents can also **create fully custom quests** from scratch
+- **Free plan:** up to **3 active quests** total (from library or custom). **Premium plan:** **unlimited quests**.
+- Parents can **edit, delete, and archive** quests
 - Each quest has:
   - **Name** (e.g., "Clean your room," "Read for 30 minutes," "Math homework")
   - **Icon/Emoji** chosen from a built-in library
@@ -231,7 +238,7 @@ Everything in Free, plus:
 - **Premium avatar items & themes** for children
 - **Multiple device support** per child
 - **Multi-family support** (shared custody scenarios)
-- **Quest marketplace** — pre-built, age-appropriate quest templates curated by child development experts
+- **Quest marketplace** (Premium) — **expert-curated** quest packs designed by child development professionals, themed by age group, season, or skill-building goals (beyond the standard built-in library)
 - **Export data** — CSV/PDF reports for family records
 - **Priority support**
 
@@ -475,6 +482,83 @@ Achievement
 
 ---
 
+## 10.5 Quest Library CMS (Web App — MVP)
+
+A **simple, lightweight web application** for the app owner/admin to manage the built-in Quest Library content without requiring a code deployment. This shares the same backend API as the mobile app.
+
+### Purpose
+
+- Add, edit, remove, and reorder quests in the built-in Quest Library that all parents see
+- No app redeployment needed — changes are reflected in the mobile app in real-time
+
+### Tech Stack
+
+- **Frontend:** Next.js or React (simple admin UI — no need for fancy design)
+- **Backend:** Same API/server as the mobile app (just add admin-only API routes)
+- **Auth:** Admin-only login (email + password, restricted to app owner accounts)
+- **Hosting:** Same infrastructure as the backend (e.g., Vercel for the frontend, or served from the same server)
+
+### CMS Features
+
+- **Quest CRUD** — create, edit, delete, reorder library quests
+- Each library quest has:
+  - Name
+  - Default icon/emoji
+  - Category (Chores, Studying, Exercise, Reading, Creative, Helping Others)
+  - Suggested time reward (parent can override when adding to their family)
+  - Suggested stacking type (parent can override)
+  - Age range tag (e.g., "Ages 4-7", "Ages 8-12", "All ages")
+  - Description/instructions
+- **Category management** — add/edit/reorder categories
+- **Publish/unpublish** — draft quests before making them visible to parents
+- **Preview** — see how the quest card will look in the mobile app
+- **Bulk import** — CSV upload to add many quests at once
+- **Usage stats** — see which library quests are most/least used by parents (basic analytics)
+
+---
+
+## 10.6 Admin Web Panel (Future — Post-MVP)
+
+A full **admin dashboard web application** for the app owner to monitor and manage the entire platform. Build this after MVP launch.
+
+### Features (Future Roadmap)
+
+- **Business metrics dashboard:**
+  - Total users, families, children
+  - Daily/weekly/monthly active users (DAU/WAU/MAU)
+  - Sign-up trends and retention charts
+  - Subscription metrics: active subscribers, MRR, churn rate, conversion rate (free → premium)
+- **Revenue & subscription management:**
+  - Revenue overview (synced from RevenueCat)
+  - Subscription details per user
+  - Refund handling
+- **User management:**
+  - Search/lookup families and users
+  - View family details (members, quests, Time Bank balances)
+  - Suspend/ban accounts for abuse
+  - Reset passwords, unlock accounts
+  - Handle support tickets
+- **Quest Library management** — same as CMS above, but integrated into the admin panel
+- **Quest Marketplace management** (Premium content):
+  - Create and manage expert-curated quest packs
+  - Assign packs to premium tier
+  - Track pack adoption rates
+- **Push notification broadcaster:**
+  - Send announcements to all users or segments (e.g., free users, premium users)
+  - Schedule notifications
+- **Content moderation:**
+  - Review flagged proof photos
+  - Moderate custom quest names (if any inappropriate content)
+- **System health:**
+  - API health and error rates
+  - Background timer service status
+  - Push notification delivery rates
+- **Data export:**
+  - Export user/revenue data as CSV
+  - Generate reports for accounting/tax purposes
+
+---
+
 ## 11. Testing Requirements
 
 - **Unit tests** for all business logic (time calculations, approval flows, plan limits, violation escalation, stacking expiry)
@@ -512,7 +596,8 @@ When building this app, provide:
 8. **State management** setup (Redux Toolkit, Zustand, or Riverpod depending on framework)
 9. **Push notification** integration
 10. **In-app purchase / subscription** integration (RevenueCat recommended)
-11. **README** with setup instructions, environment variables, and deployment guide
+11. **Quest Library CMS web app** — functional admin web app for managing the built-in quest library
+12. **README** with setup instructions, environment variables, and deployment guide
 
 ---
 
