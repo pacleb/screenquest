@@ -1,0 +1,18 @@
+export const colors = {
+  primary: '#4A90D9',
+  secondary: '#7ED321',
+  accent: '#F5A623',
+  purple: '#9B59B6',
+  background: '#F7F9FC',
+  card: '#FFFFFF',
+  textPrimary: '#2C3E50',
+  textSecondary: '#7F8C8D',
+  error: '#E74C3C',
+  warning: '#F39C12',
+  border: '#E8ECF0',
+  childBg: '#FFF8E7',
+  questCard: '#E8F5E9',
+  timerActive: '#4A90D9',
+  timerWarning: '#F5A623',
+  timerDanger: '#E74C3C',
+} as const;

@@ -1,0 +1,283 @@
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
+import { nanoid } from 'nanoid';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateFamilyDto, CreateChildDto, UpdateChildDto } from './dto/family.dto';
+
+@Injectable()
+export class FamilyService {
+  constructor(private prisma: PrismaService) {}
+
+  async createFamily(userId: string, dto: CreateFamilyDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.familyId) throw new ConflictException('User already belongs to a family');
+
+    const familyCode = this.generateFamilyCode();
+
+    const family = await this.prisma.family.create({
+      data: {
+        name: dto.name,
+        familyCode,
+        ownerId: userId,
+      },
+    });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { familyId: family.id, role: 'parent' },
+    });
+
+    return family;
+  }
+
+  async joinFamily(userId: string, familyCode: string) {
+    const family = await this.prisma.family.findUnique({
+      where: { familyCode: familyCode.toUpperCase() },
+    });
+
+    if (!family) throw new NotFoundException('Invalid family code');
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.familyId) throw new ConflictException('User already belongs to a family');
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { familyId: family.id, role: 'guardian' },
+    });
+
+    return family;
+  }
+
+  async getFamily(familyId: string) {
+    const family = await this.prisma.family.findUnique({
+      where: { id: familyId },
+      include: {
+        members: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            role: true,
+            age: true,
+          },
+        },
+        owner: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    if (!family) throw new NotFoundException('Family not found');
+
+    return family;
+  }
+
+  async getMembers(familyId: string) {
+    return this.prisma.user.findMany({
+      where: { familyId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        role: true,
+        age: true,
+      },
+    });
+  }
+
+  async inviteMember(familyId: string, invitedByUserId: string, email: string) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+
+    const existingInvite = await this.prisma.familyInvite.findFirst({
+      where: {
+        familyId,
+        inviteEmail: email.toLowerCase(),
+        status: 'pending',
+      },
+    });
+
+    if (existingInvite) throw new ConflictException('Invite already sent to this email');
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const invite = await this.prisma.familyInvite.create({
+      data: {
+        familyId,
+        invitedByUserId,
+        inviteEmail: email.toLowerCase(),
+        expiresAt,
+      },
+    });
+
+    // TODO: Send invite email
+    console.log(`[DEV] Family invite sent to ${email} for family ${family.name}`);
+
+    return invite;
+  }
+
+  async createChild(familyId: string, parentId: string, dto: CreateChildDto) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+
+    // Check max 6 children on free plan
+    const childCount = await this.prisma.user.count({
+      where: { familyId, role: 'child' },
+    });
+
+    if (childCount >= 6) {
+      throw new BadRequestException('Maximum of 6 children per family');
+    }
+
+    const child = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        age: dto.age,
+        avatarUrl: dto.avatarUrl || null,
+        email: dto.email?.toLowerCase() || null,
+        pin: dto.pin,
+        role: 'child',
+        familyId,
+        authProvider: 'email',
+        emailVerified: true, // children don't need email verification
+      },
+    });
+
+    return {
+      id: child.id,
+      name: child.name,
+      age: child.age,
+      avatarUrl: child.avatarUrl,
+      familyId: child.familyId,
+    };
+  }
+
+  async updateChild(familyId: string, childId: string, dto: UpdateChildDto) {
+    const child = await this.prisma.user.findFirst({
+      where: { id: childId, familyId, role: 'child' },
+    });
+
+    if (!child) throw new NotFoundException('Child not found');
+
+    return this.prisma.user.update({
+      where: { id: childId },
+      data: {
+        name: dto.name,
+        age: dto.age,
+        avatarUrl: dto.avatarUrl,
+        pin: dto.pin,
+      },
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        avatarUrl: true,
+        familyId: true,
+      },
+    });
+  }
+
+  async removeChild(familyId: string, childId: string) {
+    const child = await this.prisma.user.findFirst({
+      where: { id: childId, familyId, role: 'child' },
+    });
+
+    if (!child) throw new NotFoundException('Child not found');
+
+    await this.prisma.user.delete({ where: { id: childId } });
+
+    return { message: 'Child removed' };
+  }
+
+  async updateMemberRole(familyId: string, userId: string, newRole: string, requestingUserId: string) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+    if (family.ownerId !== requestingUserId) {
+      throw new ForbiddenException('Only the family owner can change roles');
+    }
+
+    if (!['guardian', 'parent'].includes(newRole)) {
+      throw new BadRequestException('Invalid role');
+    }
+
+    const member = await this.prisma.user.findFirst({
+      where: { id: userId, familyId, role: { in: ['parent', 'guardian'] } },
+    });
+
+    if (!member) throw new NotFoundException('Member not found');
+    if (member.id === requestingUserId) {
+      throw new BadRequestException('Cannot change your own role');
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+      select: { id: true, name: true, role: true },
+    });
+  }
+
+  async removeMember(familyId: string, userId: string, requestingUserId: string) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+    if (family.ownerId !== requestingUserId) {
+      throw new ForbiddenException('Only the family owner can remove members');
+    }
+    if (userId === requestingUserId) {
+      throw new BadRequestException('Cannot remove yourself');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { familyId: null },
+    });
+
+    return { message: 'Member removed' };
+  }
+
+  async transferOwnership(familyId: string, newOwnerId: string, requestingUserId: string) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+    if (family.ownerId !== requestingUserId) {
+      throw new ForbiddenException('Only the family owner can transfer ownership');
+    }
+
+    const newOwner = await this.prisma.user.findFirst({
+      where: { id: newOwnerId, familyId, role: { in: ['parent', 'guardian'] } },
+    });
+
+    if (!newOwner) throw new NotFoundException('New owner must be a family member');
+
+    await this.prisma.$transaction([
+      this.prisma.family.update({
+        where: { id: familyId },
+        data: { ownerId: newOwnerId },
+      }),
+      this.prisma.user.update({
+        where: { id: newOwnerId },
+        data: { role: 'parent' },
+      }),
+    ]);
+
+    return { message: 'Ownership transferred' };
+  }
+
+  private generateFamilyCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+}

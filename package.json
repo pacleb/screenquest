@@ -1,0 +1,31 @@
+{
+  "name": "screenquest",
+  "private": true,
+  "version": "0.0.1",
+  "description": "ScreenQuest - Kids earn screen time by completing real-world quests",
+  "scripts": {
+    "backend:dev": "pnpm --filter backend dev",
+    "backend:build": "pnpm --filter backend build",
+    "backend:start": "pnpm --filter backend start:prod",
+    "mobile:start": "pnpm --filter mobile start",
+    "mobile:ios": "pnpm --filter mobile ios",
+    "mobile:android": "pnpm --filter mobile android",
+    "cms:dev": "pnpm --filter cms dev",
+    "db:migrate": "pnpm --filter backend prisma:migrate",
+    "db:seed": "pnpm --filter backend prisma:seed",
+    "db:studio": "pnpm --filter backend prisma:studio"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "prisma"
+    ]
+  }
+}
