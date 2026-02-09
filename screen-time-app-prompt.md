@@ -28,11 +28,11 @@ Build a cross-platform mobile app called **"ScreenQuest"** that lets children ea
 
 ### 3.2 Roles
 
-| Role | Description |
-|------|-------------|
-| **Parent / Owner** | Creates the family account. Full admin privileges. Can manage everything. |
+| Role                  | Description                                                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Parent / Owner**    | Creates the family account. Full admin privileges. Can manage everything.                                                         |
 | **Parent / Guardian** | Invited by the owner. Can manage children, approve requests, create activities. Owner can configure what guardians can/cannot do. |
-| **Child** | Added by a parent. Has a simplified, kid-friendly UI. Cannot modify activities or settings. |
+| **Child**             | Added by a parent. Has a simplified, kid-friendly UI. Cannot modify activities or settings.                                       |
 
 ### 3.3 Account Flows
 
@@ -505,4 +505,4 @@ Animations:
 
 ---
 
-*Use this prompt in its entirety. Build all screens, all backend logic, all data models, and all flows described above. Prioritize a working MVP with: authentication, family management, activity CRUD, activity completion with approval, Time Bank, Play request with timer, and push notifications. Gamification features (badges, streaks, levels) can be implemented as a fast follow.*
+_Use this prompt in its entirety. Build all screens, all backend logic, all data models, and all flows described above. Prioritize a working MVP with: authentication, family management, activity CRUD, activity completion with approval, Time Bank, Play request with timer, and push notifications. Gamification features (badges, streaks, levels) can be implemented as a fast follow._
