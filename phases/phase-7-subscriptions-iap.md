@@ -12,6 +12,7 @@
 Use **RevenueCat** as the subscription management layer (handles both Apple App Store and Google Play billing):
 
 **Setup:**
+
 - Create RevenueCat account and project
 - Configure products in App Store Connect and Google Play Console:
   - `screenquest_plus_monthly` — $4.99/month
@@ -23,6 +24,7 @@ Use **RevenueCat** as the subscription management layer (handles both Apple App 
 ### 2. Backend Subscription Sync
 
 **RevenueCat webhook → Backend:**
+
 - Set up RevenueCat webhook endpoint: `POST /api/webhooks/revenuecat`
 - Handle events:
   - `INITIAL_PURCHASE` → set family plan to `premium`, set `subscription_expires_at`
@@ -33,6 +35,7 @@ Use **RevenueCat** as the subscription management layer (handles both Apple App 
 - Verify webhook signature for security
 
 **Subscription status API:**
+
 - `GET /api/families/:familyId/subscription` — get current subscription status
   - Returns: plan, expiresAt, isActive, willRenew, period
 - Backend checks `subscription_expires_at` to determine if premium features are available
@@ -43,6 +46,7 @@ Use **RevenueCat** as the subscription management layer (handles both Apple App 
 Now enforce all free-plan limits across the app:
 
 **Quest limit (already partially done in Phase 2):**
+
 - Free plan: max 3 active (non-archived) quests
 - On premium expiration:
   - If parent has > 3 active quests, they are NOT deleted
@@ -51,6 +55,7 @@ Now enforce all free-plan limits across the app:
   - After 7 days: auto-archive the most recently created quests beyond 3
 
 **Premium-only features — disable on free plan:**
+
 - Photo proof uploads: hide the option, show "Premium" lock badge
 - Full history: limit to 7-day history, show "Upgrade to see full history"
 - Advanced scheduling (weekend rules, time-of-day restrictions): show simplified version
@@ -62,6 +67,7 @@ Now enforce all free-plan limits across the app:
 ### 4. Mobile App — Subscription Screens
 
 **Paywall / Upgrade screen:**
+
 - Triggered when user hits a premium feature or taps "Upgrade" in settings
 - Design:
   - "Unlock ScreenQuest Plus! 🚀"
@@ -78,6 +84,7 @@ Now enforce all free-plan limits across the app:
   - From Settings → "Manage Subscription"
 
 **Subscription Management screen (in Settings):**
+
 - Current plan display
 - If premium: expiration date, renewal status, "Manage on App Store/Play Store" link
 - If free: "Upgrade to Premium" button
@@ -95,6 +102,7 @@ Now enforce all free-plan limits across the app:
 ### 6. In-App Purchases (Cosmetic Packs)
 
 **Avatar cosmetic packs:**
+
 - Non-consumable IAPs: $0.99–$2.99 each
 - Products:
   - `avatar_pack_space` — space-themed accessories ($1.99)
@@ -107,6 +115,7 @@ Now enforce all free-plan limits across the app:
 ### 7. App Store Compliance
 
 **Apple:**
+
 - Subscription terms in app and on purchase screen
 - "Restore Purchases" button accessible
 - Subscription management links to iOS Settings
@@ -114,6 +123,7 @@ Now enforce all free-plan limits across the app:
 - Kids Category compliance (no third-party analytics in child UI)
 
 **Google:**
+
 - Designed for Families program compliance
 - Subscription disclosure text
 - Teacher Approved badge application (if applicable)

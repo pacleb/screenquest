@@ -33,6 +33,7 @@ screenquest/
 ```
 
 **Tech stack:**
+
 - **Next.js 14+** (App Router, TypeScript)
 - **Tailwind CSS** for styling (simple admin UI — no need for kid-friendly design)
 - **shadcn/ui** components (tables, forms, dialogs, toasts)
@@ -53,6 +54,7 @@ screenquest/
 Add these routes (all require `is_app_admin` auth):
 
 **Quest Library CRUD:**
+
 - `GET /api/admin/quest-library` — list all library quests (published + drafts, with pagination)
 - `GET /api/admin/quest-library/:id` — get single quest details
 - `POST /api/admin/quest-library` — create library quest
@@ -63,6 +65,7 @@ Add these routes (all require `is_app_admin` auth):
 - `PUT /api/admin/quest-library/reorder` — reorder quests (accept array of IDs with sort_order)
 
 **Category Management:**
+
 - `GET /api/admin/categories` — list categories
 - `POST /api/admin/categories` — create category
 - `PUT /api/admin/categories/:id` — update category
@@ -70,12 +73,14 @@ Add these routes (all require `is_app_admin` auth):
 - `PUT /api/admin/categories/reorder` — reorder categories
 
 **Bulk Operations:**
+
 - `POST /api/admin/quest-library/bulk-import` — CSV upload
   - Accept CSV with columns: name, description, icon, category, suggested_reward_minutes, suggested_stacking_type, age_range
   - Validate all rows, return errors for invalid rows
   - Create quests in draft status (admin publishes after review)
 
 **Usage Stats:**
+
 - `GET /api/admin/quest-library/stats` — aggregated usage data
   - For each library quest: how many families have added it, total completions
   - Most popular / least popular quests
@@ -84,17 +89,20 @@ Add these routes (all require `is_app_admin` auth):
 ### 4. CMS Pages
 
 **Login page:**
+
 - Simple email + password form
 - "ScreenQuest Admin" branding
 - Error handling for invalid credentials
 
 **Dashboard page (/):**
+
 - Total library quests count (published / drafts)
 - Total categories
 - Top 5 most-used library quests
 - Quick actions: "Add Quest", "Import CSV", "View All"
 
 **Quest Library page (/quests):**
+
 - Data table with columns: Icon, Name, Category, Reward, Stacking, Age Range, Status (Published/Draft), Usage Count
 - Sortable columns
 - Filters: category, status, age range, stacking type
@@ -105,6 +113,7 @@ Add these routes (all require `is_app_admin` auth):
 - "Bulk Import" button
 
 **Create/Edit Quest page (/quests/new, /quests/[id]):**
+
 - Form fields:
   - Name (text input)
   - Description (textarea)
@@ -118,12 +127,14 @@ Add these routes (all require `is_app_admin` auth):
 - Delete button (edit mode only)
 
 **Categories page (/categories):**
+
 - List of categories with icon, name, quest count
 - Drag-to-reorder
 - Add/edit/delete categories
 - Inline editing
 
 **Bulk Import page (/quests/import):**
+
 - File upload (CSV only)
 - Template download link (empty CSV with correct headers)
 - Preview table after upload showing parsed data

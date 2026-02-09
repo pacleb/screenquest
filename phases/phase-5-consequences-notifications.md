@@ -33,6 +33,7 @@ CREATE TABLE violation_counters (
 ### 2. Consequences API
 
 **Parent endpoints:**
+
 - `POST /api/children/:childId/violations` — record a violation
   - Input: `{ description?: string }`
   - Auto-determine violation number from counter
@@ -50,15 +51,17 @@ CREATE TABLE violation_counters (
   - Returns: `{ currentCount: 2, nextPenaltyHours: 8, nextPenaltyMinutes: 480 }`
 
 **Child-visible endpoint:**
+
 - `GET /api/children/:childId/violation-status` — child can see their own violation count and current level (non-scary formatting handled by frontend)
 
 ### 3. Time Bank Negative Balance Logic
 
 Update Time Bank logic (from Phase 3):
+
 - Time Bank `stackable_balance_minutes` can now go **negative**
 - When balance is negative:
   - Child CANNOT request play time
-  - Play button shows: "Earn {X} more minutes to play!" 
+  - Play button shows: "Earn {X} more minutes to play!"
   - As child completes quests, earned time goes toward clearing the debt first
 - Update the play session request validation to check `totalBalance > 0`
 
@@ -67,12 +70,13 @@ Update Time Bank logic (from Phase 3):
 **Set up Firebase Cloud Messaging (FCM):**
 
 **Backend:**
+
 - Install Firebase Admin SDK
 - Create notification service with methods:
   ```typescript
-  sendToUser(userId, { title, body, data })
-  sendToFamily(familyId, { title, body, data })
-  sendToParents(familyId, { title, body, data })
+  sendToUser(userId, { title, body, data });
+  sendToFamily(familyId, { title, body, data });
+  sendToParents(familyId, { title, body, data });
   ```
 - Store device push tokens:
   ```sql
@@ -89,6 +93,7 @@ Update Time Bank logic (from Phase 3):
 - `DELETE /api/users/:userId/push-token` — unregister on logout
 
 **Mobile app:**
+
 - Set up `expo-notifications` (or `@react-native-firebase/messaging`)
 - Request notification permissions on first login
 - Register push token with backend
@@ -100,12 +105,14 @@ Update Time Bank logic (from Phase 3):
 Now connect every event in the app to a push notification:
 
 **Quest completions (from Phase 3):**
+
 - Child completes quest → notify all parents: "{Child} completed '{Quest}' — Approve?"
   - Notification action buttons: Approve | Deny
 - Parent approves → notify child: "Quest approved! +{X} minutes ⭐"
 - Parent denies → notify child: "Quest not approved. {Parent note if any}"
 
 **Play sessions (from Phase 4):**
+
 - Child requests play → notify parents: "{Child} wants to play for {X} minutes — Approve?"
   - Notification action buttons: Approve | Deny
 - Play session started → notify parents: "{Child} started playing ({X} minutes)"
@@ -119,15 +126,18 @@ Now connect every event in the app to a push notification:
 - Time's up → notify parents: "{Child} play session ended"
 
 **Violations (this phase):**
+
 - Violation recorded → notify child: "⚠️ Violation recorded — {X} hours deducted"
 - Violation forgiven → notify child: "Violation forgiven! {X} hours restored ✨"
 - Violation count reset → notify child: "Fresh start! Violation count reset 🎉"
 
 **Encouragement (optional daily):**
+
 - Daily reminder → notify child: "You have {X} quests available today! 🌟"
 - Streak at risk → notify child: "Complete a quest today to keep your streak! 🔥"
 
 **Notification action handling:**
+
 - When parent taps "Approve" on a quest completion notification → call approve API directly
 - When parent taps "Deny" → open app to detail screen for adding a note
 - When parent taps "Approve" on a play request → call approve API directly
@@ -154,6 +164,7 @@ CREATE TABLE notification_preferences (
 ### 7. Mobile App Screens
 
 **Consequences screen (Parent):**
+
 - Per-child violation summary card:
   - Current violation count
   - "Next penalty: {X} hours"
@@ -165,6 +176,7 @@ CREATE TABLE notification_preferences (
 - Empty state: "No violations yet — great job! 🎉"
 
 **Violation status display (Child):**
+
 - On child Home screen, show a subtle (non-scary) indicator if violations exist:
   - "⚠️ 1 strike" with small text: "Keep up the good work to stay on track!"
   - NOT: "VIOLATION! YOU ARE IN TROUBLE!"

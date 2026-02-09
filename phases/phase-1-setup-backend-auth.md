@@ -122,6 +122,7 @@ CREATE TABLE refresh_tokens (
 Build these API endpoints:
 
 **Auth endpoints:**
+
 - `POST /api/auth/register` — email + password sign-up → create user → send verification email
 - `POST /api/auth/login` — email + password login → return JWT access token + refresh token
 - `POST /api/auth/google` — Google Sign-In (verify Google ID token → create/find user)
@@ -134,11 +135,13 @@ Build these API endpoints:
 - `POST /api/auth/logout-all` — invalidate all refresh tokens for user (sign out all devices)
 
 **Auth middleware:**
+
 - JWT verification middleware for protected routes
 - Role-based access control middleware (parent vs. guardian vs. child)
 - Rate limiting on auth endpoints (prevent brute force)
 
 **JWT structure:**
+
 ```json
 {
   "sub": "user-uuid",
@@ -149,6 +152,7 @@ Build these API endpoints:
   "exp": 1234567890
 }
 ```
+
 - Access token: 15 min expiry
 - Refresh token: 30 day expiry, stored in DB (revocable)
 

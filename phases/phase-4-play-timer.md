@@ -28,6 +28,7 @@ CREATE TABLE play_sessions (
 ### 2. Play Session API
 
 **Child endpoints:**
+
 - `POST /api/children/:childId/play` — request play session
   - Input: `{ requestedMinutes: number }`
   - Validate:
@@ -50,6 +51,7 @@ CREATE TABLE play_sessions (
 - `GET /api/children/:childId/play/active` — get current active/paused session (if any)
 
 **Parent endpoints:**
+
 - `PUT /api/play-sessions/:sessionId/approve` — approve play request
 - `PUT /api/play-sessions/:sessionId/deny` — deny play request (refund time)
 - `POST /api/play-sessions/:sessionId/extend` — add more time to active session (deduct from Time Bank)
@@ -60,17 +62,19 @@ CREATE TABLE play_sessions (
 The **server** is the authoritative source for timer state. The client displays a countdown based on server data and syncs periodically.
 
 **Remaining time calculation (server-side):**
+
 ```
 IF status = 'active':
   elapsed = NOW() - started_at - total_paused_seconds
   remaining = (requested_minutes * 60) - elapsed
-  
+
 IF status = 'paused':
   elapsed = paused_at - started_at - total_paused_seconds
   remaining = (requested_minutes * 60) - elapsed
 ```
 
 **Server-side timer completion detection:**
+
 - Use a **scheduled job** (cron or Bull queue) that checks for active sessions where remaining time <= 0
 - When a session's time runs out:
   1. Set status = `completed`, `ended_at = NOW()`
@@ -80,6 +84,7 @@ IF status = 'paused':
 - Also schedule individual timers: when a session starts, schedule a job for exactly `requested_minutes` later
 
 **Warning notifications (server-side scheduled):**
+
 - When session starts, schedule two server-side jobs:
   - Job 1: At `started_at + requested_minutes - 5 min` → push notification: "5 minutes left!"
   - Job 2: At `started_at + requested_minutes - 1 min` → push notification: "1 minute left!"
@@ -91,6 +96,7 @@ IF status = 'paused':
 **The timer must work even when the app is closed.** Strategy:
 
 **Approach: Server-driven + local countdown display**
+
 1. When session starts, client receives `started_at`, `requestedMinutes`, and `status` from API
 2. Client calculates remaining time locally and displays countdown
 3. Client syncs with server every 30-60 seconds (via REST call) to correct any drift
@@ -98,10 +104,12 @@ IF status = 'paused':
 5. All warning/completion notifications are sent **server-side via push notifications** — they arrive regardless of app state
 
 **Platform-specific enhancements:**
+
 - **iOS:** Use `UNNotificationRequest` to schedule local notifications as backup (5-min warning, 1-min warning, time's up) — in case push is delayed
 - **Android:** Use a **Foreground Service** with persistent notification showing remaining time in the notification tray — countdown updates in real-time even when app is backgrounded
 
 **Client sync flow on app open:**
+
 ```
 1. Call GET /api/children/:childId/play/active
 2. If active session exists:
@@ -116,6 +124,7 @@ IF status = 'paused':
 ### 5. Mobile App — Play Screen
 
 **Play Request screen:**
+
 - Big "PLAY" button (animated, inviting)
 - Time selector:
   - Preset buttons: 15m, 30m, 45m, 1h, 1.5h, 2h
@@ -126,6 +135,7 @@ IF status = 'paused':
 - If approval required: show "Request sent! Waiting for approval… ⏳" state
 
 **Active Timer screen:**
+
 - Large countdown display (fun, visual — circular progress, filling/draining animation)
 - Time remaining in large friendly numbers
 - Pause button (⏸️)

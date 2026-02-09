@@ -38,6 +38,7 @@ CREATE TABLE time_banks (
 ### 2. Quest Completion API
 
 **Child-facing endpoints:**
+
 - `GET /api/children/:childId/quests` — list available quests for this child (only assigned, active, non-archived quests)
   - For recurring quests: check if already completed today/this week
   - Return quest details + whether it's available to complete now
@@ -49,6 +50,7 @@ CREATE TABLE time_banks (
   - Return completion record with status
 
 **Parent-facing endpoints:**
+
 - `GET /api/families/:familyId/completions?status=pending` — list pending completions (approval queue)
 - `PUT /api/completions/:completionId/approve` — approve completion
   - Credit earned minutes to child's Time Bank (stackable or non-stackable bucket)
@@ -64,6 +66,7 @@ CREATE TABLE time_banks (
 - Time Bank is auto-created when a child is added to a family
 
 **Non-stackable expiry logic (critical):**
+
 - Run a check whenever Time Bank is queried
 - Sum all approved, non-stackable quest completions where `expires_at > NOW()` → that's the non-stackable balance
 - Alternatively, use a scheduled job (cron) that runs at midnight per timezone to zero out expired non-stackable balances
@@ -83,6 +86,7 @@ CREATE TABLE time_banks (
 Build these screens (functional, basic styling):
 
 **Child Home screen:**
+
 - Time Bank display prominently at top
   - Show total balance large
   - Below it: "⏳ {X} min expires today" for non-stackable balance (if any)
@@ -90,6 +94,7 @@ Build these screens (functional, basic styling):
 - Big "PLAY" button (disabled for now — built in Phase 4)
 
 **Quest Board screen:**
+
 - Colorful quest cards in a scrollable list/grid
 - Each card shows:
   - Quest icon + name
@@ -100,6 +105,7 @@ Build these screens (functional, basic styling):
 - Tap card → Quest Detail screen
 
 **Quest Detail screen:**
+
 - Quest name, icon, full description
 - Reward display
 - Stacking type with explanation ("This time carries over!" or "Use it today or it's gone!")
@@ -112,6 +118,7 @@ Build these screens (functional, basic styling):
 ### 6. Mobile App — Parent Approval Queue
 
 **Approval Queue screen:**
+
 - List of pending quest completions as cards
 - Each card shows: child name + avatar, quest name, time reward, timestamp
 - If proof photo exists: thumbnail preview (tap to view full)

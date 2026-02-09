@@ -14,22 +14,22 @@ Create a comprehensive theme module used across the entire app:
 ```typescript
 // theme/colors.ts
 export const colors = {
-  primary: '#4A90D9',       // friendly blue
-  secondary: '#7ED321',     // success green
-  accent: '#F5A623',        // warm orange
-  purple: '#9B59B6',        // fun purple
-  background: '#F7F9FC',    // light gray-blue
-  card: '#FFFFFF',
-  textPrimary: '#2C3E50',
-  textSecondary: '#7F8C8D',
-  error: '#E74C3C',
-  warning: '#F39C12',
+  primary: "#4A90D9", // friendly blue
+  secondary: "#7ED321", // success green
+  accent: "#F5A623", // warm orange
+  purple: "#9B59B6", // fun purple
+  background: "#F7F9FC", // light gray-blue
+  card: "#FFFFFF",
+  textPrimary: "#2C3E50",
+  textSecondary: "#7F8C8D",
+  error: "#E74C3C",
+  warning: "#F39C12",
   // Child-specific
-  childBg: '#FFF8E7',       // warm cream for child screens
-  questCard: '#E8F5E9',     // light green for quest cards
-  timerActive: '#4A90D9',
-  timerWarning: '#F5A623',
-  timerDanger: '#E74C3C',
+  childBg: "#FFF8E7", // warm cream for child screens
+  questCard: "#E8F5E9", // light green for quest cards
+  timerActive: "#4A90D9",
+  timerWarning: "#F5A623",
+  timerDanger: "#E74C3C",
 };
 
 // theme/typography.ts — Nunito for children, Inter for parents
@@ -66,6 +66,7 @@ Build these reusable components following the design spec:
 Apply the kid-friendly design to all child screens:
 
 **Child Home screen:**
+
 - Mascot greeting at top: "Hi {name}! Ready for an adventure? 🚀" (varies by time of day)
 - Time Bank as a **visual jar/piggy bank** filling up with animated coins/stars
   - Stackable balance: solid fill
@@ -79,6 +80,7 @@ Apply the kid-friendly design to all child screens:
 - Bottom tab bar with icons: Home 🏠, Quests 📋, Play ▶️, Trophies 🏆, Me 👤
 
 **Quest Board screen:**
+
 - Category filter chips at top (horizontal scroll)
 - Quest cards in a 2-column grid:
   - Large icon/emoji
@@ -90,6 +92,7 @@ Apply the kid-friendly design to all child screens:
 - Fun background pattern (subtle stars/dots)
 
 **Quest Detail screen:**
+
 - Large icon at top with category color background
 - Quest name in big, fun font
 - Reward: large "⭐ 30 minutes" display
@@ -102,6 +105,7 @@ Apply the kid-friendly design to all child screens:
 - After submission: confetti + "Awesome! Sent to {Parent}! 🎉"
 
 **Play screen:**
+
 - When selecting time: large slider or spinning dial — big touch targets
 - Preset buttons as colorful bubbles
 - Balance shown prominently: "You have {X}"
@@ -113,6 +117,7 @@ Apply the kid-friendly design to all child screens:
 - Time's up screen: celebration with stars, "Great job! 🌟", mascot giving thumbs up
 
 **History screen:**
+
 - Simple timeline of earned and used time
 - Green (+) entries for quests completed, Red (-) entries for play time used
 - Violation entries in orange/warning style
@@ -122,6 +127,7 @@ Apply the kid-friendly design to all child screens:
 Apply clean, professional design to parent screens:
 
 **Parent Dashboard:**
+
 - Header: "Good morning, {name}" with date
 - **Children overview cards** (horizontal scroll if multiple):
   - Child avatar + name
@@ -134,18 +140,21 @@ Apply clean, professional design to parent screens:
 - **Active sessions** section: real-time countdown for each playing child
 
 **Approval Queue:**
+
 - Full-screen swipeable cards
 - Satisfying animations: swipe right = green swoosh + ✓, swipe left = red swoosh + ✗
 - Each card: child avatar, quest name, time reward, timestamp, proof thumbnail
 - Pull-to-refresh
 
 **Quest Manager (parent):**
+
 - Clean list with category section headers
 - Drag-to-reorder
 - Active quest count indicator: "2/3 quests" (free plan) or "12 quests" (premium)
 - Inline archive/unarchive actions
 
 **Child Detail screen (parent):**
+
 - Child avatar + name + age at top
 - Time Bank visual + exact numbers
 - Recent quests completed (quick list)
@@ -155,6 +164,7 @@ Apply clean, professional design to parent screens:
 - Tab: History, Achievements, Settings
 
 **Consequences screen:**
+
 - Per-child cards with traffic light visual for severity
 - Clear penalty progression display
 - Action buttons with confirmation dialogs

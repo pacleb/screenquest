@@ -10,6 +10,7 @@
 ### 1. Family Management API
 
 **Endpoints:**
+
 - `GET /api/families/:id/members` — list all family members with roles
 - `PUT /api/families/:id` — update family name/settings (owner only)
 - `PUT /api/families/:id/members/:userId/role` — promote/demote guardian (owner only)
@@ -19,6 +20,7 @@
 - `DELETE /api/families/:id/children/:childId` — remove child (owner/guardian)
 
 **Guardian permissions:**
+
 - Owner can configure what guardians can/cannot do (e.g., can approve quests but can't remove members)
 - Add a `guardian_permissions` JSONB column or separate table
 
@@ -77,6 +79,7 @@ CREATE TABLE quest_assignments (
 ### 3. Quest CRUD API
 
 **Endpoints:**
+
 - `POST /api/families/:familyId/quests` — create a quest (from scratch or from library)
   - Enforce **3-quest limit** for free plan (count active, non-archived quests)
   - Return `402 Payment Required` with message if limit reached
@@ -88,11 +91,13 @@ CREATE TABLE quest_assignments (
 - `POST /api/families/:familyId/quests/:questId/unarchive` — unarchive quest
 
 **Quest Library API (read-only for parents):**
+
 - `GET /api/quest-library` — list all published library quests (grouped by category)
 - `GET /api/quest-library/:id` — get library quest details
 - `POST /api/families/:familyId/quests/from-library/:libraryQuestId` — add a library quest to the family (pre-fills fields, parent sets reward + stacking + assigns children)
 
 **Business logic:**
+
 - Free plan: max 3 active quests — check on create and unarchive
 - Quest must be assigned to at least one child
 - Validate: reward_minutes must be > 0 and in valid increments (15, 30, 45, 60, 90, 120, or custom)
@@ -105,6 +110,7 @@ CREATE TABLE quest_assignments (
 Build these screens (functional, basic styling — full design polish is Phase 6):
 
 **Quest Manager screen:**
+
 - List of all family quests grouped by category
 - Each quest card shows: name, icon, reward time, stacking type badge, assigned children
 - "+" button to create new quest
@@ -114,6 +120,7 @@ Build these screens (functional, basic styling — full design polish is Phase 6
 - Show "3/3 quests used" counter for free plan with upgrade prompt
 
 **Create/Edit Quest screen:**
+
 - Two tabs at top: "Custom Quest" | "Quest Library"
 - **Custom Quest tab:**
   - Name input
@@ -132,6 +139,7 @@ Build these screens (functional, basic styling — full design polish is Phase 6
   - Tap to select → goes to customization screen (pre-filled, parent adjusts reward/stacking/assignment)
 
 **Family Management screen:**
+
 - List of all family members with role badges
 - Family Code display with "Copy" and "Share" buttons
 - "Invite Parent/Guardian" button

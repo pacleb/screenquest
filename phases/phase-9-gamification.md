@@ -78,17 +78,19 @@ CREATE TABLE child_avatar_items (
 ### 2. Streak System
 
 **Logic:**
+
 - Each day a child completes at least 1 quest → streak continues
 - If a day passes with no quest completions → streak resets to 0
 - Check streak via a daily cron job or on each quest completion
 
 **Streak tracking on quest completion:**
+
 ```typescript
 async function updateStreak(childId: string) {
   const streak = await getStreak(childId);
   const today = new Date().toISOString().split('T')[0];
   const yesterday = /* yesterday's date */;
-  
+
   if (streak.lastActivityDate === today) {
     // Already completed a quest today, no change
     return;
@@ -106,6 +108,7 @@ async function updateStreak(childId: string) {
 ```
 
 **Streak-based push notifications:**
+
 - "You've completed quests 5 days in a row! 🔥"
 - "Don't break your streak! Complete a quest today! 🔥" (if no quest by 6 PM)
 
@@ -113,20 +116,21 @@ async function updateStreak(childId: string) {
 
 **Seed achievements:**
 
-| Name | Description | Requirement |
-|------|-------------|-------------|
-| First Quest | Complete your first quest | 1 quest total |
-| Helping Hand | Complete 10 chores | 10 quests in Chores category |
-| Bookworm | Complete 20 reading sessions | 20 quests in Reading category |
-| Super Star | Complete quests for a full week | 7-day streak |
-| Unstoppable | Complete quests for 30 days | 30-day streak |
-| Century | Complete 100 quests total | 100 quests total |
-| Early Bird | Complete a quest before 9 AM | 1 quest before 9 AM |
-| Time Master | Use exactly all earned time | 1 play session using full balance |
-| Streak Starter | Get a 3-day streak | 3-day streak |
-| Marathon | Get a 14-day streak | 14-day streak |
+| Name           | Description                     | Requirement                       |
+| -------------- | ------------------------------- | --------------------------------- |
+| First Quest    | Complete your first quest       | 1 quest total                     |
+| Helping Hand   | Complete 10 chores              | 10 quests in Chores category      |
+| Bookworm       | Complete 20 reading sessions    | 20 quests in Reading category     |
+| Super Star     | Complete quests for a full week | 7-day streak                      |
+| Unstoppable    | Complete quests for 30 days     | 30-day streak                     |
+| Century        | Complete 100 quests total       | 100 quests total                  |
+| Early Bird     | Complete a quest before 9 AM    | 1 quest before 9 AM               |
+| Time Master    | Use exactly all earned time     | 1 play session using full balance |
+| Streak Starter | Get a 3-day streak              | 3-day streak                      |
+| Marathon       | Get a 14-day streak             | 14-day streak                     |
 
 **Achievement check logic:**
+
 - After each quest completion, check all unearned achievements
 - If requirements met → award achievement + push notification + store for celebration animation
 - When child opens app after earning: confetti + badge reveal animation
@@ -134,22 +138,23 @@ async function updateStreak(childId: string) {
 ### 4. Level System
 
 **XP and levels:**
+
 - Each quest completion = **10 XP**
 - Streak bonus: +2 XP per active streak day (e.g., 5-day streak gives +10 bonus)
 - Levels scale progressively:
 
-| Level | Title | XP Required |
-|-------|-------|-------------|
-| 1 | Starter | 0 |
-| 2 | Explorer | 50 |
-| 3 | Adventurer | 120 |
-| 4 | Helper | 220 |
-| 5 | Champion | 350 |
-| 6 | Hero | 520 |
-| 7 | Super Hero | 730 |
-| 8 | Legend | 1000 |
-| 9 | Master | 1350 |
-| 10 | Quest Master | 1800 |
+| Level | Title        | XP Required |
+| ----- | ------------ | ----------- |
+| 1     | Starter      | 0           |
+| 2     | Explorer     | 50          |
+| 3     | Adventurer   | 120         |
+| 4     | Helper       | 220         |
+| 5     | Champion     | 350         |
+| 6     | Hero         | 520         |
+| 7     | Super Hero   | 730         |
+| 8     | Legend       | 1000        |
+| 9     | Master       | 1350        |
+| 10    | Quest Master | 1800        |
 
 - Level-up triggers: celebration animation + push notification + unlock avatar items
 - Display XP progress bar on child profile
@@ -157,6 +162,7 @@ async function updateStreak(childId: string) {
 ### 5. Avatar Customization
 
 **Avatar system:**
+
 - Child has a customizable avatar displayed throughout the app
 - Avatar parts: base character, hat, outfit, accessory, background, pet companion
 - Some items are free (available from start)
@@ -165,6 +171,7 @@ async function updateStreak(childId: string) {
 - Some are purchasable (IAP cosmetic packs from Phase 7)
 
 **API:**
+
 - `GET /api/children/:childId/avatar` — get current avatar configuration
 - `PUT /api/children/:childId/avatar` — update equipped items
 - `GET /api/children/:childId/avatar-items` — list all items (locked + unlocked)
@@ -180,18 +187,21 @@ async function updateStreak(childId: string) {
 ### 7. Family Leaderboard
 
 **Optional, toggled by parent:**
+
 - Siblings can see who earned the most XP this week
 - Simple ranked list with child avatar, name, XP this week
 - Resets weekly (every Monday)
 - Parent can disable per family if it causes rivalry
 
 **API:**
+
 - `GET /api/families/:familyId/leaderboard?period=week` — ranked children by XP
 - Parent setting: `PUT /api/families/:familyId/settings` — `{ leaderboardEnabled: boolean }`
 
 ### 8. Mobile App — Gamification Screens
 
 **Achievements screen (Child):**
+
 - Grid of badge icons
 - Earned: colorful, with date earned
 - Locked: grayed out, with requirement text ("Complete 10 chores")
@@ -199,6 +209,7 @@ async function updateStreak(childId: string) {
 - Tap → detail view with larger badge image and description
 
 **Profile screen updates (Child):**
+
 - Level badge with XP progress bar
 - Current streak with flame animation (🔥)
 - "X/Y badges earned" counter
@@ -206,11 +217,13 @@ async function updateStreak(childId: string) {
 - Avatar customization: dress-up interface — tap a slot (hat, outfit, etc.) → scrollable item picker
 
 **Home screen updates (Child):**
+
 - Level badge next to child name
 - Streak counter with flame icon
 - New badge notification popup when app opens after earning one
 
 **Leaderboard tab (if enabled):**
+
 - Ranked siblings with XP bars
 - Crown icon for #1
 - Encouraging copy: "Great job this week! 🎉"
