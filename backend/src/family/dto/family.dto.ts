@@ -9,6 +9,7 @@ import {
   Min,
   Max,
   MinLength,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateFamilyDto {
@@ -87,4 +88,34 @@ export class UpdateChildDto {
   @MinLength(4)
   @MaxLength(6)
   pin?: string;
+}
+
+export class UpdateFamilyDto {
+  @ApiProperty({ example: 'The Smith-Jones Family' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  name: string;
+}
+
+export class UpdateGuardianPermissionsDto {
+  @ApiPropertyOptional({ example: true })
+  @IsBoolean()
+  @IsOptional()
+  canApproveQuests?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsBoolean()
+  @IsOptional()
+  canManageQuests?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsBoolean()
+  @IsOptional()
+  canManageChildren?: boolean;
+
+  @ApiPropertyOptional({ example: false })
+  @IsBoolean()
+  @IsOptional()
+  canRecordViolations?: boolean;
 }

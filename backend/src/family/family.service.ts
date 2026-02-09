@@ -8,7 +8,21 @@ import {
 import { nanoid } from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateFamilyDto, CreateChildDto, UpdateChildDto } from './dto/family.dto';
+import { CreateFamilyDto, CreateChildDto, UpdateChildDto, UpdateFamilyDto, UpdateGuardianPermissionsDto } from './dto/family.dto';
+
+export interface GuardianPermissions {
+  canApproveQuests: boolean;
+  canManageQuests: boolean;
+  canManageChildren: boolean;
+  canRecordViolations: boolean;
+}
+
+const DEFAULT_GUARDIAN_PERMISSIONS: GuardianPermissions = {
+  canApproveQuests: true,
+  canManageQuests: true,
+  canManageChildren: true,
+  canRecordViolations: false,
+};
 
 @Injectable()
 export class FamilyService {
@@ -270,6 +284,57 @@ export class FamilyService {
     ]);
 
     return { message: 'Ownership transferred' };
+  }
+
+  async updateFamily(familyId: string, userId: string, dto: UpdateFamilyDto) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+    if (family.ownerId !== userId) {
+      throw new ForbiddenException('Only the family owner can update family settings');
+    }
+
+    return this.prisma.family.update({
+      where: { id: familyId },
+      data: { name: dto.name },
+    });
+  }
+
+  async getGuardianPermissions(familyId: string, guardianId: string) {
+    const guardian = await this.prisma.user.findFirst({
+      where: { id: guardianId, familyId, role: 'guardian' },
+    });
+
+    if (!guardian) throw new NotFoundException('Guardian not found');
+
+    return (guardian.guardianPermissions as unknown as GuardianPermissions) || DEFAULT_GUARDIAN_PERMISSIONS;
+  }
+
+  async updateGuardianPermissions(
+    familyId: string,
+    guardianId: string,
+    requestingUserId: string,
+    dto: UpdateGuardianPermissionsDto,
+  ) {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) throw new NotFoundException('Family not found');
+    if (family.ownerId !== requestingUserId) {
+      throw new ForbiddenException('Only the family owner can update guardian permissions');
+    }
+
+    const guardian = await this.prisma.user.findFirst({
+      where: { id: guardianId, familyId, role: 'guardian' },
+    });
+
+    if (!guardian) throw new NotFoundException('Guardian not found');
+
+    const currentPerms = (guardian.guardianPermissions as unknown as GuardianPermissions) || DEFAULT_GUARDIAN_PERMISSIONS;
+    const updatedPerms = { ...currentPerms, ...dto };
+
+    return this.prisma.user.update({
+      where: { id: guardianId },
+      data: { guardianPermissions: updatedPerms as any },
+      select: { id: true, name: true, role: true, guardianPermissions: true },
+    });
   }
 
   private generateFamilyCode(): string {

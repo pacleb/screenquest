@@ -21,6 +21,7 @@ model Family {
   owner   User?          @relation("FamilyOwner", fields: [ownerId], references: [id])
   members User[]         @relation("FamilyMembers")
   invites FamilyInvite[]
+  quests  Quest[]
 
   @@map("families")
 }
@@ -41,10 +42,14 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  family        Family?        @relation("FamilyMembers", fields: [familyId], references: [id])
-  ownedFamilies Family[]       @relation("FamilyOwner")
-  refreshTokens RefreshToken[]
-  invitesSent   FamilyInvite[]
+  guardianPermissions Json?   @map("guardian_permissions") @db.JsonB
+
+  family            Family?           @relation("FamilyMembers", fields: [familyId], references: [id])
+  ownedFamilies     Family[]          @relation("FamilyOwner")
+  refreshTokens     RefreshToken[]
+  invitesSent       FamilyInvite[]
+  createdQuests     Quest[]           @relation("QuestCreator")
+  questAssignments  QuestAssignment[] @relation("ChildAssignments")
 
   @@map("users")
 }
@@ -76,4 +81,63 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model QuestLibrary {
+  id                    String   @id @default(uuid()) @db.Uuid
+  name                  String   @db.VarChar(200)
+  description           String?  @db.Text
+  icon                  String?  @db.VarChar(50)
+  category              String   @db.VarChar(50)
+  suggestedRewardMinutes Int     @map("suggested_reward_minutes")
+  suggestedStackingType String   @default("stackable") @map("suggested_stacking_type") @db.VarChar(20)
+  ageRange              String?  @map("age_range") @db.VarChar(20)
+  isPublished           Boolean  @default(false) @map("is_published")
+  sortOrder             Int      @default(0) @map("sort_order")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  familyQuests Quest[]
+
+  @@map("quest_library")
+}
+
+model Quest {
+  id              String   @id @default(uuid()) @db.Uuid
+  familyId        String   @map("family_id") @db.Uuid
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  libraryQuestId  String?  @map("library_quest_id") @db.Uuid
+  name            String   @db.VarChar(200)
+  description     String?  @db.Text
+  icon            String   @default("⭐") @db.VarChar(50)
+  category        String   @db.VarChar(50)
+  rewardMinutes   Int      @map("reward_minutes")
+  stackingType    String   @map("stacking_type") @db.VarChar(20)
+  recurrence      String   @default("one_time") @db.VarChar(20)
+  recurrenceDays  Json?    @map("recurrence_days") @db.JsonB
+  requiresProof   Boolean  @default(false) @map("requires_proof")
+  autoApprove     Boolean  @default(false) @map("auto_approve")
+  bonusMultiplier Float    @default(1.0) @map("bonus_multiplier")
+  isArchived      Boolean  @default(false) @map("is_archived")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  family       Family           @relation(fields: [familyId], references: [id])
+  createdBy    User             @relation("QuestCreator", fields: [createdByUserId], references: [id])
+  libraryQuest QuestLibrary?    @relation(fields: [libraryQuestId], references: [id])
+  assignments  QuestAssignment[]
+
+  @@map("quests")
+}
+
+model QuestAssignment {
+  id      String @id @default(uuid()) @db.Uuid
+  questId String @map("quest_id") @db.Uuid
+  childId String @map("child_id") @db.Uuid
+
+  quest Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
+  child User  @relation("ChildAssignments", fields: [childId], references: [id])
+
+  @@unique([questId, childId])
+  @@map("quest_assignments")
 }

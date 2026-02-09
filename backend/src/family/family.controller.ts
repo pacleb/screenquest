@@ -26,6 +26,8 @@ import {
   InviteMemberDto,
   CreateChildDto,
   UpdateChildDto,
+  UpdateFamilyDto,
+  UpdateGuardianPermissionsDto,
 } from './dto/family.dto';
 
 @ApiTags('Families')
@@ -138,6 +140,18 @@ export class FamilyController {
     return this.familyService.removeMember(id, userId, req.user.id);
   }
 
+  @Put(':id')
+  @Roles('parent')
+  @ApiOperation({ summary: 'Update family name/settings (owner only)' })
+  async updateFamily(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body() dto: UpdateFamilyDto,
+  ) {
+    this.ensureFamilyAccess(req.user.familyId, id);
+    return this.familyService.updateFamily(id, req.user.id, dto);
+  }
+
   @Post(':id/transfer-ownership')
   @Roles('parent')
   @HttpCode(HttpStatus.OK)
@@ -149,6 +163,31 @@ export class FamilyController {
   ) {
     this.ensureFamilyAccess(req.user.familyId, id);
     return this.familyService.transferOwnership(id, newOwnerId, req.user.id);
+  }
+
+  @Get(':id/members/:userId/permissions')
+  @Roles('parent')
+  @ApiOperation({ summary: 'Get guardian permissions' })
+  async getGuardianPermissions(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Request() req: any,
+  ) {
+    this.ensureFamilyAccess(req.user.familyId, id);
+    return this.familyService.getGuardianPermissions(id, userId);
+  }
+
+  @Put(':id/members/:userId/permissions')
+  @Roles('parent')
+  @ApiOperation({ summary: 'Update guardian permissions (owner only)' })
+  async updateGuardianPermissions(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Request() req: any,
+    @Body() dto: UpdateGuardianPermissionsDto,
+  ) {
+    this.ensureFamilyAccess(req.user.familyId, id);
+    return this.familyService.updateGuardianPermissions(id, userId, req.user.id, dto);
   }
 
   private ensureFamilyAccess(userFamilyId: string | null, requestedFamilyId: string) {

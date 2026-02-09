@@ -60,6 +60,13 @@ export default function ParentTabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="quest-edit"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
