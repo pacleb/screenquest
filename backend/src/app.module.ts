@@ -11,6 +11,8 @@ import { CompletionModule } from './completion/completion.module';
 import { TimeBankModule } from './time-bank/time-bank.module';
 import { UploadModule } from './upload/upload.module';
 import { PlaySessionModule } from './play-session/play-session.module';
+import { ViolationModule } from './violation/violation.module';
+import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -44,6 +46,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     TimeBankModule,
     UploadModule,
     PlaySessionModule,
+    ViolationModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

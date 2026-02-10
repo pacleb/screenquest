@@ -9,9 +9,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/auth';
 import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
 import { completionService, ChildQuest } from '../../../src/services/completion';
+import { violationService, ViolationStatus } from '../../../src/services/violation';
 import { colors, spacing, borderRadius } from '../../../src/theme';
 
 export default function ChildHome() {
@@ -19,19 +21,22 @@ export default function ChildHome() {
   const user = useAuthStore((s) => s.user);
   const [balance, setBalance] = useState<TimeBankBalance>({ stackableMinutes: 0, nonStackableMinutes: 0, totalMinutes: 0 });
   const [quests, setQuests] = useState<ChildQuest[]>([]);
+  const [violationStatus, setViolationStatus] = useState<ViolationStatus | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const [bal, q] = await Promise.all([
+      const [bal, q, vs] = await Promise.all([
         timeBankService.getBalance(user.id),
         completionService.listChildQuests(user.id),
+        violationService.getViolationStatus(user.id).catch(() => null),
       ]);
       setBalance(bal);
       setQuests(q.filter((quest) => quest.availableToComplete).slice(0, 5));
+      setViolationStatus(vs);
     } catch {
-      // Silently handle — screens will show defaults
+      // Silently handle
     } finally {
       setRefreshing(false);
     }
@@ -42,6 +47,8 @@ export default function ChildHome() {
   }, [fetchData]);
 
   const availableCount = quests.length;
+  const isNegativeBalance = balance.totalMinutes < 0;
+  const deficit = Math.abs(balance.totalMinutes);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -55,26 +62,56 @@ export default function ChildHome() {
         <Text style={styles.greeting}>Hi {user?.name}!</Text>
         <Text style={styles.subtitle}>Ready for an adventure?</Text>
 
+        {/* Violation Indicator */}
+        {violationStatus && violationStatus.currentCount > 0 && (
+          <View style={styles.violationCard}>
+            <Ionicons name="alert-circle-outline" size={20} color={colors.accent} />
+            <View style={styles.violationInfo}>
+              <Text style={styles.violationTitle}>
+                {violationStatus.currentCount} {violationStatus.currentCount === 1 ? 'strike' : 'strikes'}
+              </Text>
+              <Text style={styles.violationHint}>Keep up the good work to stay on track!</Text>
+            </View>
+          </View>
+        )}
+
         {/* Time Bank Card */}
-        <View style={styles.timeBankCard}>
+        <View style={[styles.timeBankCard, isNegativeBalance && styles.timeBankNegative]}>
           <Text style={styles.timeBankLabel}>Your Time Bank</Text>
-          <Text style={styles.timeBankValue}>{balance.totalMinutes} min</Text>
-          {balance.nonStackableMinutes > 0 && (
+          <Text style={[styles.timeBankValue, isNegativeBalance && styles.timeBankValueNegative]}>
+            {balance.totalMinutes} min
+          </Text>
+          {isNegativeBalance && (
+            <Text style={styles.deficitHint}>
+              Earn {deficit} more minutes to play!
+            </Text>
+          )}
+          {!isNegativeBalance && balance.nonStackableMinutes > 0 && (
             <View style={styles.expiringRow}>
               <Text style={styles.expiringText}>
                 {balance.nonStackableMinutes} min expires today
               </Text>
             </View>
           )}
-          {balance.totalMinutes === 0 && (
+          {!isNegativeBalance && balance.totalMinutes === 0 && (
             <Text style={styles.timeBankHint}>Complete quests to earn time!</Text>
           )}
         </View>
 
-        {/* Play Button (disabled — Phase 4) */}
-        <TouchableOpacity style={styles.playButton} disabled>
-          <Text style={styles.playText}>PLAY</Text>
-          <Text style={styles.playHint}>Coming soon!</Text>
+        {/* Play Button */}
+        <TouchableOpacity
+          style={[styles.playButton, (isNegativeBalance || balance.totalMinutes <= 0) && styles.playButtonDisabled]}
+          onPress={() => router.push('/(app)/child/play')}
+          disabled={isNegativeBalance || balance.totalMinutes <= 0}
+        >
+          <Ionicons
+            name="play-circle"
+            size={28}
+            color={isNegativeBalance || balance.totalMinutes <= 0 ? colors.textSecondary : '#FFF'}
+          />
+          <Text style={[styles.playText, (isNegativeBalance || balance.totalMinutes <= 0) && styles.playTextDisabled]}>
+            PLAY
+          </Text>
         </TouchableOpacity>
 
         {/* Available Quests Preview */}
@@ -125,6 +162,20 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
   greeting: { fontSize: 32, fontWeight: '800', color: colors.textPrimary, marginTop: spacing.md },
   subtitle: { fontSize: 18, color: colors.textSecondary, marginBottom: spacing.xl },
+  violationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.accent + '12',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.accent + '30',
+  },
+  violationInfo: { flex: 1 },
+  violationTitle: { fontSize: 14, fontWeight: '700', color: colors.accent },
+  violationHint: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
   timeBankCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -137,9 +188,16 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginBottom: spacing.lg,
   },
+  timeBankNegative: {
+    shadowColor: colors.error,
+    borderWidth: 1,
+    borderColor: colors.error + '30',
+  },
   timeBankLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: spacing.xs },
   timeBankValue: { fontSize: 48, fontWeight: '800', color: colors.primary },
+  timeBankValueNegative: { color: colors.error },
   timeBankHint: { fontSize: 14, color: colors.textSecondary, marginTop: spacing.xs },
+  deficitHint: { fontSize: 14, fontWeight: '600', color: colors.error, marginTop: spacing.xs },
   expiringRow: {
     marginTop: spacing.sm,
     paddingHorizontal: spacing.md,
@@ -149,15 +207,27 @@ const styles = StyleSheet.create({
   },
   expiringText: { fontSize: 13, fontWeight: '600', color: colors.accent },
   playButton: {
-    backgroundColor: colors.textSecondary + '20',
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.secondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md + 4,
     marginBottom: spacing.xl,
-    opacity: 0.6,
+    shadowColor: colors.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  playText: { fontSize: 20, fontWeight: '800', color: colors.textSecondary },
-  playHint: { fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs },
+  playButtonDisabled: {
+    backgroundColor: colors.textSecondary + '20',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  playText: { fontSize: 20, fontWeight: '800', color: '#FFF' },
+  playTextDisabled: { color: colors.textSecondary },
   questSection: { marginBottom: spacing.lg },
   questSectionHeader: {
     flexDirection: 'row',

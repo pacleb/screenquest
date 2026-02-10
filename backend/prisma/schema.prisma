@@ -56,6 +56,11 @@ model User {
   timeBank             TimeBank?         @relation("ChildTimeBank")
   playSessions         PlaySession[]     @relation("ChildPlaySessions")
   approvedSessions     PlaySession[]     @relation("ApprovedPlaySessions")
+  violations           Violation[]       @relation("ChildViolations")
+  recordedViolations   Violation[]       @relation("RecordedViolations")
+  violationCounter     ViolationCounter? @relation("ChildViolationCounter")
+  pushTokens           PushToken[]
+  notificationPrefs    NotificationPreference? @relation("UserNotificationPrefs")
 
   @@map("users")
 }
@@ -199,4 +204,59 @@ model PlaySession {
   approvedBy User? @relation("ApprovedPlaySessions", fields: [approvedByUserId], references: [id])
 
   @@map("play_sessions")
+}
+
+model Violation {
+  id               String   @id @default(uuid()) @db.Uuid
+  childId          String   @map("child_id") @db.Uuid
+  recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
+  violationNumber  Int      @map("violation_number")
+  penaltyMinutes   Int      @map("penalty_minutes")
+  description      String?  @db.Text
+  forgiven         Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  child      User @relation("ChildViolations", fields: [childId], references: [id])
+  recordedBy User @relation("RecordedViolations", fields: [recordedByUserId], references: [id])
+
+  @@map("violations")
+}
+
+model ViolationCounter {
+  childId      String    @id @map("child_id") @db.Uuid
+  currentCount Int       @default(0) @map("current_count")
+  lastResetAt  DateTime? @map("last_reset_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  child User @relation("ChildViolationCounter", fields: [childId], references: [id])
+
+  @@map("violation_counters")
+}
+
+model PushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @db.VarChar(500)
+  platform  String   @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@map("push_tokens")
+}
+
+model NotificationPreference {
+  userId           String   @id @map("user_id") @db.Uuid
+  questCompletions Boolean  @default(true) @map("quest_completions")
+  playRequests     Boolean  @default(true) @map("play_requests")
+  playStateChanges Boolean  @default(true) @map("play_state_changes")
+  violations       Boolean  @default(true)
+  dailySummary     Boolean  @default(true) @map("daily_summary")
+  weeklySummary    Boolean  @default(true) @map("weekly_summary")
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  user User @relation("UserNotificationPrefs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

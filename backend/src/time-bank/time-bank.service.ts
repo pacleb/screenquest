@@ -143,6 +143,51 @@ export class TimeBankService {
   }
 
   /**
+   * Deduct penalty from Time Bank (violations). Balance CAN go negative.
+   * Non-stackable is used first, then stackable goes negative.
+   */
+  async deductPenalty(childId: string, minutes: number) {
+    const timeBank = await this.ensureTimeBank(childId);
+
+    const now = new Date();
+    const nonStackResult = await this.prisma.questCompletion.aggregate({
+      where: {
+        childId,
+        status: 'approved',
+        stackingType: 'non_stackable',
+        expiresAt: { gt: now },
+      },
+      _sum: { earnedMinutes: true },
+    });
+
+    const currentNonStackable = nonStackResult._sum.earnedMinutes || 0;
+    let remainingDeduction = minutes;
+
+    // Deduct non-stackable first
+    const nonStackDeduct = Math.min(remainingDeduction, currentNonStackable);
+    remainingDeduction -= nonStackDeduct;
+
+    // The rest comes from stackable (CAN go negative)
+    const newStackable = timeBank.stackableBalanceMinutes - remainingDeduction;
+
+    await this.prisma.timeBank.update({
+      where: { childId },
+      data: {
+        nonStackableBalanceMinutes: currentNonStackable - nonStackDeduct,
+        stackableBalanceMinutes: newStackable,
+        lastUpdated: now,
+      },
+    });
+
+    return {
+      deducted: minutes,
+      stackableMinutes: newStackable,
+      nonStackableMinutes: currentNonStackable - nonStackDeduct,
+      totalMinutes: newStackable + (currentNonStackable - nonStackDeduct),
+    };
+  }
+
+  /**
    * Ensure a TimeBank record exists for a child (auto-create if missing)
    */
   async ensureTimeBank(childId: string) {

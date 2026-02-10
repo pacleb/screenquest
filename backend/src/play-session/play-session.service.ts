@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
+import { NotificationService } from '../notification/notification.service';
 import { RequestPlayDto, ExtendSessionDto, UpdatePlaySettingsDto } from './dto/play-session.dto';
 
 export interface PlaySettings {
@@ -36,6 +37,7 @@ export class PlaySessionService {
   constructor(
     private prisma: PrismaService,
     private timeBankService: TimeBankService,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -56,8 +58,14 @@ export class PlaySessionService {
       throw new BadRequestException('An active or pending play session already exists');
     }
 
-    // Check Time Bank balance
+    // Check Time Bank balance (negative balance blocks play entirely)
     const balance = await this.timeBankService.getBalance(childId, childId);
+    if (balance.totalMinutes <= 0) {
+      const deficit = Math.abs(balance.totalMinutes);
+      throw new BadRequestException(
+        `Your time bank is in deficit. Earn ${deficit} more minutes to play!`,
+      );
+    }
     if (balance.totalMinutes < dto.requestedMinutes) {
       throw new BadRequestException(
         `Insufficient time balance. You have ${balance.totalMinutes} minutes available.`,
@@ -92,6 +100,20 @@ export class PlaySessionService {
       });
 
       this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${dto.requestedMinutes}min)`);
+
+      // Notify parents
+      if (child.familyId) {
+        this.notificationService.sendToParents(
+          child.familyId,
+          {
+            title: 'Play Session Started',
+            body: `${child.name} started playing (${dto.requestedMinutes} minutes)`,
+            data: { type: 'play_started', sessionId: session.id },
+          },
+          'play_state_changes',
+        );
+      }
+
       return this.enrichSession(session);
     } else {
       const session = await this.prisma.playSession.create({
@@ -103,6 +125,20 @@ export class PlaySessionService {
       });
 
       this.logger.log(`Play session ${session.id} requested for child ${childId} (${dto.requestedMinutes}min)`);
+
+      // Notify parents of play request
+      if (child.familyId) {
+        this.notificationService.sendToParents(
+          child.familyId,
+          {
+            title: 'Play Request',
+            body: `${child.name} wants to play for ${dto.requestedMinutes} minutes — Approve?`,
+            data: { type: 'play_request', sessionId: session.id },
+          },
+          'play_requests',
+        );
+      }
+
       return this.enrichSession(session);
     }
   }
@@ -132,6 +168,18 @@ export class PlaySessionService {
     });
 
     this.logger.log(`Play session ${sessionId} approved by ${userId}`);
+
+    // Notify child that play was approved
+    this.notificationService.sendToUser(
+      session.childId,
+      {
+        title: 'Play Approved!',
+        body: `Your play request for ${session.requestedMinutes} minutes was approved!`,
+        data: { type: 'play_approved', sessionId },
+      },
+      'play_requests',
+    );
+
     return this.enrichSession(updated);
   }
 
@@ -155,6 +203,18 @@ export class PlaySessionService {
     });
 
     this.logger.log(`Play session ${sessionId} denied by ${userId}`);
+
+    // Notify child that play was denied
+    this.notificationService.sendToUser(
+      session.childId,
+      {
+        title: 'Play Request Denied',
+        body: 'Your play request was not approved this time.',
+        data: { type: 'play_denied', sessionId },
+      },
+      'play_requests',
+    );
+
     return this.enrichSession(updated);
   }
 
@@ -174,6 +234,20 @@ export class PlaySessionService {
         pausedAt: new Date(),
       },
     });
+
+    // Notify parents
+    const child = await this.prisma.user.findUnique({ where: { id: session.childId } });
+    if (child?.familyId) {
+      this.notificationService.sendToParents(
+        child.familyId,
+        {
+          title: 'Play Paused',
+          body: `${child.name} paused play time`,
+          data: { type: 'play_paused', sessionId },
+        },
+        'play_state_changes',
+      );
+    }
 
     return this.enrichSession(updated);
   }
@@ -201,6 +275,20 @@ export class PlaySessionService {
         lastSyncedAt: now,
       },
     });
+
+    // Notify parents
+    const child = await this.prisma.user.findUnique({ where: { id: session.childId } });
+    if (child?.familyId) {
+      this.notificationService.sendToParents(
+        child.familyId,
+        {
+          title: 'Play Resumed',
+          body: `${child.name} resumed play time`,
+          data: { type: 'play_resumed', sessionId },
+        },
+        'play_state_changes',
+      );
+    }
 
     return this.enrichSession(updated);
   }
@@ -242,6 +330,20 @@ export class PlaySessionService {
       this.logger.log(`Refunded ${refundMinutes} min to child ${session.childId}`);
     }
 
+    // Notify parents
+    const childUser = await this.prisma.user.findUnique({ where: { id: session.childId } });
+    if (childUser?.familyId) {
+      this.notificationService.sendToParents(
+        childUser.familyId,
+        {
+          title: 'Play Stopped',
+          body: `${childUser.name} stopped playing (${refundMinutes} min remaining, refunded)`,
+          data: { type: 'play_stopped', sessionId },
+        },
+        'play_state_changes',
+      );
+    }
+
     return this.enrichSession(updated);
   }
 
@@ -279,6 +381,18 @@ export class PlaySessionService {
     }
 
     this.logger.log(`Play session ${sessionId} force-ended by parent ${userId}, refunded ${refundMinutes}min`);
+
+    // Notify child
+    this.notificationService.sendToUser(
+      session.childId,
+      {
+        title: 'Play Time Ended',
+        body: 'Play time ended by parent',
+        data: { type: 'play_ended_by_parent', sessionId },
+      },
+      'play_state_changes',
+    );
+
     return this.enrichSession(updated);
   }
 
@@ -412,10 +526,12 @@ export class PlaySessionService {
   async checkExpiredSessions() {
     const activeSessions = await this.prisma.playSession.findMany({
       where: { status: 'active' },
+      include: { child: { select: { id: true, name: true, familyId: true } } },
     });
 
     for (const session of activeSessions) {
       const remaining = this.calculateRemainingSeconds(session);
+
       if (remaining <= 0) {
         await this.prisma.playSession.update({
           where: { id: session.id },
@@ -425,7 +541,52 @@ export class PlaySessionService {
           },
         });
         this.logger.log(`Play session ${session.id} completed (time expired)`);
-        // TODO Phase 5: Send push notification to child + parent
+
+        // Notify child: time's up
+        this.notificationService.sendToUser(
+          session.childId,
+          {
+            title: "Time's Up!",
+            body: 'Great job managing your time!',
+            data: { type: 'play_completed', sessionId: session.id },
+          },
+          'play_state_changes',
+        );
+
+        // Notify parents
+        if (session.child?.familyId) {
+          this.notificationService.sendToParents(
+            session.child.familyId,
+            {
+              title: 'Play Session Ended',
+              body: `${session.child.name}'s play session ended`,
+              data: { type: 'play_completed', sessionId: session.id },
+            },
+            'play_state_changes',
+          );
+        }
+      } else if (remaining <= 60 && remaining > 30) {
+        // 1-minute warning
+        this.notificationService.sendToUser(
+          session.childId,
+          {
+            title: '1 Minute Left!',
+            body: 'Almost done!',
+            data: { type: 'play_warning_1min', sessionId: session.id },
+          },
+          'play_state_changes',
+        );
+      } else if (remaining <= 300 && remaining > 270) {
+        // 5-minute warning
+        this.notificationService.sendToUser(
+          session.childId,
+          {
+            title: '5 Minutes Left!',
+            body: 'Start wrapping up!',
+            data: { type: 'play_warning_5min', sessionId: session.id },
+          },
+          'play_state_changes',
+        );
       }
     }
   }

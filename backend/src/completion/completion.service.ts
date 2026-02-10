@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
+import { NotificationService } from '../notification/notification.service';
 import { CompleteQuestDto, ReviewCompletionDto } from './dto/completion.dto';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class CompletionService {
   constructor(
     private prisma: PrismaService,
     private timeBankService: TimeBankService,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -76,6 +78,19 @@ export class CompletionService {
     // If auto-approve, credit Time Bank immediately
     if (quest.autoApprove) {
       await this.timeBankService.creditTime(childId, earnedMinutes, quest.stackingType, expiresAt);
+    }
+
+    // Notify parents about quest completion
+    if (child.familyId && !quest.autoApprove) {
+      this.notificationService.sendToParents(
+        child.familyId,
+        {
+          title: 'Quest Completed',
+          body: `${child.name} completed "${quest.name}" — Approve?`,
+          data: { type: 'quest_completion', completionId: completion.id },
+        },
+        'quest_completions',
+      );
     }
 
     return completion;
@@ -166,6 +181,17 @@ export class CompletionService {
       completion.expiresAt,
     );
 
+    // Notify child of approval
+    this.notificationService.sendToUser(
+      completion.childId,
+      {
+        title: 'Quest Approved!',
+        body: `+${completion.earnedMinutes} minutes added to your Time Bank!`,
+        data: { type: 'quest_approved', completionId },
+      },
+      'quest_completions',
+    );
+
     return updated;
   }
 
@@ -179,7 +205,7 @@ export class CompletionService {
       throw new BadRequestException('Completion has already been reviewed');
     }
 
-    return this.prisma.questCompletion.update({
+    const denied = await this.prisma.questCompletion.update({
       where: { id: completionId },
       data: {
         status: 'denied',
@@ -192,6 +218,20 @@ export class CompletionService {
         child: { select: { id: true, name: true } },
       },
     });
+
+    // Notify child of denial
+    const noteMsg = dto.parentNote ? ` ${dto.parentNote}` : '';
+    this.notificationService.sendToUser(
+      completion.childId,
+      {
+        title: 'Quest Not Approved',
+        body: `Your quest was not approved.${noteMsg}`,
+        data: { type: 'quest_denied', completionId },
+      },
+      'quest_completions',
+    );
+
+    return denied;
   }
 
   /**

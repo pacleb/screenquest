@@ -43,6 +43,15 @@ export default function ParentTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="consequences"
+        options={{
+          title: 'Rules',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shield-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="family"
         options={{
           title: 'Family',
