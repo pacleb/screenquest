@@ -15,7 +15,10 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:8081',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:8081',
+      process.env.CMS_URL || 'http://localhost:3001',
+    ],
     credentials: true,
   });
 
