@@ -8,13 +8,17 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { CreateQuestDto, UpdateQuestDto, CreateFromLibraryDto } from './dto/quest.dto';
 
 const FREE_PLAN_QUEST_LIMIT = 3;
 
 @Injectable()
 export class QuestService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private subscriptionService: SubscriptionService,
+  ) {}
 
   async create(familyId: string, userId: string, dto: CreateQuestDto) {
     await this.enforceFamilyAccess(familyId, userId);
@@ -282,22 +286,20 @@ export class QuestService {
   }
 
   private async enforceQuestLimit(familyId: string) {
-    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
-    if (!family) throw new NotFoundException('Family not found');
+    const premium = await this.subscriptionService.isPremium(familyId);
+    if (premium) return;
 
-    if (family.plan === 'free') {
-      const activeCount = await this.getActiveQuestCount(familyId);
-      if (activeCount >= FREE_PLAN_QUEST_LIMIT) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.PAYMENT_REQUIRED,
-            message: `Free plan allows up to ${FREE_PLAN_QUEST_LIMIT} active quests. Upgrade to Premium for unlimited quests.`,
-            activeQuests: activeCount,
-            limit: FREE_PLAN_QUEST_LIMIT,
-          },
-          HttpStatus.PAYMENT_REQUIRED,
-        );
-      }
+    const activeCount = await this.getActiveQuestCount(familyId);
+    if (activeCount >= FREE_PLAN_QUEST_LIMIT) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.PAYMENT_REQUIRED,
+          message: `Free plan allows up to ${FREE_PLAN_QUEST_LIMIT} active quests. Upgrade to Premium for unlimited quests.`,
+          activeQuests: activeCount,
+          limit: FREE_PLAN_QUEST_LIMIT,
+        },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
     }
   }
 

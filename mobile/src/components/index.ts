@@ -10,3 +10,4 @@ export { MascotWidget } from './MascotWidget';
 export { ConfettiOverlay } from './ConfettiOverlay';
 export { ProgressBar } from './ProgressBar';
 export { SectionHeader } from './SectionHeader';
+export { PremiumBadge } from './PremiumBadge';

@@ -170,8 +170,19 @@ export default function QuestEditScreen() {
 
       router.back();
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to save quest';
-      Alert.alert('Error', msg);
+      if (error.response?.status === 402) {
+        Alert.alert(
+          'Upgrade Required',
+          error.response?.data?.message || 'Upgrade to Premium for unlimited quests.',
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Upgrade', onPress: () => router.push('/(app)/parent/paywall') },
+          ],
+        );
+      } else {
+        const msg = error.response?.data?.message || 'Failed to save quest';
+        Alert.alert('Error', msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -202,8 +213,19 @@ export default function QuestEditScreen() {
       });
       router.back();
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to add quest';
-      Alert.alert('Error', msg);
+      if (error.response?.status === 402) {
+        Alert.alert(
+          'Upgrade Required',
+          error.response?.data?.message || 'Upgrade to Premium for unlimited quests.',
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Upgrade', onPress: () => router.push('/(app)/parent/paywall') },
+          ],
+        );
+      } else {
+        const msg = error.response?.data?.message || 'Failed to add quest';
+        Alert.alert('Error', msg);
+      }
     } finally {
       setSaving(false);
     }

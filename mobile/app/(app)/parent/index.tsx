@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/auth';
+import { useSubscriptionStore } from '../../../src/store/subscription';
 import { familyService, FamilyMember } from '../../../src/services/family';
 import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
 import { completionService, QuestCompletion } from '../../../src/services/completion';
@@ -29,6 +30,7 @@ export default function ParentDashboard() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const familyId = user?.familyId;
+  const { isTrialing, trialDaysRemaining, gracePeriodEndsAt } = useSubscriptionStore();
 
   const [childrenData, setChildrenData] = useState<ChildData[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<QuestCompletion[]>([]);
@@ -98,6 +100,34 @@ export default function ParentDashboard() {
             <Ionicons name="log-out-outline" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
+
+        {/* Trial Banner */}
+        {isTrialing && trialDaysRemaining !== null && (
+          <TouchableOpacity
+            style={styles.trialBanner}
+            onPress={() => router.push('/(app)/parent/paywall')}
+          >
+            <Ionicons name="sparkles" size={16} color={colors.accent} />
+            <Text style={styles.trialText}>
+              Free Trial — {trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''} remaining
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+          </TouchableOpacity>
+        )}
+
+        {/* Grace Period Banner */}
+        {gracePeriodEndsAt && (
+          <TouchableOpacity
+            style={[styles.trialBanner, styles.graceBanner]}
+            onPress={() => router.push('/(app)/parent/quest-archival')}
+          >
+            <Ionicons name="warning" size={16} color={colors.error} />
+            <Text style={[styles.trialText, { color: colors.error }]}>
+              Please choose which quests to keep
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.error} />
+          </TouchableOpacity>
+        )}
 
         {loading ? (
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xxl }} />
@@ -370,6 +400,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error + '10',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  trialBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.accent + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+  },
+  graceBanner: {
+    backgroundColor: colors.error + '10',
+  },
+  trialText: {
+    flex: 1,
+    fontFamily: fonts.parent.medium,
+    fontSize: 13,
+    color: colors.accent,
   },
   statsRow: {
     flexDirection: 'row',

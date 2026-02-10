@@ -83,6 +83,20 @@ export default function ParentTabLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="paywall"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="quest-archival"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

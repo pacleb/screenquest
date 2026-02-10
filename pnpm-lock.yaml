@@ -205,6 +205,9 @@ importers:
       react-native-confetti-cannon:
         specifier: ^1.5.2
         version: 1.5.2
+      react-native-purchases:
+        specifier: ^9.7.6
+        version: 9.7.6(react-native@0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
       react-native-reanimated:
         specifier: ^4.2.1
         version: 4.2.1(react-native-worklets@0.7.2(@babel/core@7.29.0)(react-native@0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native@0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
@@ -1723,6 +1726,15 @@ packages:
 
   '@remix-run/web-stream@1.1.0':
     resolution: {integrity: sha512-KRJtwrjRV5Bb+pM7zxcTJkhIqWWSy+MYsIxHK+0m5atcznsf15YwUBWHWulZerV2+vvHH1Lp1DD7pw6qKW8SgA==}
+
+  '@revenuecat/purchases-js-hybrid-mappings@17.31.0':
+    resolution: {integrity: sha512-d3clm3yyvupyfjTD6Fxj91co37Tg+4YSZw/KYDj/wUzsKtenq+z5TbRURI7VsmxYuTRVKIPIp5RScdw+R9OigQ==}
+
+  '@revenuecat/purchases-js@1.24.4':
+    resolution: {integrity: sha512-57T2976W0X87SSkayBaxT+In37kxqC6phqjmzBraJUccnhLd1tg9BpYm2AMGEfouAiNE4jUXNmL+iJRrVwRuaw==}
+
+  '@revenuecat/purchases-typescript-internal@17.31.0':
+    resolution: {integrity: sha512-uQUJk90LJ8tSzI1xEzE5mqBrYfrxZW5uKz4HxJc0hW3EoEITDXvZOEAcFew0JEPJQlepjFfVn349uNHyF0J5QA==}
 
   '@rnx-kit/chromium-edge-launcher@1.0.0':
     resolution: {integrity: sha512-lzD84av1ZQhYUS+jsGqJiCMaJO2dn9u+RTT9n9q6D3SaKVwWqv+7AoRKqBu19bkwyE+iFRl1ymr40QS90jVFYg==}
@@ -4965,6 +4977,16 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-purchases@9.7.6:
+    resolution: {integrity: sha512-AjlADJ4jqY8TfmVXLbRQsgQ5w5Ou1AGr5wBt7M3RhoCorP+DYLNXry9YY91x33pLosJNJrPF3cUQ91+oKwW76Q==}
+    peerDependencies:
+      react: '>= 16.6.3'
+      react-native: '>= 0.73.0'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
 
   react-native-reanimated@4.2.1:
     resolution: {integrity: sha512-/NcHnZMyOvsD/wYXug/YqSKw90P9edN0kEPL5lP4PFf1aQ4F1V7MKe/E0tvfkXKIajy3Qocp5EiEnlcrK/+BZg==}
@@ -8516,6 +8538,14 @@ snapshots:
   '@remix-run/web-stream@1.1.0':
     dependencies:
       web-streams-polyfill: 3.3.3
+
+  '@revenuecat/purchases-js-hybrid-mappings@17.31.0':
+    dependencies:
+      '@revenuecat/purchases-js': 1.24.4
+
+  '@revenuecat/purchases-js@1.24.4': {}
+
+  '@revenuecat/purchases-typescript-internal@17.31.0': {}
 
   '@rnx-kit/chromium-edge-launcher@1.0.0':
     dependencies:
@@ -12360,6 +12390,13 @@ snapshots:
 
   react-native-is-edge-to-edge@1.2.1(react-native@0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0):
     dependencies:
+      react: 18.2.0
+      react-native: 0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0)
+
+  react-native-purchases@9.7.6(react-native@0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0):
+    dependencies:
+      '@revenuecat/purchases-js-hybrid-mappings': 17.31.0
+      '@revenuecat/purchases-typescript-internal': 17.31.0
       react: 18.2.0
       react-native: 0.74.5(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.2.79)(react@18.2.0)
 

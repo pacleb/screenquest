@@ -13,6 +13,7 @@ import { UploadModule } from './upload/upload.module';
 import { PlaySessionModule } from './play-session/play-session.module';
 import { ViolationModule } from './violation/violation.module';
 import { NotificationModule } from './notification/notification.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -48,6 +49,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PlaySessionModule,
     ViolationModule,
     NotificationModule,
+    SubscriptionModule,
   ],
 })
 export class AppModule {}

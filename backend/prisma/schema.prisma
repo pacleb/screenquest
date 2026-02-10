@@ -12,8 +12,11 @@ model Family {
   name                  String    @db.VarChar(100)
   familyCode            String    @unique @map("family_code") @db.VarChar(8)
   plan                  String    @default("free") @db.VarChar(20)
+  subscriptionStatus    String?   @map("subscription_status") @db.VarChar(20)
   subscriptionExpiresAt DateTime? @map("subscription_expires_at") @db.Timestamptz()
   subscriptionPeriod    String?   @map("subscription_period") @db.VarChar(10)
+  gracePeriodEndsAt     DateTime? @map("grace_period_ends_at") @db.Timestamptz()
+  revenuecatAppUserId   String?   @map("revenuecat_app_user_id") @db.VarChar(255)
   ownerId               String?   @map("owner_id") @db.Uuid
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
@@ -61,6 +64,7 @@ model User {
   violationCounter     ViolationCounter? @relation("ChildViolationCounter")
   pushTokens           PushToken[]
   notificationPrefs    NotificationPreference? @relation("UserNotificationPrefs")
+  avatarPacks          AvatarPackPurchase[]
 
   @@map("users")
 }
@@ -244,6 +248,18 @@ model PushToken {
 
   @@unique([userId, token])
   @@map("push_tokens")
+}
+
+model AvatarPackPurchase {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  packId    String   @map("pack_id") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, packId])
+  @@map("avatar_pack_purchases")
 }
 
 model NotificationPreference {

@@ -16,7 +16,9 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { useAuthStore } from '../src/store/auth';
+import { useSubscriptionStore } from '../src/store/subscription';
 import { setupNotificationHandler, notificationService } from '../src/services/notification';
+import { subscriptionService } from '../src/services/subscription';
 import { colors } from '../src/theme';
 
 setupNotificationHandler();
@@ -36,16 +38,23 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
+  const fetchSubscriptionStatus = useSubscriptionStore((s) => s.fetchStatus);
+
   useEffect(() => {
+    subscriptionService.initRevenueCat();
     initialize();
   }, []);
 
-  // Register push token when user is logged in
+  // Register push token + identify RevenueCat user when logged in
   useEffect(() => {
     if (user?.id) {
       notificationService.registerPushToken(user.id);
     }
-  }, [user?.id]);
+    if (user?.familyId) {
+      subscriptionService.identifyUser(user.familyId);
+      fetchSubscriptionStatus(user.familyId);
+    }
+  }, [user?.id, user?.familyId]);
 
   if (!fontsLoaded) {
     return (

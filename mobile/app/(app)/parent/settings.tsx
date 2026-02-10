@@ -12,14 +12,22 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Linking, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../src/store/auth';
+import { useSubscriptionStore } from '../../../src/store/subscription';
 import { familyService, FamilyMember } from '../../../src/services/family';
 import { playSessionService, PlaySettings } from '../../../src/services/playSession';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+import { subscriptionService } from '../../../src/services/subscription';
+import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
+import { Badge } from '../../../src/components';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const familyId = user?.familyId;
+  const sub = useSubscriptionStore();
+  const [restoringPurchases, setRestoringPurchases] = useState(false);
 
   const [children, setChildren] = useState<FamilyMember[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -89,6 +97,100 @@ export default function SettingsScreen() {
             <Ionicons name="shield-outline" size={20} color={colors.textSecondary} />
             <Text style={styles.infoText}>Role: {user?.role}</Text>
           </View>
+        </View>
+
+        {/* Subscription */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
+          <View style={styles.subCard}>
+            <View style={styles.subRow}>
+              <Text style={styles.subLabel}>Current Plan</Text>
+              <Badge
+                label={sub.isTrialing ? 'Trial' : sub.isActive ? 'Premium' : 'Free'}
+                variant={sub.isActive ? 'success' : 'muted'}
+              />
+            </View>
+            {sub.isTrialing && sub.trialDaysRemaining !== null && (
+              <View style={styles.subRow}>
+                <Text style={styles.subLabel}>Trial Ends</Text>
+                <Text style={styles.subValue}>
+                  {sub.trialDaysRemaining} day{sub.trialDaysRemaining !== 1 ? 's' : ''} remaining
+                </Text>
+              </View>
+            )}
+            {sub.isActive && !sub.isTrialing && sub.expiresAt && (
+              <>
+                <View style={styles.subRow}>
+                  <Text style={styles.subLabel}>
+                    {sub.willRenew ? 'Renews' : 'Active Until'}
+                  </Text>
+                  <Text style={styles.subValue}>
+                    {new Date(sub.expiresAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.subRow}>
+                  <Text style={styles.subLabel}>Period</Text>
+                  <Text style={styles.subValue}>
+                    {sub.period === 'yearly' ? 'Yearly' : 'Monthly'}
+                  </Text>
+                </View>
+              </>
+            )}
+            {sub.subscriptionStatus === 'cancelled' && sub.expiresAt && (
+              <Text style={styles.cancelledNote}>
+                Your premium access is active until {new Date(sub.expiresAt).toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+
+          {sub.isActive ? (
+            <TouchableOpacity
+              style={styles.subButton}
+              onPress={() => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('https://apps.apple.com/account/subscriptions');
+                } else {
+                  Linking.openURL('https://play.google.com/store/account/subscriptions');
+                }
+              }}
+            >
+              <Ionicons name="open-outline" size={16} color={colors.primary} />
+              <Text style={styles.subButtonText}>Manage Subscription</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.subButton, styles.upgradeButton]}
+              onPress={() => router.push('/(app)/parent/paywall')}
+            >
+              <Ionicons name="sparkles" size={16} color="#FFF" />
+              <Text style={[styles.subButtonText, { color: '#FFF' }]}>Upgrade to Premium</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.restoreButton}
+            disabled={restoringPurchases}
+            onPress={async () => {
+              setRestoringPurchases(true);
+              try {
+                const info = await subscriptionService.restorePurchases();
+                if (info?.entitlements?.active?.premium) {
+                  if (familyId) await sub.fetchStatus(familyId);
+                  Alert.alert('Restored!', 'Your premium subscription has been restored.');
+                } else {
+                  Alert.alert('No Purchases', 'No previous purchases found.');
+                }
+              } catch {
+                Alert.alert('Error', 'Could not restore purchases.');
+              } finally {
+                setRestoringPurchases(false);
+              }
+            }}
+          >
+            <Text style={styles.restoreText}>
+              {restoringPurchases ? 'Restoring...' : 'Restore Purchases'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Play Settings per child */}
@@ -304,6 +406,66 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveBtnText: { fontSize: 15, fontWeight: '700', color: '#FFF' },
+  subCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+  },
+  subRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  subLabel: {
+    fontFamily: fonts.parent.medium,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  subValue: {
+    fontFamily: fonts.parent.semiBold,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  cancelledNote: {
+    fontFamily: fonts.parent.regular,
+    fontSize: 12,
+    color: colors.accent,
+    marginTop: spacing.xs,
+  },
+  subButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  subButtonText: {
+    fontFamily: fonts.parent.semiBold,
+    fontSize: 14,
+    color: colors.primary,
+  },
+  upgradeButton: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  restoreButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  restoreText: {
+    fontFamily: fonts.parent.medium,
+    fontSize: 13,
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
+  },
   logoutButton: {
     backgroundColor: colors.error,
     paddingVertical: spacing.md,
