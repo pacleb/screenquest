@@ -170,7 +170,7 @@ export class QuestService {
     // Build update data, omitting assignedChildIds
     const { assignedChildIds, ...updateFields } = dto;
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx: PrismaService) => {
       // Update assignments if provided
       if (assignedChildIds) {
         await tx.questAssignment.deleteMany({ where: { questId } });

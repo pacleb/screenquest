@@ -26,6 +26,10 @@
       "@prisma/engines",
       "bcrypt",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "@screenquest/mobile>react": "18.2.0",
+      "@screenquest/mobile>react-dom": "18.2.0"
+    }
   }
 }

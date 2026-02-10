@@ -166,7 +166,7 @@ export class QuestLibraryAdminService {
       publishedQuests,
       draftQuests,
       totalCategories,
-      topUsed: topUsed.map((q) => ({
+      topUsed: topUsed.map((q: { id: string; name: string; icon: string | null; category: string; _count: { familyQuests: number } }) => ({
         id: q.id,
         name: q.name,
         icon: q.icon,

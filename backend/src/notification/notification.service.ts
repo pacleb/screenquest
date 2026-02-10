@@ -58,7 +58,7 @@ export class NotificationService {
     if (tokens.length === 0) return;
 
     await this.sendExpoPush(
-      tokens.map((t) => t.token),
+      tokens.map((t: { token: string }) => t.token),
       payload,
     );
   }

@@ -201,19 +201,19 @@ export class SubscriptionService {
     let toKeep: string[];
     if (keepQuestIds && keepQuestIds.length === FREE_PLAN_QUEST_LIMIT) {
       // Validate that all keepQuestIds belong to this family
-      const validIds = activeQuests.map((q) => q.id);
+      const validIds = activeQuests.map((q: { id: string }) => q.id);
       const allValid = keepQuestIds.every((id) => validIds.includes(id));
       if (!allValid) throw new BadRequestException('Invalid quest IDs');
       toKeep = keepQuestIds;
     } else {
       // Auto-archive: keep the 3 oldest (most established)
       toKeep = activeQuests
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        .sort((a: { createdAt: Date }, b: { createdAt: Date }) => a.createdAt.getTime() - b.createdAt.getTime())
         .slice(0, FREE_PLAN_QUEST_LIMIT)
-        .map((q) => q.id);
+        .map((q: { id: string }) => q.id);
     }
 
-    const toArchive = activeQuests.filter((q) => !toKeep.includes(q.id)).map((q) => q.id);
+    const toArchive = activeQuests.filter((q: { id: string }) => !toKeep.includes(q.id)).map((q: { id: string }) => q.id);
 
     await this.prisma.quest.updateMany({
       where: { id: { in: toArchive } },
@@ -248,6 +248,6 @@ export class SubscriptionService {
       where: { userId },
       select: { packId: true },
     });
-    return purchases.map((p) => p.packId);
+    return purchases.map((p: { packId: string }) => p.packId);
   }
 }

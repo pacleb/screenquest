@@ -274,7 +274,7 @@ export class CompletionService {
     const recentCompletions = await this.prisma.questCompletion.findMany({
       where: {
         childId,
-        questId: { in: quests.map((q) => q.id) },
+        questId: { in: quests.map((q: { id: string }) => q.id) },
         completedAt: { gte: weekStart },
         status: { in: ['pending', 'approved'] },
       },
@@ -282,11 +282,11 @@ export class CompletionService {
     });
 
     // Build a map of quest availability
-    return quests.map((quest) => {
-      const questCompletions = recentCompletions.filter((c) => c.questId === quest.id);
-      const completedToday = questCompletions.some((c) => c.completedAt >= todayStart);
+    return quests.map((quest: { id: string; recurrence: string; [key: string]: unknown }) => {
+      const questCompletions = recentCompletions.filter((c: { questId: string; completedAt: Date; status: string }) => c.questId === quest.id);
+      const completedToday = questCompletions.some((c: { completedAt: Date }) => c.completedAt >= todayStart);
       const completedThisWeek = questCompletions.length > 0;
-      const pendingApproval = questCompletions.some((c) => c.status === 'pending');
+      const pendingApproval = questCompletions.some((c: { status: string }) => c.status === 'pending');
 
       let availableToComplete = true;
       let statusLabel = 'available';
