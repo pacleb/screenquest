@@ -16,7 +16,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../../src/store/auth';
 import { completionService, ChildQuest } from '../../../src/services/completion';
 import { uploadService } from '../../../src/services/upload';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
+import { Button, Card, Badge, ConfettiOverlay } from '../../../src/components';
 
 export default function QuestDetailScreen() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function QuestDetailScreen() {
   const [completed, setCompleted] = useState(false);
   const [resultStatus, setResultStatus] = useState<'approved' | 'pending' | null>(null);
   const [proofUri, setProofUri] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (!user?.id || !id) return;
@@ -48,13 +50,11 @@ export default function QuestDetailScreen() {
       Alert.alert('Permission needed', 'Camera permission is required for proof photos');
       return;
     }
-
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       quality: 0.7,
       allowsEditing: true,
     });
-
     if (!result.canceled && result.assets[0]) {
       setProofUri(result.assets[0].uri);
     }
@@ -66,13 +66,11 @@ export default function QuestDetailScreen() {
       Alert.alert('Permission needed', 'Photo library permission is required');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.7,
       allowsEditing: true,
     });
-
     if (!result.canceled && result.assets[0]) {
       setProofUri(result.assets[0].uri);
     }
@@ -93,15 +91,16 @@ export default function QuestDetailScreen() {
     setSubmitting(true);
     try {
       let proofImageUrl: string | undefined;
-
       if (proofUri) {
         const uploadResult = await uploadService.uploadProof(proofUri);
         proofImageUrl = uploadResult.url;
       }
-
       const completion = await completionService.completeQuest(user.id, quest.id, proofImageUrl);
       setCompleted(true);
       setResultStatus(completion.status as 'approved' | 'pending');
+      if (completion.status === 'approved') {
+        setShowConfetti(true);
+      }
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Failed to complete quest';
       Alert.alert('Error', msg);
@@ -122,7 +121,7 @@ export default function QuestDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.headerBar}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -137,8 +136,9 @@ export default function QuestDetailScreen() {
   if (completed) {
     return (
       <SafeAreaView style={styles.container}>
+        <ConfettiOverlay active={showConfetti} onComplete={() => setShowConfetti(false)} />
         <View style={styles.successContainer}>
-          <Text style={styles.successIcon}>
+          <Text style={styles.successEmoji}>
             {resultStatus === 'approved' ? '🎉' : '⏳'}
           </Text>
           <Text style={styles.successTitle}>
@@ -149,27 +149,34 @@ export default function QuestDetailScreen() {
               ? `You earned ${quest.rewardMinutes} minutes! It's been added to your Time Bank.`
               : `Waiting for your parent to approve. You'll earn ${quest.rewardMinutes} minutes!`}
           </Text>
-          <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Done</Text>
-          </TouchableOpacity>
+          <Button
+            title="Done"
+            onPress={() => router.back()}
+            childFont
+            style={{ marginTop: spacing.xl, minWidth: 160 }}
+          />
         </View>
       </SafeAreaView>
     );
   }
 
+  const isStackable = quest.stackingType === 'stackable';
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.headerBar}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Quest Icon + Name */}
         <View style={styles.questHeader}>
-          <Text style={styles.questIcon}>{quest.icon}</Text>
+          <View style={[styles.iconBg, { backgroundColor: isStackable ? '#E8F5E9' : '#FFF3E0' }]}>
+            <Text style={styles.questIcon}>{quest.icon}</Text>
+          </View>
           <Text style={styles.questName}>{quest.name}</Text>
           {quest.description && (
             <Text style={styles.questDesc}>{quest.description}</Text>
@@ -179,39 +186,46 @@ export default function QuestDetailScreen() {
         {/* Reward Card */}
         <View style={styles.rewardCard}>
           <Text style={styles.rewardLabel}>Reward</Text>
-          <Text style={styles.rewardValue}>{quest.rewardMinutes} min</Text>
+          <View style={styles.rewardRow}>
+            <Text style={styles.rewardValue}>{quest.rewardMinutes}</Text>
+            <Text style={styles.rewardUnit}>minutes</Text>
+          </View>
         </View>
 
         {/* Stacking Info */}
-        <View style={styles.infoCard}>
-          <Ionicons
-            name={quest.stackingType === 'stackable' ? 'layers-outline' : 'time-outline'}
-            size={24}
-            color={quest.stackingType === 'stackable' ? colors.secondary : colors.accent}
-          />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>
-              {quest.stackingType === 'stackable' ? 'Stackable Time' : 'Today Only'}
-            </Text>
-            <Text style={styles.infoDesc}>
-              {quest.stackingType === 'stackable'
-                ? 'This time carries over! It stays in your bank until you use it.'
-                : "Use it today or it's gone! This time expires at midnight."}
-            </Text>
-          </View>
-        </View>
-
-        {/* Auto-approve info */}
-        {quest.autoApprove && (
-          <View style={styles.infoCard}>
-            <Ionicons name="flash-outline" size={24} color={colors.secondary} />
+        <Card style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Ionicons
+              name={isStackable ? 'layers-outline' : 'time-outline'}
+              size={24}
+              color={isStackable ? colors.secondary : colors.accent}
+            />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Instant Approval</Text>
+              <Text style={styles.infoTitle}>
+                {isStackable ? 'Stackable Time' : 'Today Only'}
+              </Text>
               <Text style={styles.infoDesc}>
-                This quest is auto-approved! Time is added instantly.
+                {isStackable
+                  ? 'This time is yours to keep! Use it whenever you want.'
+                  : "Use it today or it's gone! This time resets at midnight."}
               </Text>
             </View>
           </View>
+        </Card>
+
+        {/* Auto-approve info */}
+        {quest.autoApprove && (
+          <Card style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Ionicons name="flash-outline" size={24} color={colors.secondary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoTitle}>Instant Approval</Text>
+                <Text style={styles.infoDesc}>
+                  This quest is auto-approved! Time is added right away.
+                </Text>
+              </View>
+            </View>
+          </Card>
         )}
 
         {/* Proof Photo Section */}
@@ -261,17 +275,15 @@ export default function QuestDetailScreen() {
       {/* "I Did It!" Button */}
       {quest.availableToComplete && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={styles.completeBtn}
+          <Button
+            title="I Did It!"
             onPress={handleComplete}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Text style={styles.completeBtnText}>I Did It!</Text>
-            )}
-          </TouchableOpacity>
+            loading={submitting}
+            variant="success"
+            size="lg"
+            childFont
+            style={styles.completeBtn}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -288,34 +300,84 @@ const styles = StyleSheet.create({
   },
   scrollContent: { paddingHorizontal: spacing.lg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { fontSize: 16, color: colors.textSecondary },
+  errorText: { fontFamily: fonts.child.regular, fontSize: 16, color: colors.textSecondary },
   questHeader: { alignItems: 'center', marginBottom: spacing.xl },
-  questIcon: { fontSize: 64, marginBottom: spacing.md },
-  questName: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' },
-  questDesc: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm },
+  iconBg: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  questIcon: { fontSize: 52 },
+  questName: {
+    ...typography.childH1,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  questDesc: {
+    fontFamily: fonts.child.regular,
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    lineHeight: 22,
+  },
   rewardCard: {
-    backgroundColor: colors.primary + '15',
+    backgroundColor: colors.primary + '12',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  rewardLabel: { fontSize: 14, fontWeight: '600', color: colors.primary },
-  rewardValue: { fontSize: 36, fontWeight: '800', color: colors.primary },
-  infoCard: {
+  rewardLabel: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: spacing.xs,
+  },
+  rewardValue: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 44,
+    color: colors.primary,
+  },
+  rewardUnit: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 18,
+    color: colors.primary,
+  },
+  infoCard: { marginBottom: spacing.sm },
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
     gap: spacing.md,
   },
   infoContent: { flex: 1 },
-  infoTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  infoDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  infoTitle: {
+    fontFamily: fonts.child.bold,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  infoDesc: {
+    fontFamily: fonts.child.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 19,
+  },
   proofSection: { marginTop: spacing.md },
-  proofLabel: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.sm },
+  proofLabel: {
+    fontFamily: fonts.child.bold,
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
   proofActions: { flexDirection: 'row', gap: spacing.sm },
   proofBtn: {
     flex: 1,
@@ -327,22 +389,31 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 2,
-    borderColor: colors.primary + '30',
+    borderColor: colors.primary + '25',
     borderStyle: 'dashed',
   },
-  proofBtnText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  proofBtnText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.primary,
+  },
   proofPreview: { alignItems: 'center' },
   proofImage: { width: 200, height: 200, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   retakeBtn: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  retakeBtnText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  retakeBtnText: { fontFamily: fonts.child.semiBold, fontSize: 14, color: colors.primary },
   unavailableCard: {
-    backgroundColor: colors.textSecondary + '15',
+    backgroundColor: colors.textSecondary + '12',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginTop: spacing.md,
     alignItems: 'center',
   },
-  unavailableText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  unavailableText: {
+    fontFamily: fonts.child.regular,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -353,28 +424,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.childBg,
   },
   completeBtn: {
-    backgroundColor: colors.secondary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 4,
-    alignItems: 'center',
     shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  completeBtnText: { fontSize: 20, fontWeight: '800', color: '#FFF' },
   // Success state
   successContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  successIcon: { fontSize: 80, marginBottom: spacing.lg },
-  successTitle: { fontSize: 32, fontWeight: '800', color: colors.textPrimary, marginBottom: spacing.md },
-  successMessage: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
-  doneBtn: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+  successEmoji: { fontSize: 80, marginBottom: spacing.lg },
+  successTitle: {
+    ...typography.childH1,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
-  doneBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  successMessage: {
+    fontFamily: fonts.child.regular,
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
 });

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../src/theme';
+import { colors, fonts } from '../../../src/theme';
 
 export default function ParentTabLayout() {
   return (
@@ -12,6 +12,13 @@ export default function ParentTabLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarLabelStyle: {
+          fontFamily: fonts.parent.medium,
+          fontSize: 11,
         },
       }}
     >

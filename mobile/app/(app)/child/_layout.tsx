@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../src/theme';
+import { colors, fonts } from '../../../src/theme';
 
 export default function ChildTabLayout() {
   return (
@@ -12,12 +12,13 @@ export default function ChildTabLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 64,
+          paddingBottom: 10,
+          paddingTop: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontFamily: fonts.child.semiBold,
+          fontSize: 11,
         },
       }}
     >

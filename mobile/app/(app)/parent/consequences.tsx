@@ -19,7 +19,7 @@ import {
   Violation,
   ViolationStatus,
 } from '../../../src/services/violation';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 
 export default function ConsequencesScreen() {
   const user = useAuthStore((s) => s.user);
@@ -347,8 +347,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.lg },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    ...typography.parentH1,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -371,8 +370,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   childChipText: {
+    fontFamily: fonts.parent.semiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: colors.textSecondary,
   },
   childChipTextActive: { color: '#FFF' },
@@ -390,13 +389,13 @@ const styles = StyleSheet.create({
   },
   statusItem: { flex: 1, alignItems: 'center' },
   statusValue: {
+    fontFamily: fonts.parent.bold,
     fontSize: 36,
-    fontWeight: '800',
     color: colors.textPrimary,
   },
   statusLabel: {
+    fontFamily: fonts.parent.medium,
     fontSize: 13,
-    fontWeight: '600',
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
@@ -485,8 +484,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...typography.parentH2,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },

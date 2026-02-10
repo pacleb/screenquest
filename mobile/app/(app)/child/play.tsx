@@ -13,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/auth';
 import { playSessionService, PlaySession } from '../../../src/services/playSession';
 import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
+import { CountdownRing, Button, ConfettiOverlay } from '../../../src/components';
 
 const PRESETS = [15, 30, 45, 60, 90, 120];
 
@@ -28,11 +29,11 @@ export default function ChildPlay() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const syncRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appStateRef = useRef(AppState.currentState);
 
-  // Fetch balance + check for active session on mount
   const init = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -65,11 +66,9 @@ export default function ChildPlay() {
     init();
   }, [init]);
 
-  // Handle app state changes — sync with server on foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
-        // App came to foreground — sync with server
         syncWithServer();
       }
       appStateRef.current = nextState;
@@ -77,7 +76,6 @@ export default function ChildPlay() {
     return () => sub.remove();
   }, [session?.id]);
 
-  // Local countdown timer
   useEffect(() => {
     if (screenState === 'active' && remainingSeconds > 0) {
       timerRef.current = setInterval(() => {
@@ -85,24 +83,22 @@ export default function ChildPlay() {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
             setScreenState('completed');
+            setShowConfetti(true);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
     }
-
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [screenState]);
 
-  // Sync with server every 60 seconds during active play
   useEffect(() => {
     if ((screenState === 'active' || screenState === 'waiting') && session?.id) {
       syncRef.current = setInterval(syncWithServer, 60000);
     }
-
     return () => {
       if (syncRef.current) clearInterval(syncRef.current);
     };
@@ -141,7 +137,6 @@ export default function ChildPlay() {
     try {
       const result = await playSessionService.requestPlay(user.id, selectedMinutes);
       setSession(result);
-
       if (result.status === 'active') {
         setRemainingSeconds(result.remainingSeconds);
         setScreenState('active');
@@ -198,6 +193,7 @@ export default function ChildPlay() {
             await playSessionService.stop(session.id);
             setScreenState('completed');
             setRemainingSeconds(0);
+            setShowConfetti(true);
           } catch (error: any) {
             Alert.alert('Error', error.response?.data?.message || 'Failed to stop');
           } finally {
@@ -212,22 +208,11 @@ export default function ChildPlay() {
     setScreenState('select');
     setSession(null);
     setRemainingSeconds(0);
-    init(); // Refresh balance
+    setShowConfetti(false);
+    init();
   };
 
-  const formatTime = (totalSeconds: number) => {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    if (hrs > 0) {
-      return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
-  const progress = session
-    ? 1 - remainingSeconds / (session.requestedMinutes * 60)
-    : 0;
+  const totalSeconds = session ? session.requestedMinutes * 60 : 0;
 
   if (loading) {
     return (
@@ -241,12 +226,17 @@ export default function ChildPlay() {
   if (screenState === 'completed') {
     return (
       <SafeAreaView style={styles.container}>
+        <ConfettiOverlay active={showConfetti} onComplete={() => setShowConfetti(false)} />
         <View style={styles.centered}>
+          <Text style={styles.completedEmoji}>🌟</Text>
           <Text style={styles.completedTitle}>Great job!</Text>
           <Text style={styles.completedSubtitle}>You managed your screen time well!</Text>
-          <TouchableOpacity style={styles.doneBtn} onPress={handleDone}>
-            <Text style={styles.doneBtnText}>Back to Play</Text>
-          </TouchableOpacity>
+          <Button
+            title="Back to Play"
+            onPress={handleDone}
+            childFont
+            style={{ marginTop: spacing.xl, minWidth: 180 }}
+          />
         </View>
       </SafeAreaView>
     );
@@ -257,7 +247,8 @@ export default function ChildPlay() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.waitingEmoji}>⏳</Text>
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: spacing.md }} />
           <Text style={styles.waitingTitle}>Request Sent!</Text>
           <Text style={styles.waitingSubtitle}>
             Waiting for your parent to approve {selectedMinutes} minutes...
@@ -272,38 +263,21 @@ export default function ChildPlay() {
 
   // --- Active / Paused Timer ---
   if (screenState === 'active' || screenState === 'paused') {
-    const isWarning = remainingSeconds <= 300 && remainingSeconds > 60;
-    const isDanger = remainingSeconds <= 60;
-
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.timerContainer}>
           {screenState === 'paused' && (
             <View style={styles.pausedBanner}>
+              <Ionicons name="snow-outline" size={18} color={colors.accent} />
               <Text style={styles.pausedText}>PAUSED</Text>
             </View>
           )}
 
-          {/* Progress ring (simplified — circular background) */}
-          <View style={[
-            styles.timerRing,
-            isDanger && styles.timerRingDanger,
-            isWarning && styles.timerRingWarning,
-          ]}>
-            <Text style={[
-              styles.timerText,
-              isDanger && { color: colors.timerDanger },
-              isWarning && { color: colors.timerWarning },
-            ]}>
-              {formatTime(remainingSeconds)}
-            </Text>
-            <Text style={styles.timerLabel}>remaining</Text>
-          </View>
-
-          {/* Progress bar */}
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
-          </View>
+          {/* Countdown Ring */}
+          <CountdownRing
+            remainingSeconds={remainingSeconds}
+            totalSeconds={totalSeconds}
+          />
 
           {/* Controls */}
           <View style={styles.controlRow}>
@@ -315,7 +289,7 @@ export default function ChildPlay() {
             ) : (
               <TouchableOpacity style={styles.resumeBtn} onPress={handleResume} disabled={actionLoading}>
                 <Ionicons name="play" size={28} color="#FFF" />
-                <Text style={styles.resumeText}>Resume</Text>
+                <Text style={styles.resumeBtnText}>Resume</Text>
               </TouchableOpacity>
             )}
 
@@ -381,17 +355,16 @@ export default function ChildPlay() {
         </View>
 
         {/* Start button */}
-        <TouchableOpacity
-          style={[styles.startBtn, (balance.totalMinutes < 5 || actionLoading) && styles.startBtnDisabled]}
+        <Button
+          title="Start Playing!"
           onPress={handleRequestPlay}
-          disabled={balance.totalMinutes < 5 || actionLoading}
-        >
-          {actionLoading ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.startBtnText}>Start Playing!</Text>
-          )}
-        </TouchableOpacity>
+          loading={actionLoading}
+          disabled={balance.totalMinutes < 5}
+          variant="success"
+          size="lg"
+          childFont
+          style={styles.startBtn}
+        />
       </View>
     </SafeAreaView>
   );
@@ -403,7 +376,11 @@ const styles = StyleSheet.create({
 
   // Select screen
   selectContainer: { flex: 1, padding: spacing.lg },
-  selectTitle: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, marginBottom: spacing.lg },
+  selectTitle: {
+    ...typography.childH1,
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+  },
   balanceCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -411,17 +388,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xl,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 3,
   },
-  balanceLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  balanceValue: { fontSize: 36, fontWeight: '800', color: colors.primary },
-  balanceExpiring: { fontSize: 12, color: colors.accent, marginTop: spacing.xs },
+  balanceLabel: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  balanceValue: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 36,
+    color: colors.primary,
+  },
+  balanceExpiring: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 12,
+    color: colors.accent,
+    marginTop: spacing.xs,
+  },
   sectionLabel: {
+    fontFamily: fonts.child.bold,
     fontSize: 16,
-    fontWeight: '700',
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -438,84 +428,84 @@ const styles = StyleSheet.create({
   },
   presetBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
   presetBtnDisabled: { opacity: 0.4 },
-  presetText: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+  presetText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 18,
+    color: colors.textPrimary,
+  },
   presetTextActive: { color: colors.primary },
   presetTextDisabled: { color: colors.textSecondary },
   selectedDisplay: { alignItems: 'center', marginBottom: spacing.xl },
-  selectedValue: { fontSize: 56, fontWeight: '800', color: colors.primary },
-  selectedUnit: { fontSize: 16, fontWeight: '600', color: colors.textSecondary },
-  startBtn: {
-    backgroundColor: colors.secondary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 4,
-    alignItems: 'center',
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  selectedValue: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 56,
+    color: colors.primary,
   },
-  startBtnDisabled: { backgroundColor: colors.textSecondary, shadowOpacity: 0 },
-  startBtnText: { fontSize: 20, fontWeight: '800', color: '#FFF' },
+  selectedUnit: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  startBtn: {
+    shadowColor: colors.secondary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
 
   // Waiting
-  waitingTitle: { fontSize: 24, fontWeight: '800', color: colors.textPrimary, marginTop: spacing.lg },
-  waitingSubtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm },
+  waitingEmoji: { fontSize: 56, marginBottom: spacing.sm },
+  waitingTitle: {
+    ...typography.childH2,
+    color: colors.textPrimary,
+  },
+  waitingSubtitle: {
+    fontFamily: fonts.child.regular,
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
   cancelWaitBtn: { marginTop: spacing.xl },
-  cancelWaitText: { fontSize: 16, fontWeight: '600', color: colors.textSecondary },
+  cancelWaitText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
 
   // Timer
   timerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
   pausedBanner: {
-    backgroundColor: colors.accent + '20',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.accent + '18',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.xl,
-    marginBottom: spacing.lg,
-  },
-  pausedText: { fontSize: 16, fontWeight: '800', color: colors.accent, letterSpacing: 2 },
-  timerRing: {
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 8,
-    borderColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
     marginBottom: spacing.xl,
   },
-  timerRingWarning: { borderColor: colors.timerWarning },
-  timerRingDanger: { borderColor: colors.timerDanger },
-  timerText: { fontSize: 48, fontWeight: '800', color: colors.primary },
-  timerLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginTop: spacing.xs },
-  progressBarBg: {
-    width: '80%',
-    height: 8,
-    backgroundColor: colors.border,
-    borderRadius: 4,
-    marginBottom: spacing.xl,
-    overflow: 'hidden',
+  pausedText: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 16,
+    color: colors.accent,
+    letterSpacing: 2,
   },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
-  controlRow: { flexDirection: 'row', gap: spacing.lg },
+  controlRow: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xl },
   pauseBtn: {
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary + '15',
+    backgroundColor: colors.primary + '12',
   },
-  controlText: { fontSize: 14, fontWeight: '600', color: colors.primary, marginTop: spacing.xs },
+  controlText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.primary,
+    marginTop: spacing.xs,
+  },
   resumeBtn: {
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
@@ -523,7 +513,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: colors.primary,
   },
-  resumeText: { fontSize: 14, fontWeight: '600', color: '#FFF', marginTop: spacing.xs },
+  resumeBtnText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: '#FFF',
+    marginTop: spacing.xs,
+  },
   stopBtn: {
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
@@ -531,19 +526,26 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: colors.error + '10',
     borderWidth: 1,
-    borderColor: colors.error + '30',
+    borderColor: colors.error + '25',
   },
-  stopText: { fontSize: 14, fontWeight: '600', color: colors.error, marginTop: spacing.xs },
+  stopText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.error,
+    marginTop: spacing.xs,
+  },
 
   // Completed
-  completedTitle: { fontSize: 32, fontWeight: '800', color: colors.textPrimary },
-  completedSubtitle: { fontSize: 16, color: colors.textSecondary, marginTop: spacing.sm, textAlign: 'center' },
-  doneBtn: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+  completedEmoji: { fontSize: 80, marginBottom: spacing.lg },
+  completedTitle: {
+    ...typography.childH1,
+    color: colors.textPrimary,
   },
-  doneBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  completedSubtitle: {
+    fontFamily: fonts.child.regular,
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
 });

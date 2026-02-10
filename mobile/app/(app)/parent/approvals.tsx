@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/auth';
 import { completionService, QuestCompletion } from '../../../src/services/completion';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 
 type FilterTab = 'pending' | 'approved' | 'denied' | 'all';
 
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     gap: spacing.sm,
   },
-  title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary },
+  title: { ...typography.parentH1, color: colors.textPrimary },
   countBadge: {
     backgroundColor: colors.error,
     borderRadius: 12,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
   },
-  countText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
+  countText: { fontFamily: fonts.parent.bold, fontSize: 13, color: '#FFF' },
   filterRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
@@ -297,12 +297,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   filterTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  filterText: { fontFamily: fonts.parent.semiBold, fontSize: 13, color: colors.textSecondary },
   filterTextActive: { color: '#FFF' },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   empty: { alignItems: 'center', paddingTop: 80 },
-  emptyText: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginTop: spacing.md },
-  emptyHint: { fontSize: 14, color: colors.textSecondary, marginTop: spacing.xs },
+  emptyText: { fontFamily: fonts.parent.bold, fontSize: 18, color: colors.textPrimary, marginTop: spacing.md },
+  emptyHint: { fontFamily: fonts.parent.regular, fontSize: 14, color: colors.textSecondary, marginTop: spacing.xs },
   completionCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: { fontSize: 16, fontWeight: '700', color: colors.secondary },
-  childName: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
+  childName: { fontFamily: fonts.parent.semiBold, fontSize: 15, color: colors.textPrimary },
   timestamp: { fontSize: 12, color: colors.textSecondary },
   statusBadge: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: borderRadius.sm },
   statusPending: { backgroundColor: colors.accent + '20' },
@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
   questRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   questIcon: { fontSize: 28, marginRight: spacing.sm },
   questInfo: { flex: 1 },
-  questName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  questReward: { fontSize: 13, fontWeight: '600', color: colors.primary, marginTop: 2 },
+  questName: { fontFamily: fonts.parent.semiBold, fontSize: 15, color: colors.textPrimary },
+  questReward: { fontFamily: fonts.parent.medium, fontSize: 13, color: colors.primary, marginTop: 2 },
   proofRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
   proofThumb: { width: 48, height: 48, borderRadius: borderRadius.sm },
   proofLabel: { fontSize: 12, color: colors.textSecondary },
