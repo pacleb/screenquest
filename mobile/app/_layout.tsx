@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
@@ -23,7 +24,16 @@ import { colors } from '../src/theme';
 
 setupNotificationHandler();
 
-export default function RootLayout() {
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    enabled: !__DEV__,
+  });
+}
+
+function RootLayout() {
   const initialize = useAuthStore((s) => s.initialize);
   const user = useAuthStore((s) => s.user);
 
@@ -74,3 +84,5 @@ export default function RootLayout() {
     </>
   );
 }
+
+export default SENTRY_DSN ? Sentry.wrap(RootLayout) : RootLayout;

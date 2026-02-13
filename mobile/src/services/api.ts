@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import * as Sentry from '@sentry/react-native';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -50,6 +51,19 @@ api.interceptors.response.use(
         // The auth store will detect this and redirect to login
         return Promise.reject(refreshError);
       }
+    }
+
+    // Add Sentry breadcrumb for API errors
+    if (error.response) {
+      Sentry.addBreadcrumb({
+        category: 'api',
+        message: `${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response.status}`,
+        level: error.response.status >= 500 ? 'error' : 'warning',
+        data: {
+          status: error.response.status,
+          requestId: error.response.headers?.['x-request-id'],
+        },
+      });
     }
 
     return Promise.reject(error);
