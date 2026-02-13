@@ -8,6 +8,7 @@ import {
 import { nanoid } from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateFamilyDto, CreateChildDto, UpdateChildDto, UpdateFamilyDto, UpdateGuardianPermissionsDto } from './dto/family.dto';
 
 export interface GuardianPermissions {
@@ -26,7 +27,10 @@ const DEFAULT_GUARDIAN_PERMISSIONS: GuardianPermissions = {
 
 @Injectable()
 export class FamilyService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   async createFamily(userId: string, dto: CreateFamilyDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -135,8 +139,14 @@ export class FamilyService {
       },
     });
 
-    // TODO: Send invite email
-    console.log(`[DEV] Family invite sent to ${email} for family ${family.name}`);
+    // Send invite email
+    const inviter = await this.prisma.user.findUnique({ where: { id: invitedByUserId } });
+    await this.mail.sendFamilyInviteEmail(
+      email,
+      family.name,
+      inviter?.name || 'A family member',
+      family.familyCode,
+    );
 
     return invite;
   }

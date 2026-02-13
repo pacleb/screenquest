@@ -15,10 +15,12 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL || 'http://localhost:8081',
-      process.env.CMS_URL || 'http://localhost:3001',
-    ],
+    origin: process.env.NODE_ENV === 'production'
+      ? [
+          process.env.FRONTEND_URL || 'http://localhost:8081',
+          process.env.CMS_URL || 'http://localhost:3001',
+        ]
+      : true, // Allow all origins in development (mobile devices on LAN)
     credentials: true,
   });
 

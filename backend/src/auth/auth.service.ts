@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { MailService } from '../mail/mail.service';
 import {
   RegisterDto,
   LoginDto,
@@ -26,6 +27,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private redis: RedisService,
+    private mail: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -58,8 +60,8 @@ export class AuthService {
       86400, // 24 hours
     );
 
-    // TODO: Send verification email (Phase 5 will add proper email service)
-    console.log(`[DEV] Email verification token for ${user.email}: ${verificationToken}`);
+    // Send verification email
+    await this.mail.sendVerificationEmail(user.email!, user.name, verificationToken);
 
     const tokens = await this.generateTokens(user);
 
@@ -155,8 +157,8 @@ export class AuthService {
       3600, // 1 hour
     );
 
-    // TODO: Send password reset email
-    console.log(`[DEV] Password reset token for ${user.email}: ${resetToken}`);
+    // Send password reset email
+    await this.mail.sendPasswordResetEmail(user.email!, user.name, resetToken);
 
     return { message: 'If the email exists, a reset link has been sent' };
   }

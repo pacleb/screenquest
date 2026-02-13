@@ -15,6 +15,7 @@ import { ViolationModule } from './violation/violation.module';
 import { NotificationModule } from './notification/notification.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { MailModule } from './mail/mail.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -40,6 +41,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ]),
     PrismaModule,
     RedisModule,
+    MailModule,
     AuthModule,
     FamilyModule,
     UserModule,
