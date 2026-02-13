@@ -305,11 +305,11 @@ Turn achievements from simple unlocks into **collectible, displayable badges** t
 
 Each achievement gets a **designed badge** (not just an emoji). Badges have 3 visual tiers:
 
-| Tier | Appearance | Achievements |
-|------|------------|--------------|
-| **Bronze** | Simple icon, muted border | First Quest, Streak Starter, Helping Hand |
-| **Silver** | Polished icon, shimmer border, glow | Super Star, Marathon (7-day streak), Bookworm |
-| **Gold** | Animated icon, particle border, pulsing glow | Unstoppable, Century, Time Master |
+| Tier       | Appearance                                   | Achievements                                  |
+| ---------- | -------------------------------------------- | --------------------------------------------- |
+| **Bronze** | Simple icon, muted border                    | First Quest, Streak Starter, Helping Hand     |
+| **Silver** | Polished icon, shimmer border, glow          | Super Star, Marathon (7-day streak), Bookworm |
+| **Gold**   | Animated icon, particle border, pulsing glow | Unstoppable, Century, Time Master             |
 
 #### 8.2 Badge Data Model
 
@@ -365,6 +365,7 @@ When a new badge is earned:
 Add more achievements to make the badge collection deeper:
 
 **Milestones:**
+
 - 🌟 First Quest (1 quest) — Bronze
 - ⭐ Super Star (25 quests) — Silver
 - 💪 Unstoppable (50 quests) — Silver
@@ -373,6 +374,7 @@ Add more achievements to make the badge collection deeper:
 - 👑 Quest Master (500 quests) — Gold
 
 **Streaks:**
+
 - 🔥 Streak Starter (3-day streak) — Bronze
 - 🏃 Marathon (7-day streak) — Silver
 - ⚡ Lightning Streak (14-day streak) — Silver
@@ -381,6 +383,7 @@ Add more achievements to make the badge collection deeper:
 - ♾️ Unstoppable Force (100-day streak) — Gold, Secret
 
 **Categories:**
+
 - 🤝 Helping Hand (5 chores) — Bronze
 - 📚 Bookworm (5 learning) — Bronze
 - 🏋️ Fitness Fan (5 exercise) — Bronze
@@ -391,6 +394,7 @@ Add more achievements to make the badge collection deeper:
 - 🏆 All-Rounder (5+ in every category) — Gold
 
 **Special:**
+
 - 🐦 Early Bird (quest before 9 AM) — Bronze
 - 🦉 Night Owl (quest after 6 PM) — Bronze
 - ⏰ Time Master (500 total minutes earned) — Silver
