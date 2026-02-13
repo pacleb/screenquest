@@ -48,5 +48,8 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`ScreenQuest API running on http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
+
+  // Graceful shutdown
+  app.enableShutdownHooks();
 }
 bootstrap();
