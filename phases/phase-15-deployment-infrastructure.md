@@ -20,7 +20,7 @@
 
 | Environment | Purpose      | Backend URL                | Database       |
 | ----------- | ------------ | -------------------------- | -------------- |
-| Local       | Development  | http://localhost:3000       | Docker Compose |
+| Local       | Development  | http://localhost:3000      | Docker Compose |
 | Staging     | QA + testing | https://api-staging.sq.app | Staging DB     |
 | Production  | Live app     | https://api.sq.app         | Production DB  |
 
@@ -36,6 +36,7 @@ Deploy the NestJS backend using one of:
 - **Option B (scale-ready): AWS ECS Fargate** — containerized, auto-scaling, with RDS PostgreSQL + ElastiCache Redis
 
 Regardless of hosting choice:
+
 - Docker image with multi-stage build (build → production)
 - Health check endpoint: `GET /api/health`
 - Graceful shutdown handling
@@ -72,6 +73,37 @@ Regardless of hosting choice:
 - `GET /api/families/:familyId/export?format=pdf&range=30d` — PDF report
 - Email the export link to the parent (don't serve large files synchronously)
 - Rate limit: 1 export per hour per family
+
+---
+
+## Tests to Write
+
+### Backend Unit Tests
+
+**Data Export (`backend/src/family/export.service.spec.ts`):**
+
+- `exportCSV(familyId, range)` generates valid CSV with headers: date, child name, quest name, minutes earned, minutes used, balance
+- `exportCSV` with `range=30d` only includes data from the past 30 days
+- `exportCSV` with no data returns CSV with headers only
+- `exportPDF(familyId, range)` generates valid PDF buffer
+- Export requires premium subscription — throws for free users
+- Export rate limiting: second request within 1 hour throws `TooManyRequestsException`
+- Export only includes data from the requesting family (no cross-tenant leakage)
+
+### Backend Integration Tests (`backend/test/export.e2e-spec.ts`)
+
+- `GET /families/:familyId/export?format=csv&range=30d` — returns CSV file with correct `Content-Type` header
+- `GET /families/:familyId/export?format=pdf&range=30d` — returns PDF file
+- Export by non-family member → 403
+- Export by free-tier user → 403
+- Second export within 1 hour → 429
+
+### Infrastructure Tests
+
+- **Docker build:** `docker build -t screenquest-backend .` completes successfully
+- **Health check:** deployed container responds to `GET /api/health` within 5 seconds
+- **Graceful shutdown:** `SIGTERM` signal allows in-flight requests to complete before exit
+- **S3 signed URLs:** generated URL grants read access for 1 hour, then expires
 
 ---
 

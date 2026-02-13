@@ -42,6 +42,42 @@
 
 ---
 
+## Tests to Write
+
+### Mobile Unit Tests (Jest + React Native Testing Library)
+
+**Error Boundary (`mobile/src/components/__tests__/ErrorBoundary.test.tsx`):**
+
+- Renders children normally when no error
+- Catches JS error and displays "Something went wrong" screen
+- "Retry" button re-renders children
+- "Report" button triggers error reporting service
+
+**Network Interceptor (`mobile/src/services/__tests__/api.test.ts`):**
+
+- On 401 response: triggers token refresh and retries original request
+- On 401 with expired refresh token: redirects to login
+- On 5xx response: retries up to 3 times with exponential backoff
+- On network error: queues the request for offline processing
+- Shows offline banner when `NetInfo` reports no connectivity
+
+**Offline Queue (`mobile/src/services/__tests__/offlineQueue.test.ts`):**
+
+- Quest completion action is persisted to local storage when offline
+- Queued actions are submitted in order when connectivity returns
+- Duplicate actions are deduplicated (same quest + timestamp)
+- Conflict resolution: server response takes precedence if data diverges
+- Queue is cleared after successful submission
+
+**Cached Data (`mobile/src/hooks/__tests__/useOfflineCache.test.ts`):**
+
+- Quest list is cached on successful fetch
+- Cached quest list is returned when offline (with "last updated" timestamp)
+- Time Bank balance is cached with staleness indicator
+- Cache invalidation occurs on successful fresh fetch
+
+---
+
 ## Done When
 
 - [ ] Global error boundary catches JS crashes with recovery UI

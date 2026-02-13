@@ -483,6 +483,52 @@ pnpm add lottie-react-native expo-haptics expo-av expo-linear-gradient react-nat
 
 ---
 
+### Tests to Write
+
+#### Backend Unit Tests
+
+**Theme Service (`backend/src/gamification/theme.service.spec.ts`):**
+- `getThemes(childId)` returns all themes with correct `isUnlocked` status based on child's level and streak
+- `setActiveTheme(childId, themeId)` succeeds for an unlocked theme
+- `setActiveTheme(childId, themeId)` throws for a locked theme
+- `setActiveTheme(childId, themeId)` throws for a premium theme without subscription
+- Theme unlock status updates correctly when child levels up
+
+**Streak Freeze (`backend/src/gamification/streak.service.spec.ts`):**
+- `useStreakFreeze(childId)` succeeds for premium user with freeze available
+- `useStreakFreeze(childId)` throws for free user
+- `useStreakFreeze(childId)` throws if already used this week
+- Streak freeze preserves streak count when a day is missed
+
+**Weekly Stats (`backend/src/gamification/stats.service.spec.ts`):**
+- `getWeeklyStats(childId)` returns correct quest count, XP earned, and minutes earned for the past 7 days
+- Returns zeroes for a child with no activity
+
+**Activity Feed (`backend/src/family/activity-feed.service.spec.ts`):**
+- `getActivityFeed(familyId)` returns paginated entries sorted by most recent
+- Feed includes quest completions, achievements, and play sessions
+- Feed does not leak data from other families
+
+**Badge Showcase (`backend/src/gamification/badge.service.spec.ts`):**
+- `setShowcase(childId, badgeIds)` accepts up to 3 badge IDs
+- `setShowcase(childId, badgeIds)` throws if more than 3
+- `setShowcase(childId, badgeIds)` throws if child hasn't earned the badge
+
+#### Backend Integration Tests
+
+**Theme Flow (`backend/test/theme.e2e-spec.ts`):**
+- `GET /gamification/themes` — returns theme list with unlock status for authenticated child
+- `PUT /gamification/themes/active` — sets active theme, returns updated user
+- `PUT /gamification/themes/active` with locked theme — returns 403
+- Theme endpoints require authentication — returns 401 without token
+
+**Stats & Feed (`backend/test/stats.e2e-spec.ts`):**
+- `GET /gamification/progress/weekly-stats` — returns correct stats for authenticated child
+- `GET /families/:id/activity-feed` — returns paginated activity for family members
+- `GET /families/:id/activity-feed` — returns 403 for non-family member
+
+---
+
 ### Success Metrics
 
 After launching Phase 11, measure:

@@ -76,6 +76,42 @@ Required by **Apple App Store**, **Google Play**, and **GDPR**:
 
 ---
 
+## Tests to Write
+
+### Backend Unit Tests
+
+**Parental Consent (`backend/src/family/consent.service.spec.ts`):**
+
+- `createConsent(childId, parentId, consentText, ip)` stores consent record with timestamp
+- `revokeConsent(childId, parentId)` sets `revokedAt` timestamp
+- `revokeConsent` triggers child account deactivation and schedules data deletion
+- `hasValidConsent(childId)` returns `true` when consent exists and is not revoked
+- `hasValidConsent(childId)` returns `false` when consent is revoked
+- Child account creation fails without prior parental consent
+
+**Account Deletion (`backend/src/user/deletion.service.spec.ts`):**
+
+- `requestDeletion(userId)` creates deletion request with 30-day grace period
+- `requestDeletion(userId)` revokes all user tokens
+- `cancelDeletion(userId)` within grace period cancels the request
+- `purgeDeletion(userId)` after grace period deletes: completions, Time Bank, achievements, violations, photos
+- Parent account deletion cascades to family data when parent is family owner
+- Child account deletion removes only child-specific data
+- Deletion audit log records anonymized deletion record
+- Deletion job processes expired grace periods automatically
+
+### Backend Integration Tests (`backend/test/deletion.e2e-spec.ts`)
+
+- `DELETE /users/:userId/account` — creates deletion request, returns 200 with grace period info
+- `DELETE /users/:userId/account` — non-owner cannot delete another user → 403
+- `POST /users/:userId/account/cancel-deletion` — cancels within grace period → 200
+- `POST /users/:userId/account/cancel-deletion` — after grace period → 410 (Gone)
+- Child creation without consent → 400
+- Child creation with consent → 201
+- Consent revocation → child account deactivated, login fails
+
+---
+
 ## Done When
 
 - [ ] Parental consent screen displays before child account creation

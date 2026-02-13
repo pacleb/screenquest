@@ -40,7 +40,7 @@
 | Error rate > 5% for 5 minutes     | P1       | Slack + Email |
 | Database connection failures      | P0       | PagerDuty/SMS |
 | BullMQ failed jobs > 10           | P1       | Slack         |
-| Timer completion jobs not running  | P0       | PagerDuty/SMS |
+| Timer completion jobs not running | P0       | PagerDuty/SMS |
 | Disk usage > 80%                  | P2       | Email         |
 | Certificate expiration < 14 days  | P2       | Email         |
 | Crash spike (Sentry)              | P1       | Slack         |
@@ -52,6 +52,7 @@ Use **PostHog** (self-hostable, privacy-friendly) or **Mixpanel**:
 #### 4.1 Key Events to Track
 
 **Funnel events (parent):**
+
 - `app_opened`, `signup_started`, `signup_completed`
 - `family_created`, `child_added`, `first_quest_created`
 - `quest_created` (with properties: `source`, `category`, `plan`)
@@ -61,6 +62,7 @@ Use **PostHog** (self-hostable, privacy-friendly) or **Mixpanel**:
 - `paywall_viewed`, `trial_started`, `subscription_purchased`, `subscription_cancelled`
 
 **Engagement events (child) — server-side only:**
+
 - `quest_completed`, `play_session_started`, `play_session_completed`
 - `achievement_earned`, `level_up`, `avatar_customized`
 
@@ -74,6 +76,32 @@ Use **PostHog** (self-hostable, privacy-friendly) or **Mixpanel**:
 - **Retention:** D1/D7/D30 retention by cohort
 - **Revenue:** MRR, subscriber count, trial-to-paid conversion, churn rate
 - **Feature adoption:** quest library usage, photo proof usage, gamification engagement
+
+---
+
+## Tests to Write
+
+### Backend Unit Tests
+
+**Structured Logging (`backend/src/common/logging.spec.ts`):**
+
+- Logger outputs valid JSON with `timestamp`, `level`, `message`, and `requestId` fields
+- Request ID from incoming header is propagated through the log context
+- Log levels filter correctly (e.g., `info` level suppresses `debug` messages)
+
+**Analytics Events (`backend/src/common/analytics.service.spec.ts`):**
+
+- `trackEvent(eventName, properties)` sends event to analytics provider
+- Child engagement events are tracked server-side only (no client SDK reference)
+- Events include required properties (`userId`, `familyId`, `timestamp`)
+- Malformed or missing event name throws validation error
+
+### Backend Integration Tests (`backend/test/monitoring.e2e-spec.ts`)
+
+- `GET /api/health` — returns `{ status: 'ok', db: 'connected', redis: 'connected' }` with 200
+- `GET /api/health` — response includes `requestId` header
+- All API responses include `X-Request-Id` header for correlation
+- Server-side analytics events fire on quest completion (verify via mock/spy)
 
 ---
 
