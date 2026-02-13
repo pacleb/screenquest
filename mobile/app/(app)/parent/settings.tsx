@@ -19,6 +19,7 @@ import { useSubscriptionStore } from '../../../src/store/subscription';
 import { familyService, FamilyMember } from '../../../src/services/family';
 import { playSessionService, PlaySettings } from '../../../src/services/playSession';
 import { subscriptionService } from '../../../src/services/subscription';
+import { gamificationService } from '../../../src/services/gamification';
 import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 import { Badge } from '../../../src/components';
 
@@ -34,8 +35,10 @@ export default function SettingsScreen() {
   const [settings, setSettings] = useState<PlaySettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [leaderboardEnabled, setLeaderboardEnabled] = useState(false);
+  const [togglingLeaderboard, setTogglingLeaderboard] = useState(false);
 
-  // Fetch children
+  // Fetch children + leaderboard setting
   useEffect(() => {
     if (!familyId) return;
     familyService.getMembers(familyId).then((members) => {
@@ -43,6 +46,10 @@ export default function SettingsScreen() {
       setChildren(kids);
       if (kids.length > 0) setSelectedChildId(kids[0].id);
     });
+    gamificationService
+      .getLeaderboardSetting(familyId)
+      .then((r) => setLeaderboardEnabled(r.enabled))
+      .catch(() => {});
   }, [familyId]);
 
   // Fetch play settings for selected child
@@ -321,6 +328,38 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             ) : null}
+          </View>
+        )}
+
+        {/* Family Leaderboard */}
+        {children.length > 1 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Family Leaderboard</Text>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Show Leaderboard</Text>
+                <Text style={styles.settingDesc}>
+                  Display weekly XP ranking among siblings on the Trophies tab
+                </Text>
+              </View>
+              <Switch
+                value={leaderboardEnabled}
+                disabled={togglingLeaderboard}
+                onValueChange={async (val) => {
+                  if (!familyId) return;
+                  setTogglingLeaderboard(true);
+                  setLeaderboardEnabled(val);
+                  try {
+                    await gamificationService.toggleLeaderboard(familyId, val);
+                  } catch {
+                    setLeaderboardEnabled(!val);
+                  } finally {
+                    setTogglingLeaderboard(false);
+                  }
+                }}
+                trackColor={{ false: colors.border, true: colors.primary }}
+              />
+            </View>
           </View>
         )}
 

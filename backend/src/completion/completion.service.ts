@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
+import { GamificationService } from '../gamification/gamification.service';
 import { CompleteQuestDto, ReviewCompletionDto } from './dto/completion.dto';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class CompletionService {
     private prisma: PrismaService,
     private timeBankService: TimeBankService,
     private notificationService: NotificationService,
+    private gamificationService: GamificationService,
   ) {}
 
   /**
@@ -75,9 +77,11 @@ export class CompletionService {
       },
     });
 
-    // If auto-approve, credit Time Bank immediately
+    // If auto-approve, credit Time Bank and process gamification
     if (quest.autoApprove) {
       await this.timeBankService.creditTime(childId, earnedMinutes, quest.stackingType, expiresAt);
+      const gamificationEvent = await this.gamificationService.processCompletion(childId, completion.id);
+      return { ...completion, gamificationEvent };
     }
 
     // Notify parents about quest completion
@@ -192,7 +196,13 @@ export class CompletionService {
       'quest_completions',
     );
 
-    return updated;
+    // Process gamification (XP, streak, achievements)
+    const gamificationEvent = await this.gamificationService.processCompletion(
+      completion.childId,
+      completionId,
+    );
+
+    return { ...updated, gamificationEvent };
   }
 
   /**

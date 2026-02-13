@@ -74,6 +74,13 @@ export default function ChildTabLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="avatar-customize"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

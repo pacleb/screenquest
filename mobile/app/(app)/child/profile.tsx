@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,44 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../src/store/auth';
+import { useGamificationStore } from '../../../src/store/gamification';
 import { AVATAR_PACKS, AvatarPack, avatarPackService } from '../../../src/services/avatarPacks';
 import { colors, spacing, borderRadius, fonts } from '../../../src/theme';
-import { Card, Badge } from '../../../src/components';
+import { typography } from '../../../src/theme/typography';
+import { Card, Badge, ProgressBar } from '../../../src/components';
 
 export default function ChildProfile() {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { progress, achievements, fetchProgress, fetchAchievements } =
+    useGamificationStore();
   const [ownedPacks, setOwnedPacks] = useState<string[]>([]);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    if (!user?.id) return;
+    await Promise.all([
+      fetchProgress(user.id),
+      fetchAchievements(user.id),
+      avatarPackService.getOwnedPacks(user.id).then(setOwnedPacks).catch(() => {}),
+    ]);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (user?.id) {
-      avatarPackService.getOwnedPacks(user.id).then(setOwnedPacks).catch(() => {});
-    }
-  }, [user?.id]);
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   const handleBuyPack = async (pack: AvatarPack) => {
     if (!user?.id) return;
@@ -41,17 +62,91 @@ export default function ChildProfile() {
     }
   };
 
+  const recentBadges = achievements
+    .filter((a) => a.unlockedAt)
+    .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
+    .slice(0, 5);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarEmoji}>😊</Text>
           </View>
           <Text style={styles.name}>{user?.name}</Text>
-          <Text style={styles.level}>Level 1 — Starter</Text>
+
+          {/* Level + Streak Row */}
+          <View style={styles.levelRow}>
+            <Text style={styles.level}>
+              Level {progress?.level ?? 1} — {progress?.levelName ?? 'Starter'}
+            </Text>
+            {progress && progress.currentStreak > 0 && (
+              <View style={styles.streakBadge}>
+                <Text style={styles.streakText}>
+                  🔥 {progress.currentStreak}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* XP Progress Bar */}
+          {progress && (
+            <View style={styles.xpSection}>
+              <ProgressBar
+                progress={progress.xpProgressInLevel}
+                color={colors.purple}
+                height={10}
+              />
+              <Text style={styles.xpText}>
+                {progress.totalXp} / {progress.totalXp + progress.xpToNextLevel} XP
+              </Text>
+            </View>
+          )}
         </View>
+
+        {/* Recent Badges */}
+        {recentBadges.length > 0 && (
+          <View style={styles.badgesSection}>
+            <View style={styles.badgesHeader}>
+              <Text style={styles.sectionTitle}>Badges</Text>
+              <TouchableOpacity onPress={() => router.push('/(app)/child/trophies')}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.badgesRow}>
+              {recentBadges.map((badge) => (
+                <View key={badge.id} style={styles.badgeItem}>
+                  <Text style={styles.badgeIcon}>{badge.icon}</Text>
+                  <Text style={styles.badgeName} numberOfLines={1}>
+                    {badge.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Customize Avatar Button */}
+        <TouchableOpacity
+          style={styles.customizeBtn}
+          onPress={() => router.push('/(app)/child/avatar-customize')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.customizeBtnIcon}>🎭</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.customizeBtnText}>Customize Avatar</Text>
+            <Text style={styles.customizeBtnHint}>Equip hats, outfits & more!</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.purple} />
+        </TouchableOpacity>
 
         {/* Avatar Shop */}
         <Text style={styles.shopTitle}>Avatar Shop</Text>
@@ -102,7 +197,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
   profileHeader: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   avatar: {
     width: 100,
@@ -125,10 +220,95 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   level: {
     fontFamily: fonts.child.semiBold,
     fontSize: 16,
     color: colors.purple,
+  },
+  streakBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  streakText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 13,
+    color: '#E65100',
+  },
+  xpSection: {
+    width: '100%',
+    paddingHorizontal: spacing.xl,
+  },
+  xpText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  badgesSection: {
+    marginBottom: spacing.lg,
+  },
+  badgesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  sectionTitle: {
+    fontFamily: fonts.child.bold,
+    fontSize: 18,
+    color: colors.textPrimary,
+  },
+  seeAll: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 14,
+    color: colors.purple,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  badgeItem: {
+    alignItems: 'center',
+    width: 56,
+  },
+  badgeIcon: { fontSize: 28 },
+  badgeName: {
+    fontFamily: fonts.child.regular,
+    fontSize: 10,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  customizeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.purple + '30',
+  },
+  customizeBtnIcon: { fontSize: 28 },
+  customizeBtnText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  customizeBtnHint: {
+    fontFamily: fonts.child.regular,
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   shopTitle: {
     fontFamily: fonts.child.bold,

@@ -14,6 +14,7 @@ import { useAuthStore } from '../../../src/store/auth';
 import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
 import { completionService, ChildQuest } from '../../../src/services/completion';
 import { violationService, ViolationStatus } from '../../../src/services/violation';
+import { useGamificationStore } from '../../../src/store/gamification';
 import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 import {
   MascotWidget,
@@ -21,11 +22,19 @@ import {
   QuestCard,
   SectionHeader,
   EmptyState,
+  CelebrationModal,
+  Badge,
 } from '../../../src/components';
 
 export default function ChildHome() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const {
+    progress,
+    pendingCelebration,
+    fetchProgress,
+    setCelebration,
+  } = useGamificationStore();
   const [balance, setBalance] = useState<TimeBankBalance>({
     stackableMinutes: 0,
     nonStackableMinutes: 0,
@@ -42,6 +51,7 @@ export default function ChildHome() {
         timeBankService.getBalance(user.id),
         completionService.listChildQuests(user.id),
         violationService.getViolationStatus(user.id).catch(() => null),
+        fetchProgress(user.id),
       ]);
       setBalance(bal);
       setQuests(q.filter((quest) => quest.availableToComplete).slice(0, 5));
@@ -71,6 +81,30 @@ export default function ChildHome() {
       >
         {/* Mascot Greeting */}
         <MascotWidget name={user?.name} />
+
+        {/* Level + Streak Row */}
+        {progress && (
+          <View style={styles.statsRow}>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelIcon}>⭐</Text>
+              <Text style={styles.levelText}>
+                Lv.{progress.level} {progress.levelName}
+              </Text>
+            </View>
+            {progress.currentStreak > 0 && (
+              <View style={styles.streakBadge}>
+                <Text style={styles.streakText}>
+                  🔥 {progress.currentStreak}-day streak
+                </Text>
+              </View>
+            )}
+            {progress.weeklyXp > 0 && (
+              <View style={styles.xpBadge}>
+                <Text style={styles.xpBadgeText}>{progress.weeklyXp} XP</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Violation Indicator */}
         {violationStatus && violationStatus.currentCount > 0 && (
@@ -149,6 +183,14 @@ export default function ChildHome() {
           />
         )}
       </ScrollView>
+
+      {/* Celebration Modal */}
+      {pendingCelebration && (
+        <CelebrationModal
+          event={pendingCelebration}
+          onDismiss={() => setCelebration(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -156,6 +198,51 @@ export default function ChildHome() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3E8FF',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: 4,
+  },
+  levelIcon: { fontSize: 14 },
+  levelText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 13,
+    color: colors.purple,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  streakText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 13,
+    color: '#E65100',
+  },
+  xpBadge: {
+    backgroundColor: colors.secondary + '20',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  xpBadgeText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 13,
+    color: colors.secondary,
+  },
   violationCard: {
     flexDirection: 'row',
     alignItems: 'center',

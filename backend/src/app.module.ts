@@ -14,6 +14,7 @@ import { PlaySessionModule } from './play-session/play-session.module';
 import { ViolationModule } from './violation/violation.module';
 import { NotificationModule } from './notification/notification.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { GamificationModule } from './gamification/gamification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -50,6 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ViolationModule,
     NotificationModule,
     SubscriptionModule,
+    GamificationModule,
   ],
 })
 export class AppModule {}

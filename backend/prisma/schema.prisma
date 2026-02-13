@@ -17,6 +17,7 @@ model Family {
   subscriptionPeriod    String?   @map("subscription_period") @db.VarChar(10)
   gracePeriodEndsAt     DateTime? @map("grace_period_ends_at") @db.Timestamptz()
   revenuecatAppUserId   String?   @map("revenuecat_app_user_id") @db.VarChar(255)
+  leaderboardEnabled    Boolean   @default(false) @map("leaderboard_enabled")
   ownerId               String?   @map("owner_id") @db.Uuid
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
@@ -66,6 +67,9 @@ model User {
   pushTokens           PushToken[]
   notificationPrefs    NotificationPreference? @relation("UserNotificationPrefs")
   avatarPacks          AvatarPackPurchase[]
+  progress             ChildProgress?        @relation("ChildProgress")
+  childAchievements    ChildAchievement[]    @relation("ChildAchievements")
+  equippedItems        ChildEquippedItem[]   @relation("ChildEquippedItems")
 
   @@map("users")
 }
@@ -273,6 +277,81 @@ model QuestCategory {
   @@map("quest_categories")
 }
 
+model ChildProgress {
+  childId            String    @id @map("child_id") @db.Uuid
+  totalXp            Int       @default(0) @map("total_xp")
+  level              Int       @default(1)
+  currentStreak      Int       @default(0) @map("current_streak")
+  longestStreak      Int       @default(0) @map("longest_streak")
+  lastCompletionDate DateTime? @map("last_completion_date") @db.Date
+  weeklyXp           Int       @default(0) @map("weekly_xp")
+  weeklyXpResetAt    DateTime? @map("weekly_xp_reset_at") @db.Timestamptz()
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  child User @relation("ChildProgress", fields: [childId], references: [id])
+
+  @@map("child_progress")
+}
+
+model Achievement {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String   @db.VarChar(255)
+  icon        String   @db.VarChar(50)
+  category    String   @db.VarChar(50)
+  criteria    Json     @db.JsonB
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  childAchievements ChildAchievement[]
+
+  @@map("achievements")
+}
+
+model ChildAchievement {
+  id            String   @id @default(uuid()) @db.Uuid
+  childId       String   @map("child_id") @db.Uuid
+  achievementId String   @map("achievement_id") @db.Uuid
+  unlockedAt    DateTime @default(now()) @map("unlocked_at") @db.Timestamptz()
+
+  child       User        @relation("ChildAchievements", fields: [childId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([childId, achievementId])
+  @@map("child_achievements")
+}
+
+model AvatarItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  icon        String   @db.VarChar(50)
+  slot        String   @db.VarChar(20)
+  unlockType  String   @map("unlock_type") @db.VarChar(20)
+  unlockValue String?  @map("unlock_value") @db.VarChar(100)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  equippedBy ChildEquippedItem[]
+
+  @@map("avatar_items")
+}
+
+model ChildEquippedItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  childId      String   @map("child_id") @db.Uuid
+  avatarItemId String   @map("avatar_item_id") @db.Uuid
+  slot         String   @db.VarChar(20)
+  equippedAt   DateTime @default(now()) @map("equipped_at") @db.Timestamptz()
+
+  child      User       @relation("ChildEquippedItems", fields: [childId], references: [id])
+  avatarItem AvatarItem @relation(fields: [avatarItemId], references: [id])
+
+  @@unique([childId, slot])
+  @@map("child_equipped_items")
+}
+
 model NotificationPreference {
   userId           String   @id @map("user_id") @db.Uuid
   questCompletions Boolean  @default(true) @map("quest_completions")
@@ -281,6 +360,7 @@ model NotificationPreference {
   violations       Boolean  @default(true)
   dailySummary     Boolean  @default(true) @map("daily_summary")
   weeklySummary    Boolean  @default(true) @map("weekly_summary")
+  gamification     Boolean  @default(true)
   updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz()
 
   user User @relation("UserNotificationPrefs", fields: [userId], references: [id], onDelete: Cascade)
