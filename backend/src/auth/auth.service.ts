@@ -8,6 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -187,7 +188,7 @@ export class AuthService {
   }
 
   async refreshToken(dto: RefreshTokenDto) {
-    const tokenHash = await this.hashToken(dto.refreshToken);
+    const tokenHash = this.hashToken(dto.refreshToken);
 
     const storedToken = await this.prisma.refreshToken.findFirst({
       where: {
@@ -216,7 +217,7 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    const tokenHash = await this.hashToken(refreshToken);
+    const tokenHash = this.hashToken(refreshToken);
 
     await this.prisma.refreshToken.deleteMany({
       where: { tokenHash },
@@ -257,7 +258,7 @@ export class AuthService {
 
     // Generate refresh token
     const refreshTokenValue = nanoid(64);
-    const tokenHash = await this.hashToken(refreshTokenValue);
+    const tokenHash = this.hashToken(refreshTokenValue);
 
     const refreshExpiryDays = 30;
     const expiresAt = new Date();
@@ -277,8 +278,8 @@ export class AuthService {
     };
   }
 
-  private async hashToken(token: string): Promise<string> {
-    return bcrypt.hash(token, 10);
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private sanitizeUser(user: any) {

@@ -117,6 +117,10 @@ export class FamilyService {
     const family = await this.prisma.family.findUnique({ where: { id: familyId } });
     if (!family) throw new NotFoundException('Family not found');
 
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // If a pending invite already exists, refresh its expiration and resend
     const existingInvite = await this.prisma.familyInvite.findFirst({
       where: {
         familyId,
@@ -125,21 +129,25 @@ export class FamilyService {
       },
     });
 
-    if (existingInvite) throw new ConflictException('Invite already sent to this email');
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    const invite = await this.prisma.familyInvite.create({
-      data: {
-        familyId,
-        invitedByUserId,
-        inviteEmail: email.toLowerCase(),
-        expiresAt,
-      },
-    });
+    let invite;
+    if (existingInvite) {
+      invite = await this.prisma.familyInvite.update({
+        where: { id: existingInvite.id },
+        data: { expiresAt, invitedByUserId },
+      });
+    } else {
+      invite = await this.prisma.familyInvite.create({
+        data: {
+          familyId,
+          invitedByUserId,
+          inviteEmail: email.toLowerCase(),
+          expiresAt,
+        },
+      });
+    }
 
     // Send invite email
+    console.log('[INVITE] invitedByUserId:', invitedByUserId, 'type:', typeof invitedByUserId);
     const inviter = await this.prisma.user.findUnique({ where: { id: invitedByUserId } });
     await this.mail.sendFamilyInviteEmail(
       email,
