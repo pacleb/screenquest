@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,38 +7,64 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../../src/store/auth';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+import { useAuthStore } from "../../../src/store/auth";
 import {
   gamificationService,
   AvatarItemData,
-} from '../../../src/services/gamification';
-import { colors, spacing, borderRadius, fonts } from '../../../src/theme';
-import { Card } from '../../../src/components';
+} from "../../../src/services/gamification";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  fonts,
+  useTheme,
+} from "../../../src/theme";
+import { Card } from "../../../src/components";
 
-const SLOTS = ['hat', 'outfit', 'accessory', 'background', 'pet'] as const;
+const SLOTS = [
+  "face",
+  "hair",
+  "hat",
+  "outfit",
+  "accessory",
+  "background",
+  "pet",
+] as const;
 const SLOT_LABELS: Record<string, string> = {
-  hat: 'Hats',
-  outfit: 'Outfits',
-  accessory: 'Accessories',
-  background: 'Backgrounds',
-  pet: 'Pets',
+  face: "Face",
+  hair: "Hair",
+  hat: "Hats",
+  outfit: "Outfits",
+  accessory: "Accessories",
+  background: "Backgrounds",
+  pet: "Pets",
 };
 const SLOT_ICONS: Record<string, string> = {
-  hat: '🎩',
-  outfit: '👕',
-  accessory: '✨',
-  background: '🌈',
-  pet: '🐾',
+  face: "😊",
+  hair: "💇",
+  hat: "🎩",
+  outfit: "👕",
+  accessory: "✨",
+  background: "🌈",
+  pet: "🐾",
 };
 
 export default function AvatarCustomize() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const { colors: themeColors } = useTheme();
   const [items, setItems] = useState<AvatarItemData[]>([]);
-  const [activeSlot, setActiveSlot] = useState<string>('hat');
+  const [activeSlot, setActiveSlot] = useState<string>("face");
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
 
@@ -72,6 +98,7 @@ export default function AvatarCustomize() {
     if (!user?.id || acting) return;
     setActing(item.id);
     try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       if (item.isEquipped) {
         await gamificationService.unequipSlot(user.id, item.slot);
       } else {
@@ -87,14 +114,14 @@ export default function AvatarCustomize() {
 
   const getUnlockLabel = (item: AvatarItemData): string => {
     switch (item.unlockType) {
-      case 'level':
+      case "level":
         return `Level ${item.unlockValue}`;
-      case 'achievement':
+      case "achievement":
         return `Earn "${item.unlockValue}"`;
-      case 'purchase':
-        return 'Avatar Pack';
+      case "purchase":
+        return "Avatar Pack";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -102,20 +129,31 @@ export default function AvatarCustomize() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color={colors.purple} />
+          <ActivityIndicator size="large" color={themeColors.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={[styles.backBtn, { backgroundColor: themeColors.card }]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={themeColors.textPrimary}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Customize Avatar</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
+          Customize Avatar
+        </Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -138,7 +176,7 @@ export default function AvatarCustomize() {
                 {equippedBySlot[slot]?.icon ?? SLOT_ICONS[slot]}
               </Text>
               <Text style={styles.equippedSlotLabel}>
-                {equippedBySlot[slot] ? equippedBySlot[slot].name : 'None'}
+                {equippedBySlot[slot] ? equippedBySlot[slot].name : "None"}
               </Text>
             </View>
           ))}
@@ -190,10 +228,10 @@ export default function AvatarCustomize() {
               activeOpacity={0.7}
             >
               {isActing ? (
-                <ActivityIndicator size="small" color={colors.purple} />
+                <ActivityIndicator size="small" color={themeColors.primary} />
               ) : (
                 <Text style={styles.itemIcon}>
-                  {isLocked ? '🔒' : item.icon}
+                  {isLocked ? "🔒" : item.icon}
                 </Text>
               )}
               <Text
@@ -225,11 +263,11 @@ export default function AvatarCustomize() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
-  loadingCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingCenter: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -238,8 +276,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     fontFamily: fonts.child.bold,
@@ -247,7 +285,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   previewArea: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.md,
   },
   previewCircle: {
@@ -255,10 +293,10 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.md,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -266,23 +304,23 @@ const styles = StyleSheet.create({
   },
   previewBase: { fontSize: 56 },
   equippedHat: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     fontSize: 28,
   },
   equippedPet: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -4,
     right: -4,
     fontSize: 24,
   },
   equippedRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: spacing.md,
   },
   equippedSlot: {
-    alignItems: 'center',
+    alignItems: "center",
     width: 52,
   },
   equippedSlotIcon: { fontSize: 20 },
@@ -291,7 +329,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: colors.textSecondary,
     marginTop: 2,
-    textAlign: 'center',
+    textAlign: "center",
   },
   tabsScroll: {
     paddingHorizontal: spacing.md,
@@ -299,8 +337,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: colors.card,
     paddingHorizontal: spacing.md,
@@ -310,7 +348,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   tabActive: {
-    backgroundColor: '#F3E8FF',
+    backgroundColor: "#F3E8FF",
     borderColor: colors.purple,
   },
   tabIcon: { fontSize: 16 },
@@ -321,37 +359,37 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: { color: colors.purple },
   itemsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     padding: spacing.md,
     gap: spacing.sm,
     paddingBottom: 100,
   },
   itemCard: {
-    width: '30%',
+    width: "30%",
     backgroundColor: colors.card,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   itemCardEquipped: {
     borderColor: colors.purple,
-    backgroundColor: '#F3E8FF',
+    backgroundColor: "#F3E8FF",
   },
   itemCardLocked: {
     opacity: 0.55,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   itemIcon: { fontSize: 32, marginBottom: 4 },
   itemName: {
     fontFamily: fonts.child.bold,
     fontSize: 11,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  lockedText: { color: '#999' },
+  lockedText: { color: "#999" },
   equippedBadge: {
     backgroundColor: colors.purple,
     paddingHorizontal: 6,
@@ -362,21 +400,21 @@ const styles = StyleSheet.create({
   equippedBadgeText: {
     fontFamily: fonts.child.bold,
     fontSize: 9,
-    color: '#FFF',
+    color: "#FFF",
   },
   lockReason: {
     fontFamily: fonts.child.regular,
     fontSize: 9,
-    color: '#999',
+    color: "#999",
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyText: {
     fontFamily: fonts.child.regular,
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
-    width: '100%',
+    textAlign: "center",
+    width: "100%",
     paddingVertical: spacing.xl,
   },
 });

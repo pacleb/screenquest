@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,41 +7,62 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../../src/store/auth';
-import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
-import { completionService, ChildQuest } from '../../../src/services/completion';
-import { violationService, ViolationStatus } from '../../../src/services/violation';
-import { useGamificationStore } from '../../../src/store/gamification';
-import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../../src/store/auth";
 import {
+  timeBankService,
+  TimeBankBalance,
+} from "../../../src/services/timeBank";
+import {
+  completionService,
+  ChildQuest,
+} from "../../../src/services/completion";
+import {
+  violationService,
+  ViolationStatus,
+} from "../../../src/services/violation";
+import { useGamificationStore } from "../../../src/store/gamification";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  fonts,
+  typography,
+  useTheme,
+} from "../../../src/theme";
+import {
+  AnimatedHeader,
   MascotWidget,
   TimeBankDisplay,
   QuestCard,
   SectionHeader,
   EmptyState,
   CelebrationModal,
-  Badge,
-} from '../../../src/components';
+  SkeletonDashboard,
+  WeeklyStatsChart,
+} from "../../../src/components";
+import { useThemeStore } from "../../../src/store/theme";
+import { useHaptics } from "../../../src/hooks/useAccessibility";
 
 export default function ChildHome() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const {
-    progress,
-    pendingCelebration,
-    fetchProgress,
-    setCelebration,
-  } = useGamificationStore();
+  const { colors: themeColors } = useTheme();
+  const { progress, pendingCelebration, fetchProgress, setCelebration } =
+    useGamificationStore();
+  const { weeklyStats, fetchWeeklyStats } = useThemeStore();
+  const haptics = useHaptics();
+  const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState<TimeBankBalance>({
     stackableMinutes: 0,
     nonStackableMinutes: 0,
     totalMinutes: 0,
   });
   const [quests, setQuests] = useState<ChildQuest[]>([]);
-  const [violationStatus, setViolationStatus] = useState<ViolationStatus | null>(null);
+  const [violationStatus, setViolationStatus] =
+    useState<ViolationStatus | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -52,6 +73,7 @@ export default function ChildHome() {
         completionService.listChildQuests(user.id),
         violationService.getViolationStatus(user.id).catch(() => null),
         fetchProgress(user.id),
+        fetchWeeklyStats(),
       ]);
       setBalance(bal);
       setQuests(q.filter((quest) => quest.availableToComplete).slice(0, 5));
@@ -59,6 +81,7 @@ export default function ChildHome() {
     } catch {
       // Silently handle
     } finally {
+      setLoading(false);
       setRefreshing(false);
     }
   }, [user?.id]);
@@ -70,117 +93,172 @@ export default function ChildHome() {
   const isNegativeBalance = balance.totalMinutes < 0;
   const canPlay = !isNegativeBalance && balance.totalMinutes > 0;
 
+  const completedToday = quests.filter((q) => (q as any).completedToday).length;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
+      {/* Animated Gradient Header */}
+      <AnimatedHeader
+        name={user?.name || "Hero"}
+        level={progress?.level ?? 1}
+        levelName={progress?.levelName ?? "Starter"}
+        xpProgress={
+          progress
+            ? progress.xpProgressInLevel / (progress.xpToNextLevel || 1)
+            : 0
+        }
+        xpToNext={progress?.xpToNextLevel ?? 100}
+        totalXp={progress?.totalXp ?? 0}
+        streak={progress?.currentStreak ?? 0}
+        weeklyXp={progress?.weeklyXp ?? 0}
+        onThemePress={() => router.push("/(app)/child/themes")}
+        onAvatarPress={() => router.push("/(app)/child/avatar-customize")}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchData();
+            }}
+          />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Mascot Greeting */}
-        <MascotWidget name={user?.name} />
+        {/* Loading State */}
+        {loading && <SkeletonDashboard />}
 
-        {/* Level + Streak Row */}
-        {progress && (
-          <View style={styles.statsRow}>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelIcon}>⭐</Text>
-              <Text style={styles.levelText}>
-                Lv.{progress.level} {progress.levelName}
-              </Text>
-            </View>
-            {progress.currentStreak > 0 && (
-              <View style={styles.streakBadge}>
-                <Text style={styles.streakText}>
-                  🔥 {progress.currentStreak}-day streak
-                </Text>
-              </View>
-            )}
-            {progress.weeklyXp > 0 && (
-              <View style={styles.xpBadge}>
-                <Text style={styles.xpBadgeText}>{progress.weeklyXp} XP</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Violation Indicator */}
-        {violationStatus && violationStatus.currentCount > 0 && (
-          <View style={styles.violationCard}>
-            <Ionicons name="alert-circle-outline" size={20} color={colors.accent} />
-            <View style={styles.violationInfo}>
-              <Text style={styles.violationTitle}>
-                {violationStatus.currentCount} {violationStatus.currentCount === 1 ? 'strike' : 'strikes'}
-              </Text>
-              <Text style={styles.violationHint}>Keep up the good work to stay on track!</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Time Bank Display */}
-        <TimeBankDisplay
-          stackableMinutes={balance.stackableMinutes}
-          nonStackableMinutes={balance.nonStackableMinutes}
-          totalMinutes={balance.totalMinutes}
-        />
-
-        {/* Play Button */}
-        <TouchableOpacity
-          style={[styles.playButton, !canPlay && styles.playButtonDisabled]}
-          onPress={() => router.push('/(app)/child/play')}
-          disabled={!canPlay}
-          activeOpacity={0.85}
-        >
-          <Ionicons
-            name="play-circle"
-            size={32}
-            color={canPlay ? '#FFF' : colors.textSecondary}
-          />
-          <Text style={[styles.playText, !canPlay && styles.playTextDisabled]}>
-            PLAY
-          </Text>
-        </TouchableOpacity>
-
-        {/* Available Quests */}
-        {quests.length > 0 && (
-          <View style={styles.questSection}>
-            <SectionHeader
-              title="Available Quests"
-              action="See all"
-              onAction={() => router.push('/(app)/child/quests')}
-              childUI
+        {!loading && (
+          <>
+            {/* Context-Aware Mascot */}
+            <MascotWidget
+              name={user?.name}
+              questsDone={completedToday}
+              totalQuests={quests.length + completedToday}
+              streak={progress?.currentStreak ?? 0}
+              xpToNext={progress?.xpToNextLevel ?? 100}
+              level={progress?.level ?? 1}
+              onTap={() => haptics.notification("success")}
             />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.questScroll}
-            >
-              {quests.map((quest) => (
-                <QuestCard
-                  key={quest.id}
-                  icon={quest.icon}
-                  name={quest.name}
-                  rewardMinutes={quest.rewardMinutes}
-                  stackingType={quest.stackingType as 'stackable' | 'non_stackable'}
-                  compact
-                  onPress={() =>
-                    router.push({ pathname: '/(app)/child/quest-detail', params: { id: quest.id } })
-                  }
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
 
-        {quests.length === 0 && (
-          <EmptyState
-            emoji="📋"
-            title="No quests available"
-            message="Check back later or ask your parents!"
-            childUI
-          />
+            {/* Weekly Stats Chart */}
+            {weeklyStats && weeklyStats.dailyStats.length > 0 && (
+              <WeeklyStatsChart
+                dailyStats={weeklyStats.dailyStats}
+                accentColor={themeColors.primary}
+                textColor={themeColors.textPrimary}
+                cardColor={themeColors.card}
+              />
+            )}
+
+            {/* Violation Indicator */}
+            {violationStatus && violationStatus.currentCount > 0 && (
+              <View style={styles.violationCard}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={20}
+                  color={colors.accent}
+                />
+                <View style={styles.violationInfo}>
+                  <Text style={styles.violationTitle}>
+                    {violationStatus.currentCount}{" "}
+                    {violationStatus.currentCount === 1 ? "strike" : "strikes"}
+                  </Text>
+                  <Text style={styles.violationHint}>
+                    Keep up the good work to stay on track!
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Time Bank Display */}
+            <TimeBankDisplay
+              stackableMinutes={balance.stackableMinutes}
+              nonStackableMinutes={balance.nonStackableMinutes}
+              totalMinutes={balance.totalMinutes}
+            />
+
+            {/* Play Button */}
+            <TouchableOpacity
+              style={[
+                styles.playButton,
+                {
+                  backgroundColor: themeColors.secondary,
+                  shadowColor: themeColors.secondary,
+                },
+                !canPlay && styles.playButtonDisabled,
+              ]}
+              onPress={() => {
+                haptics.impact("medium");
+                router.push("/(app)/child/play");
+              }}
+              disabled={!canPlay}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="play-circle"
+                size={32}
+                color={canPlay ? "#FFF" : themeColors.textSecondary}
+              />
+              <Text
+                style={[styles.playText, !canPlay && styles.playTextDisabled]}
+              >
+                PLAY
+              </Text>
+            </TouchableOpacity>
+
+            {/* Available Quests */}
+            {quests.length > 0 && (
+              <View style={styles.questSection}>
+                <SectionHeader
+                  title="Available Quests"
+                  action="See all"
+                  onAction={() => router.push("/(app)/child/quests")}
+                  childUI
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.questScroll}
+                >
+                  {quests.map((quest) => (
+                    <QuestCard
+                      key={quest.id}
+                      icon={quest.icon}
+                      name={quest.name}
+                      rewardMinutes={quest.rewardMinutes}
+                      stackingType={
+                        quest.stackingType as "stackable" | "non_stackable"
+                      }
+                      category={(quest as any).category}
+                      compact
+                      onPress={() => {
+                        haptics.impact("light");
+                        router.push({
+                          pathname: "/(app)/child/quest-detail",
+                          params: { id: quest.id },
+                        });
+                      }}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {quests.length === 0 && (
+              <EmptyState
+                emoji="📋"
+                title="No quests available"
+                message="Check back later or ask your parents!"
+                childUI
+              />
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -198,61 +276,16 @@ export default function ChildHome() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3E8FF',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    gap: 4,
-  },
-  levelIcon: { fontSize: 14 },
-  levelText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 13,
-    color: colors.purple,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  streakText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 13,
-    color: '#E65100',
-  },
-  xpBadge: {
-    backgroundColor: colors.secondary + '20',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  xpBadgeText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 13,
-    color: colors.secondary,
-  },
   violationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.accent + '10',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.accent + "10",
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.accent + '25',
+    borderColor: colors.accent + "25",
   },
   violationInfo: { flex: 1 },
   violationTitle: {
@@ -267,9 +300,9 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   playButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     backgroundColor: colors.secondary,
     borderRadius: borderRadius.xl,
@@ -283,14 +316,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   playButtonDisabled: {
-    backgroundColor: colors.textSecondary + '18',
+    backgroundColor: colors.textSecondary + "18",
     shadowOpacity: 0,
     elevation: 0,
   },
   playText: {
     fontFamily: fonts.child.extraBold,
     fontSize: 22,
-    color: '#FFF',
+    color: "#FFF",
     letterSpacing: 2,
   },
   playTextDisabled: { color: colors.textSecondary },

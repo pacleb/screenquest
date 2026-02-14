@@ -49,6 +49,7 @@ model User {
 
   guardianPermissions Json?   @map("guardian_permissions") @db.JsonB
   playSettings        Json?   @map("play_settings") @db.JsonB
+  activeThemeId       String? @map("active_theme_id") @db.Uuid
 
   family            Family?           @relation("FamilyMembers", fields: [familyId], references: [id])
   ownedFamilies     Family[]          @relation("FamilyOwner")
@@ -70,6 +71,7 @@ model User {
   progress             ChildProgress?        @relation("ChildProgress")
   childAchievements    ChildAchievement[]    @relation("ChildAchievements")
   equippedItems        ChildEquippedItem[]   @relation("ChildEquippedItems")
+  activeTheme          Theme?                @relation("UserActiveTheme", fields: [activeThemeId], references: [id])
 
   @@map("users")
 }
@@ -286,6 +288,8 @@ model ChildProgress {
   lastCompletionDate DateTime? @map("last_completion_date") @db.Date
   weeklyXp           Int       @default(0) @map("weekly_xp")
   weeklyXpResetAt    DateTime? @map("weekly_xp_reset_at") @db.Timestamptz()
+  showcaseBadges     String[]  @default([]) @map("showcase_badges") @db.Uuid
+  streakFreezeUsedAt DateTime? @map("streak_freeze_used_at") @db.Timestamptz()
   updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
   child User @relation("ChildProgress", fields: [childId], references: [id])
@@ -294,15 +298,19 @@ model ChildProgress {
 }
 
 model Achievement {
-  id          String   @id @default(uuid()) @db.Uuid
-  key         String   @unique @db.VarChar(50)
-  name        String   @db.VarChar(100)
-  description String   @db.VarChar(255)
-  icon        String   @db.VarChar(50)
-  category    String   @db.VarChar(50)
-  criteria    Json     @db.JsonB
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique @db.VarChar(50)
+  name          String   @db.VarChar(100)
+  description   String   @db.VarChar(255)
+  icon          String   @db.VarChar(50)
+  category      String   @db.VarChar(50)
+  criteria      Json     @db.JsonB
+  sortOrder     Int      @default(0) @map("sort_order")
+  badgeTier     String   @default("bronze") @map("badge_tier") @db.VarChar(10)
+  badgeColor    String   @default("#CD7F32") @map("badge_color") @db.VarChar(7)
+  xpReward      Int      @default(0) @map("xp_reward")
+  isSecret      Boolean  @default(false) @map("is_secret")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   childAchievements ChildAchievement[]
 
@@ -366,4 +374,24 @@ model NotificationPreference {
   user User @relation("UserNotificationPrefs", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model Theme {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String   @db.VarChar(255)
+  previewUrl  String?  @map("preview_url") @db.VarChar(500)
+  unlockType  String   @map("unlock_type") @db.VarChar(20)
+  unlockValue Int?     @map("unlock_value")
+  colors      Json     @db.JsonB
+  gradients   Json?    @db.JsonB
+  isAnimated  Boolean  @default(false) @map("is_animated")
+  category    String   @db.VarChar(30)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  users User[] @relation("UserActiveTheme")
+
+  @@map("themes")
 }

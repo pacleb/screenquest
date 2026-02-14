@@ -12,3 +12,8 @@ export { ProgressBar } from './ProgressBar';
 export { SectionHeader } from './SectionHeader';
 export { PremiumBadge } from './PremiumBadge';
 export { CelebrationModal } from './CelebrationModal';
+export { StreakFire } from './StreakFire';
+export { WeeklyStatsChart } from './WeeklyStatsChart';
+export { AnimatedHeader } from './AnimatedHeader';
+export { SkeletonLoader, SkeletonQuestCard, SkeletonDashboard } from './SkeletonLoader';
+export { LottieAnimation } from './LottieAnimation';

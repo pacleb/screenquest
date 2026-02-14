@@ -1,6 +1,6 @@
 # ScreenQuest — Developer Handoff Document
 
-> **Last updated:** Phase 10b complete (Feb 14, 2026)
+> **Last updated:** Phase 11 (partial) complete (Feb 14, 2026)
 > **Purpose:** Gives any AI agent or developer full context to continue implementation from any phase.
 
 ---
@@ -102,11 +102,12 @@ screenquest/
 | `PlaySession`            | Timer sessions with start/pause/resume/end tracking                  |
 | `Violation`              | Penalty records with escalating minutes                              |
 | `ViolationCounter`       | Per-child violation counter for escalation                           |
-| `ChildProgress`          | XP, level, streak tracking (gamification)                            |
-| `Achievement`            | Achievement definitions with criteria                                |
+| `ChildProgress`          | XP, level, streak tracking, showcaseBadges, streakFreezeUsedAt       |
+| `Achievement`            | Achievement definitions with criteria, badgeTier, xpReward, isSecret |
 | `ChildAchievement`       | Earned achievements per child                                        |
 | `AvatarItem`             | Cosmetic items (face, hair, hat, outfit, etc.)                       |
 | `ChildEquippedItem`      | Currently equipped items per slot                                    |
+| `Theme`                  | Dynamic themes with colors, gradients, unlock criteria               |
 | `RefreshToken`           | Hashed refresh tokens with expiry                                    |
 | `PushToken`              | Device push notification tokens                                      |
 | `NotificationPreference` | Per-user notification toggles                                        |
@@ -183,19 +184,66 @@ SENTRY_DSN            Error tracking
 | 9     | Gamification — XP, levels, streaks, achievements, avatar items, leaderboard           |
 | 10    | Backend unit tests, integration tests, CI/CD setup, Sentry error tracking             |
 | 10b   | Security hardening — PIN hashing, rate limiting, auth fixes, webhook idempotency      |
+| 11\*  | Visual polish — dynamic themes, enhanced avatars, streak fire, weekly stats, badges   |
+
+\*Phase 11 is partially complete. See "Phase 11 Progress" below for details.
+
+---
+
+## Phase 11 Progress (Partial)
+
+### Completed
+
+**Backend:**
+
+- `Theme` model added to Prisma schema (10 themes seeded: Classic, Sunset Glow, Ocean Explorer, Neon Arcade, Candy Land, Space Odyssey, Forest Guardian, Fire Streak, Diamond Elite, Champion Gold)
+- `Achievement` model extended with `badgeTier` (bronze/silver/gold), `badgeColor`, `xpReward`, `isSecret` fields; 27 achievements seeded
+- `ChildProgress` extended with `showcaseBadges` (String[]) and `streakFreezeUsedAt` (DateTime?)
+- `User.activeThemeId` added as FK to Theme
+- Migration: `20260214004507_add_themes_badges_showcase`
+- `ThemeService` (383 lines): getThemes, setActiveTheme, isThemeUnlocked, useStreakFreeze, setShowcase, getShowcase, getWeeklyStats, getActivityFeed
+- 4 new controllers: ThemeController, StreakStatsController, BadgeShowcaseController, ActivityFeedController
+- 3 new DTOs: SetActiveThemeDto, SetShowcaseDto, PaginationDto
+- 11 unit tests for ThemeService (all passing)
+- 51 avatar items across 7 slots (added face, hair)
+- Total: 150 unit tests passing, 14 e2e tests still failing (pre-existing assertion mismatches)
+
+**Mobile:**
+
+- Installed: lottie-react-native, expo-haptics, expo-av, expo-linear-gradient, react-native-chart-kit, @react-native-async-storage/async-storage
+- `ThemeProvider` + `useTheme()` hook (React Context) with AsyncStorage persistence
+- `useThemeStore` (Zustand) for theme state, weekly stats, activity feed, showcase
+- Theme API service with all endpoints
+- Theme selection screen (`child/themes.tsx`) with gradient cards, haptic feedback, reanimated animations
+- Child tab layout uses dynamic theme colors
+- Child dashboard: theme button, StreakFire component, WeeklyStatsChart, dynamic colors
+- Avatar builder: 7 slots (added face + hair), haptic feedback, dynamic colors
+- Trophy room: badge showcase (max 3), streak freeze button, tier tags, animated cards
+- `StreakFire` component: pulsing animation, glow for 7+ streaks, tiered emoji display
+- `WeeklyStatsChart` component: custom bar chart, today highlighting, summary row
+- Mobile TypeScript compiles cleanly (0 errors)
+
+### Remaining Phase 11 Items
+
+- Lottie animation files (actual .json assets for level-up, achievement unlock, etc.)
+- expo-av sound effects integration
+- Parent dashboard upgrade with activity feed / weekly stats
+- Additional micro-interactions (haptic feedback on more components)
+- Accessibility labels on all interactive elements
+- Dark mode toggle
 
 ---
 
 ## Remaining Phases
 
-| Phase | Focus                                                                         |
-| ----- | ----------------------------------------------------------------------------- |
-| 11    | Visual polish — themes, avatar builder, streak animations, dashboard redesign |
-| 12    | COPPA compliance — parental consent, account deletion, privacy                |
-| 13    | Monitoring — structured logging, analytics, alerting                          |
-| 14    | Offline support — error boundaries, offline queue, caching                    |
-| 15    | Deployment — hosting, S3, database backups, data export                       |
-| 16    | Mobile E2E tests, app store submission                                        |
+| Phase | Focus                                                                       |
+| ----- | --------------------------------------------------------------------------- |
+| 11    | Visual polish — remaining: Lottie, sound, parent dashboard, a11y, dark mode |
+| 12    | COPPA compliance — parental consent, account deletion, privacy              |
+| 13    | Monitoring — structured logging, analytics, alerting                        |
+| 14    | Offline support — error boundaries, offline queue, caching                  |
+| 15    | Deployment — hosting, S3, database backups, data export                     |
+| 16    | Mobile E2E tests, app store submission                                      |
 
 ---
 
@@ -203,7 +251,7 @@ SENTRY_DSN            Error tracking
 
 1. **Family code uses `Math.random()`** — not crypto-secure (acceptable for MVP)
 2. **`cleanDatabase()` in `test/setup.ts`** references some non-existent tables — may need updating when running e2e tests
-3. **E2E tests fail** — `uuid` ESM import issue in Jest e2e config (unit tests all pass)
+3. **E2E tests** — 14 assertion mismatches (status codes, response shapes) deferred; `uuid` ESM transform fixed
 4. **Production static file migration** — when deploying, proof uploads should move to S3 (currently disk-based with authenticated GET endpoint)
 5. **Run `npx ts-node prisma/hash-existing-pins.ts`** before first deploy after Phase 10b to hash any pre-existing plaintext child PINs
 

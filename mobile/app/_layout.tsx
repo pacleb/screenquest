@@ -1,26 +1,30 @@
-import * as Sentry from '@sentry/react-native';
-import { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useFonts } from 'expo-font';
+import * as Sentry from "@sentry/react-native";
+import { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
 import {
   Nunito_400Regular,
   Nunito_600SemiBold,
   Nunito_700Bold,
   Nunito_800ExtraBold,
-} from '@expo-google-fonts/nunito';
+} from "@expo-google-fonts/nunito";
 import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-} from '@expo-google-fonts/inter';
-import { useAuthStore } from '../src/store/auth';
-import { useSubscriptionStore } from '../src/store/subscription';
-import { setupNotificationHandler, notificationService } from '../src/services/notification';
-import { subscriptionService } from '../src/services/subscription';
-import { colors } from '../src/theme';
+} from "@expo-google-fonts/inter";
+import { useAuthStore } from "../src/store/auth";
+import { useSubscriptionStore } from "../src/store/subscription";
+import { useThemeStore } from "../src/store/theme";
+import {
+  setupNotificationHandler,
+  notificationService,
+} from "../src/services/notification";
+import { subscriptionService } from "../src/services/subscription";
+import { colors, ThemeProvider } from "../src/theme";
 
 setupNotificationHandler();
 
@@ -49,6 +53,7 @@ function RootLayout() {
   });
 
   const fetchSubscriptionStatus = useSubscriptionStore((s) => s.fetchStatus);
+  const fetchThemes = useThemeStore((s) => s.fetchThemes);
 
   useEffect(() => {
     subscriptionService.initRevenueCat();
@@ -56,9 +61,13 @@ function RootLayout() {
   }, []);
 
   // Register push token + identify RevenueCat user when logged in
+  // Also load themes for child users
   useEffect(() => {
     if (user?.id) {
       notificationService.registerPushToken(user.id);
+      if (user.role === "child") {
+        fetchThemes();
+      }
     }
     if (user?.familyId) {
       subscriptionService.identifyUser(user.familyId);
@@ -68,20 +77,27 @@ function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <>
+    <ThemeProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }
 

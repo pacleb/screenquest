@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,15 +6,21 @@ import {
   SafeAreaView,
   ScrollView,
   RefreshControl,
-} from 'react-native';
-import { colors, spacing, borderRadius } from '../../../src/theme';
-import { fonts, typography } from '../../../src/theme/typography';
-import { Badge, Card, ProgressBar } from '../../../src/components';
-import { useAuthStore } from '../../../src/store/auth';
-import { useGamificationStore } from '../../../src/store/gamification';
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { colors, spacing, borderRadius, useTheme } from "../../../src/theme";
+import { fonts, typography } from "../../../src/theme/typography";
+import { Badge, Card, ProgressBar, StreakFire } from "../../../src/components";
+import { useAuthStore } from "../../../src/store/auth";
+import { useGamificationStore } from "../../../src/store/gamification";
+import { useThemeStore } from "../../../src/store/theme";
 
 export default function ChildTrophies() {
   const user = useAuthStore((s) => s.user);
+  const { colors: themeColors } = useTheme();
   const {
     progress,
     achievements,
@@ -24,13 +30,17 @@ export default function ChildTrophies() {
     fetchAchievements,
     fetchLeaderboard,
   } = useGamificationStore();
+  const { showcaseBadges, fetchShowcase, setShowcase, useStreakFreeze } =
+    useThemeStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedShowcase, setSelectedShowcase] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     await Promise.all([
       fetchProgress(user.id),
       fetchAchievements(user.id),
+      fetchShowcase(user.id),
       user.familyId ? fetchLeaderboard(user.familyId) : Promise.resolve(),
     ]);
   }, [user]);
@@ -48,8 +58,47 @@ export default function ChildTrophies() {
   const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
   const totalCount = achievements.length;
 
+  const TIER_ORDER: Record<string, number> = { gold: 0, silver: 1, bronze: 2 };
+  const TIER_COLORS: Record<string, string> = {
+    gold: "#FFD700",
+    silver: "#C0C0C0",
+    bronze: "#CD7F32",
+  };
+
+  const handleToggleShowcase = async (achievementId: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const isSelected = selectedShowcase.includes(achievementId);
+    let next: string[];
+    if (isSelected) {
+      next = selectedShowcase.filter((id) => id !== achievementId);
+    } else {
+      if (selectedShowcase.length >= 3) {
+        Alert.alert(
+          "Max 3",
+          "You can showcase up to 3 badges. Remove one first!",
+        );
+        return;
+      }
+      next = [...selectedShowcase, achievementId];
+    }
+    setSelectedShowcase(next);
+    try {
+      await setShowcase(next);
+    } catch {}
+  };
+
+  const handleStreakFreeze = async () => {
+    const result = await useStreakFreeze();
+    Alert.alert(result.success ? "❄️ Streak Frozen!" : "Oops", result.message);
+    if (result.success) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={
@@ -58,19 +107,24 @@ export default function ChildTrophies() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Trophies</Text>
-          <Badge variant="purple">
-            {unlockedCount}/{totalCount}
-          </Badge>
+          <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+            🏆 Trophies
+          </Text>
+          <Badge variant="purple" label={`${unlockedCount}/${totalCount}`} />
         </View>
 
-        {/* Streak Card */}
+        {/* Streak Card with Fire */}
         {progress && (
           <Card style={styles.streakCard}>
             <View style={styles.streakRow}>
-              <Text style={styles.streakEmoji}>🔥</Text>
+              <StreakFire streak={progress.currentStreak} size="md" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.streakValue}>
+                <Text
+                  style={[
+                    styles.streakValue,
+                    { color: themeColors.textPrimary },
+                  ]}
+                >
                   {progress.currentStreak}-day streak
                 </Text>
                 <Text style={styles.streakBest}>
@@ -78,52 +132,126 @@ export default function ChildTrophies() {
                 </Text>
               </View>
               {progress.currentStreak >= 3 && (
-                <Badge variant="warning">On fire!</Badge>
+                <Badge variant="warning" label="On fire!" />
               )}
             </View>
+            {/* Streak Freeze */}
+            <TouchableOpacity
+              style={styles.freezeBtn}
+              onPress={handleStreakFreeze}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.freezeIcon}>❄️</Text>
+              <Text style={styles.freezeText}>Use Streak Freeze</Text>
+            </TouchableOpacity>
           </Card>
         )}
 
-        {/* Achievements Grid */}
-        <Text style={styles.sectionTitle}>Achievements</Text>
-        <View style={styles.grid}>
-          {achievements.map((a) => {
-            const unlocked = !!a.unlockedAt;
-            return (
-              <View
-                key={a.id}
-                style={[
-                  styles.achievementCard,
-                  !unlocked && styles.achievementLocked,
-                ]}
-              >
-                <Text style={styles.achievementIcon}>
-                  {unlocked ? a.icon : '🔒'}
-                </Text>
-                <Text
+        {/* Badge Showcase */}
+        {showcaseBadges.length > 0 && (
+          <View style={styles.showcaseSection}>
+            <Text
+              style={[styles.sectionTitle, { color: themeColors.textPrimary }]}
+            >
+              ✨ Showcase
+            </Text>
+            <View style={styles.showcaseRow}>
+              {showcaseBadges.map((badge) => (
+                <View
+                  key={badge.id}
                   style={[
-                    styles.achievementName,
-                    !unlocked && styles.lockedText,
+                    styles.showcaseBadge,
+                    { borderColor: badge.badgeColor },
                   ]}
-                  numberOfLines={1}
                 >
-                  {a.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.achievementDesc,
-                    !unlocked && styles.lockedText,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {a.description}
-                </Text>
-                {unlocked && a.unlockedAt && (
-                  <Text style={styles.unlockedDate}>
-                    {new Date(a.unlockedAt).toLocaleDateString()}
+                  <Text style={styles.showcaseIcon}>{badge.icon}</Text>
+                  <Text
+                    style={[
+                      styles.showcaseName,
+                      { color: themeColors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {badge.name}
                   </Text>
-                )}
-              </View>
+                  <View
+                    style={[
+                      styles.tierTag,
+                      { backgroundColor: badge.badgeColor },
+                    ]}
+                  >
+                    <Text style={styles.tierText}>{badge.badgeTier}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Achievements Grid */}
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          Achievements
+        </Text>
+        <Text
+          style={[styles.showcaseHint, { color: themeColors.textSecondary }]}
+        >
+          Tap earned badges to add to your showcase (max 3)
+        </Text>
+        <View style={styles.grid}>
+          {achievements.map((a, i) => {
+            const unlocked = !!a.unlockedAt;
+            const isShowcased = selectedShowcase.includes(a.id);
+            return (
+              <Animated.View
+                key={a.id}
+                entering={FadeInDown.delay(i * 50).duration(200)}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.achievementCard,
+                    { backgroundColor: themeColors.card },
+                    !unlocked && styles.achievementLocked,
+                    isShowcased && { borderWidth: 2, borderColor: "#FFD700" },
+                  ]}
+                  onPress={() => unlocked && handleToggleShowcase(a.id)}
+                  disabled={!unlocked}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.achievementIcon}>
+                    {unlocked ? a.icon : "🔒"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.achievementName,
+                      { color: themeColors.textPrimary },
+                      !unlocked && styles.lockedText,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {a.name}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.achievementDesc,
+                      { color: themeColors.textSecondary },
+                      !unlocked && styles.lockedText,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {a.description}
+                  </Text>
+                  {unlocked && a.unlockedAt && (
+                    <Text style={styles.unlockedDate}>
+                      {new Date(a.unlockedAt).toLocaleDateString()}
+                    </Text>
+                  )}
+                  {isShowcased && (
+                    <View style={styles.showcaseStar}>
+                      <Text style={{ fontSize: 10 }}>⭐</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
             );
           })}
         </View>
@@ -138,7 +266,7 @@ export default function ChildTrophies() {
                 <View style={styles.leaderboardRow}>
                   <View style={styles.rankBadge}>
                     <Text style={styles.rankText}>
-                      {entry.rank === 1 ? '👑' : `#${entry.rank}`}
+                      {entry.rank === 1 ? "👑" : `#${entry.rank}`}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -166,9 +294,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
   scroll: { padding: spacing.lg, paddingBottom: 100 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.lg,
   },
   title: {
@@ -177,11 +305,10 @@ const styles = StyleSheet.create({
   },
   streakCard: { marginBottom: spacing.lg },
   streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
-  streakEmoji: { fontSize: 40 },
   streakValue: {
     ...typography.childH3,
     color: colors.textPrimary,
@@ -190,6 +317,62 @@ const styles = StyleSheet.create({
     ...typography.childCaption,
     color: colors.textSecondary,
   },
+  freezeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: "#E3F2FD",
+    borderWidth: 1,
+    borderColor: "#90CAF9",
+  },
+  freezeIcon: { fontSize: 16 },
+  freezeText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 13,
+    color: "#1976D2",
+  },
+  showcaseSection: { marginBottom: spacing.lg },
+  showcaseRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "center",
+  },
+  showcaseBadge: {
+    alignItems: "center",
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    backgroundColor: "#FFFDE7",
+    width: 90,
+  },
+  showcaseIcon: { fontSize: 36, marginBottom: 4 },
+  showcaseName: {
+    fontFamily: fonts.child.bold,
+    fontSize: 11,
+    textAlign: "center",
+  },
+  tierTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: borderRadius.sm,
+    marginTop: 4,
+  },
+  tierText: {
+    fontFamily: fonts.child.bold,
+    fontSize: 9,
+    color: "#FFF",
+    textTransform: "uppercase",
+  },
+  showcaseHint: {
+    fontFamily: fonts.child.regular,
+    fontSize: 12,
+    marginBottom: spacing.md,
+    marginTop: -spacing.xs,
+  },
   sectionTitle: {
     ...typography.childH2,
     color: colors.textPrimary,
@@ -197,18 +380,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
   achievementCard: {
-    width: '31%',
+    width: 100,
     backgroundColor: colors.card,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -216,28 +399,33 @@ const styles = StyleSheet.create({
   },
   achievementLocked: {
     opacity: 0.5,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: "#F0F0F0",
   },
   achievementIcon: { fontSize: 32, marginBottom: 4 },
   achievementName: {
     fontFamily: fonts.child.bold,
     fontSize: 12,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   achievementDesc: {
     fontFamily: fonts.child.regular,
     fontSize: 10,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 2,
   },
-  lockedText: { color: '#999' },
+  lockedText: { color: "#999" },
   unlockedDate: {
     fontFamily: fonts.child.regular,
     fontSize: 9,
     color: colors.secondary,
     marginTop: 4,
+  },
+  showcaseStar: {
+    position: "absolute",
+    top: 4,
+    right: 4,
   },
   leaderboardSubtitle: {
     ...typography.childCaption,
@@ -247,17 +435,17 @@ const styles = StyleSheet.create({
   },
   leaderboardCard: { marginBottom: spacing.sm },
   leaderboardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
   rankBadge: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3E8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F3E8FF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   rankText: {
     fontFamily: fonts.child.bold,
@@ -272,7 +460,7 @@ const styles = StyleSheet.create({
     ...typography.childCaption,
     color: colors.textSecondary,
   },
-  xpColumn: { alignItems: 'center' },
+  xpColumn: { alignItems: "center" },
   xpValue: {
     fontFamily: fonts.child.extraBold,
     fontSize: 20,
@@ -286,7 +474,7 @@ const styles = StyleSheet.create({
   encouragement: {
     ...typography.childBody,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.md,
   },
 });

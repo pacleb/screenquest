@@ -28,6 +28,11 @@ import {
   PlaySession,
 } from "../../../src/services/playSession";
 import {
+  gamificationService,
+  ChildProgressData,
+} from "../../../src/services/gamification";
+import { themeService, ActivityFeedEntry } from "../../../src/services/theme";
+import {
   colors,
   spacing,
   borderRadius,
@@ -41,12 +46,15 @@ import {
   SectionHeader,
   EmptyState,
   TimeBankDisplay,
+  StreakFire,
+  ProgressBar,
 } from "../../../src/components";
 
 interface ChildData {
   member: FamilyMember;
   balance: TimeBankBalance;
   activeSession: PlaySession | null;
+  progress: ChildProgressData | null;
 }
 
 export default function ParentDashboard() {
@@ -60,6 +68,7 @@ export default function ParentDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState<QuestCompletion[]>(
     [],
   );
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -69,29 +78,34 @@ export default function ParentDashboard() {
       const members = await familyService.getMembers(familyId);
       const children = members.filter((m) => m.role === "child");
 
-      // Fetch balance + active session for each child
+      // Fetch balance + active session + gamification for each child
       const childDataPromises = children.map(async (child) => {
-        const [balance, activeSession] = await Promise.all([
-          timeBankService
-            .getBalance(child.id)
-            .catch(() => ({
-              stackableMinutes: 0,
-              nonStackableMinutes: 0,
-              totalMinutes: 0,
-            })),
+        const [balance, activeSession, progress] = await Promise.all([
+          timeBankService.getBalance(child.id).catch(() => ({
+            stackableMinutes: 0,
+            nonStackableMinutes: 0,
+            totalMinutes: 0,
+          })),
           playSessionService.getActiveSession(child.id).catch(() => null),
+          gamificationService.getProgress(child.id).catch(() => null),
         ]);
-        return { member: child, balance, activeSession };
+        return { member: child, balance, activeSession, progress };
       });
 
       const childData = await Promise.all(childDataPromises);
       setChildrenData(childData);
 
-      // Fetch pending approvals
-      const completions = await completionService
-        .listFamilyCompletions(familyId, "pending")
-        .catch(() => []);
+      // Fetch pending approvals + activity feed
+      const [completions, feed] = await Promise.all([
+        completionService
+          .listFamilyCompletions(familyId, "pending")
+          .catch(() => []),
+        themeService
+          .getActivityFeed(familyId, 1, 5)
+          .catch(() => ({ items: [], page: 1, hasMore: false })),
+      ]);
       setPendingApprovals(completions.slice(0, 3));
+      setActivityFeed(feed.items);
     } catch {
       // silent
     } finally {
@@ -207,45 +221,90 @@ export default function ParentDashboard() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.childScroll}
               >
-                {childrenData.map(({ member, balance, activeSession }) => (
-                  <Card key={member.id} style={styles.childCard}>
-                    <Avatar
-                      name={member.name}
-                      url={member.avatarUrl}
-                      size={48}
-                    />
-                    <Text style={styles.childName} numberOfLines={1}>
-                      {member.name}
-                    </Text>
-                    <TimeBankDisplay
-                      stackableMinutes={balance.stackableMinutes}
-                      nonStackableMinutes={balance.nonStackableMinutes}
-                      totalMinutes={balance.totalMinutes}
-                      compact
-                    />
-                    {activeSession &&
-                      (activeSession.status === "active" ||
-                        activeSession.status === "paused") && (
-                        <View style={styles.activeIndicator}>
-                          <View
-                            style={[
-                              styles.pulseDot,
-                              activeSession.status === "paused" &&
-                                styles.pausedDot,
-                            ]}
-                          />
-                          <Text style={styles.activeText}>
-                            {activeSession.status === "active"
-                              ? `${activeSession.remainingMinutes}m left`
-                              : "Paused"}
+                {childrenData.map(
+                  ({ member, balance, activeSession, progress }) => (
+                    <Card key={member.id} style={styles.childCard}>
+                      <Avatar
+                        name={member.name}
+                        url={member.avatarUrl}
+                        size={48}
+                      />
+                      <Text style={styles.childName} numberOfLines={1}>
+                        {member.name}
+                      </Text>
+
+                      {/* Level + Streak pills */}
+                      {progress && (
+                        <View style={styles.childStatsRow}>
+                          <View style={styles.childLevelPill}>
+                            <Text style={styles.childLevelText}>
+                              Lv.{progress.level}
+                            </Text>
+                          </View>
+                          {progress.currentStreak > 0 && (
+                            <StreakFire
+                              streak={progress.currentStreak}
+                              size="sm"
+                            />
+                          )}
+                        </View>
+                      )}
+
+                      {/* XP Progress Bar */}
+                      {progress && (
+                        <View style={styles.childXpRow}>
+                          <View style={styles.childXpBar}>
+                            <View
+                              style={[
+                                styles.childXpFill,
+                                {
+                                  width: `${Math.min(
+                                    100,
+                                    (progress.xpProgressInLevel /
+                                      progress.xpToNextLevel) *
+                                      100,
+                                  )}%`,
+                                },
+                              ]}
+                            />
+                          </View>
+                          <Text style={styles.childXpText}>
+                            {progress.weeklyXp} XP
                           </Text>
                         </View>
                       )}
-                    {activeSession && activeSession.status === "requested" && (
-                      <Badge label="Needs Approval" variant="warning" />
-                    )}
-                  </Card>
-                ))}
+
+                      <TimeBankDisplay
+                        stackableMinutes={balance.stackableMinutes}
+                        nonStackableMinutes={balance.nonStackableMinutes}
+                        totalMinutes={balance.totalMinutes}
+                        compact
+                      />
+                      {activeSession &&
+                        (activeSession.status === "active" ||
+                          activeSession.status === "paused") && (
+                          <View style={styles.activeIndicator}>
+                            <View
+                              style={[
+                                styles.pulseDot,
+                                activeSession.status === "paused" &&
+                                  styles.pausedDot,
+                              ]}
+                            />
+                            <Text style={styles.activeText}>
+                              {activeSession.status === "active"
+                                ? `${activeSession.remainingMinutes}m left`
+                                : "Paused"}
+                            </Text>
+                          </View>
+                        )}
+                      {activeSession &&
+                        activeSession.status === "requested" && (
+                          <Badge label="Needs Approval" variant="warning" />
+                        )}
+                    </Card>
+                  ),
+                )}
               </ScrollView>
             )}
 
@@ -386,11 +445,44 @@ export default function ParentDashboard() {
                 <Text style={styles.statLabel}>Playing</Text>
               </Card>
             </View>
+
+            {/* Activity Feed */}
+            {activityFeed.length > 0 && (
+              <View style={styles.feedSection}>
+                <SectionHeader title="Recent Activity" />
+                {activityFeed.map((item, idx) => (
+                  <View key={idx} style={styles.feedItem}>
+                    <View style={styles.feedIconWrap}>
+                      <Text style={styles.feedIcon}>{item.icon}</Text>
+                    </View>
+                    <View style={styles.feedContent}>
+                      <Text style={styles.feedMessage}>{item.message}</Text>
+                      <Text style={styles.feedTime}>
+                        {formatTimeAgo(item.timestamp)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function formatTimeAgo(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}d ago`;
 }
 
 const styles = StyleSheet.create({
@@ -426,6 +518,47 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  childStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: spacing.xs,
+  },
+  childLevelPill: {
+    backgroundColor: colors.primary + "15",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  childLevelText: {
+    fontFamily: fonts.parent.bold,
+    fontSize: 11,
+    color: colors.primary,
+  },
+  childXpRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    width: "100%",
+    marginBottom: spacing.xs,
+  },
+  childXpBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  childXpFill: {
+    height: "100%",
+    backgroundColor: colors.secondary,
+    borderRadius: 2,
+  },
+  childXpText: {
+    fontFamily: fonts.parent.medium,
+    fontSize: 10,
+    color: colors.textSecondary,
   },
   activeIndicator: {
     flexDirection: "row",
@@ -558,5 +691,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  feedSection: {
+    marginTop: spacing.lg,
+  },
+  feedItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  feedIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary + "10",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  feedIcon: { fontSize: 16 },
+  feedContent: { flex: 1 },
+  feedMessage: {
+    fontFamily: fonts.parent.regular,
+    fontSize: 13,
+    color: colors.textPrimary,
+    lineHeight: 18,
+  },
+  feedTime: {
+    fontFamily: fonts.parent.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
 });

@@ -1,8 +1,10 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../../src/theme';
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { fonts, useTheme } from "../../../src/theme";
 
 export default function ChildTabLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
@@ -25,7 +27,7 @@ export default function ChildTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -34,7 +36,7 @@ export default function ChildTabLayout() {
       <Tabs.Screen
         name="quests"
         options={{
-          title: 'Quests',
+          title: "Quests",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star" size={size} color={color} />
           ),
@@ -43,7 +45,7 @@ export default function ChildTabLayout() {
       <Tabs.Screen
         name="play"
         options={{
-          title: 'Play',
+          title: "Play",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="play-circle" size={size + 4} color={color} />
           ),
@@ -52,7 +54,7 @@ export default function ChildTabLayout() {
       <Tabs.Screen
         name="trophies"
         options={{
-          title: 'Trophies',
+          title: "Trophies",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy" size={size} color={color} />
           ),
@@ -61,7 +63,7 @@ export default function ChildTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Me',
+          title: "Me",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
@@ -76,6 +78,13 @@ export default function ChildTabLayout() {
       />
       <Tabs.Screen
         name="avatar-customize"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="themes"
         options={{
           href: null,
           headerShown: false,
