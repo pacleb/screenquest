@@ -1,6 +1,6 @@
 # ScreenQuest — Developer Handoff Document
 
-> **Last updated:** Phase 13 complete (Feb 14, 2026)
+> **Last updated:** Phase 11 complete, Phase 15 done (Feb 2026)
 > **Purpose:** Gives any AI agent or developer full context to continue implementation from any phase.
 
 ---
@@ -178,30 +178,28 @@ POSTHOG_HOST          PostHog host (default: https://us.i.posthog.com)
 
 ## Phases Completed
 
-| Phase | What Was Built                                                                        |
-| ----- | ------------------------------------------------------------------------------------- |
-| 1     | Backend scaffolding, auth (register/login/JWT/refresh), Prisma schema, Docker Compose |
-| 2     | Family CRUD, quest CRUD, child management, invites, guardian permissions              |
-| 3     | Quest completion flow, Time Bank (stackable/non-stackable), approval workflow         |
-| 4     | Play session timer (request→approve→start→pause→resume→end), BullMQ jobs              |
-| 5     | Violations with escalating penalties, push notifications (Expo), email service        |
-| 6     | Mobile UI polish, Expo Router screens, parent/child tab layouts                       |
-| 7     | RevenueCat subscription integration, premium gating, free plan limits (3 quests)      |
-| 8     | Quest library CMS (Next.js), quest categories, template system                        |
-| 9     | Gamification — XP, levels, streaks, achievements, avatar items, leaderboard           |
-| 10    | Backend unit tests, integration tests, CI/CD setup, Sentry error tracking             |
-| 10b   | Security hardening — PIN hashing, rate limiting, auth fixes, webhook idempotency      |
-| 11\*  | Visual polish — dynamic themes, enhanced avatars, streak fire, weekly stats, badges   |
-| 12    | COPPA compliance — parental consent, account deletion, privacy policy endpoints       |
-| 13    | Monitoring — structured logging (Pino), analytics (PostHog), metrics, alerting        |
-
-\*Phase 11 is partially complete. See "Phase 11 Progress" below for details.
+| Phase | What Was Built                                                                                      |
+| ----- | --------------------------------------------------------------------------------------------------- |
+| 1     | Backend scaffolding, auth (register/login/JWT/refresh), Prisma schema, Docker Compose               |
+| 2     | Family CRUD, quest CRUD, child management, invites, guardian permissions                            |
+| 3     | Quest completion flow, Time Bank (stackable/non-stackable), approval workflow                       |
+| 4     | Play session timer (request→approve→start→pause→resume→end), BullMQ jobs                            |
+| 5     | Violations with escalating penalties, push notifications (Expo), email service                      |
+| 6     | Mobile UI polish, Expo Router screens, parent/child tab layouts                                     |
+| 7     | RevenueCat subscription integration, premium gating, free plan limits (3 quests)                    |
+| 8     | Quest library CMS (Next.js), quest categories, template system                                      |
+| 9     | Gamification — XP, levels, streaks, achievements, avatar items, leaderboard                         |
+| 10    | Backend unit tests, integration tests, CI/CD setup, Sentry error tracking                           |
+| 10b   | Security hardening — PIN hashing, rate limiting, auth fixes, webhook idempotency                    |
+| 11    | Visual polish — dynamic themes, avatars, streak fire, stats, badges, Lottie, sound, dark mode, a11y |
+| 12    | COPPA compliance — parental consent, account deletion, privacy policy endpoints                     |
+| 13    | Monitoring — structured logging (Pino), analytics (PostHog), metrics, alerting                      |
 
 ---
 
-## Phase 11 Progress (Partial)
+## Phase 11 — Visual Polish (Complete)
 
-### Completed
+### Previously Completed (by prior AI)
 
 **Backend:**
 
@@ -232,14 +230,66 @@ POSTHOG_HOST          PostHog host (default: https://us.i.posthog.com)
 - `WeeklyStatsChart` component: custom bar chart, today highlighting, summary row
 - Mobile TypeScript compiles cleanly (0 errors)
 
-### Remaining Phase 11 Items
+### Phase 11 Leftovers (Now Complete)
 
-- Lottie animation files (actual .json assets for level-up, achievement unlock, etc.)
-- expo-av sound effects integration
-- Parent dashboard upgrade with activity feed / weekly stats
-- Additional micro-interactions (haptic feedback on more components)
-- Accessibility labels on all interactive elements
-- Dark mode toggle
+**Lottie Animations (7 animation JSON files):**
+
+- `mobile/assets/animations/` — 7 hand-crafted Lottie JSON files:
+  - `checkmark-burst.json` — Quest completion (green circle + checkmark + particles, 45 frames)
+  - `level-up.json` — Level up celebration (spinning gold star + glow ring, 60 frames)
+  - `achievement-unlock.json` — Badge drop with bounce + shimmer (60 frames)
+  - `timer-complete.json` — Timer ring completion + check (60 frames)
+  - `loading-bounce.json` — 3 bouncing colored dots (90 frames, looping)
+  - `empty-state.json` — Cute face with blinking eyes + question mark (90 frames, looping)
+  - `rocket-launch.json` — Rocket body + flame + sparks (45 frames)
+- `mobile/assets/animations/index.ts` — Typed `Animations` export object + `AnimationKey` type
+- Integration: `CelebrationModal` (level-up, achievement unlock), `EmptyState` (animated prop), `quest-detail` (checkmark burst on approval), `play.tsx` (timer complete), `child/index.tsx` (animated empty state)
+
+**Sound Effects (7 WAV audio files):**
+
+- `mobile/assets/sounds/` — 7 synthesized WAV files (22050Hz, 16-bit mono PCM):
+  - `quest-complete.wav` (880Hz, 300ms), `level-up.wav` (660Hz, 500ms), `achievement.wav` (1047Hz, 400ms)
+  - `streak.wav` (784Hz, 350ms), `timer-warning.wav` (440Hz, 250ms), `timer-complete.wav` (523Hz, 400ms), `tap.wav` (1200Hz, 50ms)
+- `SoundEffects` service (`soundEffects.ts`) fully wired — `SOUND_ASSETS` map points to actual WAV files
+- `useSoundEffects` hook (`hooks/useSoundEffects.ts`) — initializes audio, preloads common sounds
+- Integration: `CelebrationModal` (plays per event type), `quest-detail` (questComplete on approval), `play.tsx` (timerComplete at 0s, timerWarning at 60s)
+- Sound effects toggle in `parent/settings.tsx` → "App Preferences" section with Switch
+
+**Parent Dashboard Charts:**
+
+- `ParentCharts.tsx` component — 3 pure-RN chart components (no external chart library):
+  - `WeeklyCompletionChart` — Horizontal bar chart, weekly quest completions per child, color-coded
+  - `ScreenTimeTrend` — Vertical bar chart, daily screen time over past 2 weeks per child
+  - `StreakCalendar` — GitHub-style heatmap, 28-day quest completion calendar per child
+- Backend: `getWeeklyStats` extended to 28 days with `playMinutes` and `xp` per day
+- Backend: New endpoint `GET /children/:childId/gamification/weekly-stats` (parent-accessible)
+- Mobile: `gamificationService.getChildWeeklyStats(childId)` added
+- Parent dashboard fetches weekly stats per child, renders "Weekly Insights" section
+
+**Dark Mode:**
+
+- `darkColors` palette added to `ThemeContext.tsx` (dark background #121218, card #1E1E2A, etc.)
+- `darkGradients` palette for dark mode gradient variants
+- `ThemeProvider` uses `useColorScheme()` for system dark mode detection
+- `DarkModePreference` type (`'system' | 'light' | 'dark'`) in theme store
+- Dark mode preference persisted to AsyncStorage (`@screenquest_dark_mode`)
+- `useTheme()` hook now returns `isDark` boolean
+- Settings toggle: 3-option selector (System / Light / Dark) with icons in "App Preferences"
+
+**Accessibility Audit & Fixes (20+ elements across 11 files):**
+
+- Child dashboard: Play button — `accessibilityLabel`, `accessibilityRole`, `accessibilityHint`, `accessibilityState`
+- Play timer: Pause, Resume, Stop buttons — labels + roles; time preset buttons — labels + selected state
+- Parent dashboard: Logout, Deny, Approve, Stop session buttons — labels + roles + hints
+- Quest detail: Back buttons — labels + roles
+- Parent quests: FAB "Create new quest" — label + role
+- Family management: Email, name, age, PIN inputs — `accessibilityLabel`; consent checkbox — `accessibilityRole="checkbox"` + `accessibilityState`
+- Settings: Require Approval switch, Leaderboard switch — `accessibilityLabel`
+- Quest edit: Requires Proof, Auto-Approve switches — `accessibilityLabel`
+- `TimeBankDisplay` — `accessibilityRole="summary"` + descriptive label; compact variant — `accessibilityRole="text"`
+- `StreakFire` — `accessibilityRole="text"` + `"N day streak"` label
+- `Card` — `accessibilityRole="button"` when `onPress` is provided
+- All `ParentCharts` components have `accessibilityRole="summary"` + descriptive labels
 
 ---
 
@@ -331,12 +381,10 @@ _Implemented by another AI agent._
 
 ## Remaining Phases
 
-| Phase | Focus                                                                       |
-| ----- | --------------------------------------------------------------------------- |
-| 11    | Visual polish — remaining: Lottie, sound, parent dashboard, a11y, dark mode |
-| 14    | Offline support — error boundaries, offline queue, caching                  |
-| 15    | Deployment — hosting, S3, database backups, data export                     |
-| 16    | Mobile E2E tests, app store submission                                      |
+| Phase | Focus                                                      |
+| ----- | ---------------------------------------------------------- |
+| 14    | Offline support — error boundaries, offline queue, caching |
+| 16    | Mobile E2E tests, app store submission                     |
 
 ---
 

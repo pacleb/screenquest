@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,24 +8,24 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../../src/store/auth';
-import { questService, Quest } from '../../../src/services/quest';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../../src/store/auth";
+import { questService, Quest } from "../../../src/services/quest";
+import { colors, spacing, borderRadius } from "../../../src/theme";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  chores: 'Chores',
-  studying: 'Studying',
-  exercise: 'Exercise',
-  reading: 'Reading',
-  creative: 'Creative',
-  helping_others: 'Helping Others',
-  custom: 'Custom',
+  chores: "Chores",
+  studying: "Studying",
+  exercise: "Exercise",
+  reading: "Reading",
+  creative: "Creative",
+  helping_others: "Helping Others",
+  custom: "Custom",
 };
 
-type FilterTab = 'all' | 'active' | 'archived';
+type FilterTab = "all" | "active" | "archived";
 
 export default function QuestsScreen() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function QuestsScreen() {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<FilterTab>('active');
+  const [filter, setFilter] = useState<FilterTab>("active");
   const [questCount, setQuestCount] = useState({ activeQuests: 0, limit: 3 });
 
   const familyId = user?.familyId;
@@ -41,7 +41,8 @@ export default function QuestsScreen() {
   const fetchQuests = useCallback(async () => {
     if (!familyId) return;
     try {
-      const archived = filter === 'archived' ? true : filter === 'active' ? false : undefined;
+      const archived =
+        filter === "archived" ? true : filter === "active" ? false : undefined;
       const [data, count] = await Promise.all([
         questService.list(familyId, { archived }),
         questService.getCount(familyId),
@@ -49,7 +50,7 @@ export default function QuestsScreen() {
       setQuests(data);
       setQuestCount(count);
     } catch {
-      Alert.alert('Error', 'Failed to load quests');
+      Alert.alert("Error", "Failed to load quests");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,27 +71,31 @@ export default function QuestsScreen() {
       }
       fetchQuests();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Action failed');
+      Alert.alert("Error", error.response?.data?.message || "Action failed");
     }
   };
 
   const handleDelete = async (quest: Quest) => {
     if (!familyId) return;
-    Alert.alert('Delete Quest', `Delete "${quest.name}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await questService.remove(familyId, quest.id);
-            fetchQuests();
-          } catch {
-            Alert.alert('Error', 'Failed to delete quest');
-          }
+    Alert.alert(
+      "Delete Quest",
+      `Delete "${quest.name}"? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await questService.remove(familyId, quest.id);
+              fetchQuests();
+            } catch {
+              Alert.alert("Error", "Failed to delete quest");
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const groupedQuests = quests.reduce<Record<string, Quest[]>>((acc, quest) => {
@@ -104,12 +109,24 @@ export default function QuestsScreen() {
     <TouchableOpacity
       key={quest.id}
       style={styles.questCard}
-      onPress={() => router.push({ pathname: '/(app)/parent/quest-edit', params: { id: quest.id } })}
+      onPress={() =>
+        router.push({
+          pathname: "/(app)/parent/quest-edit",
+          params: { id: quest.id },
+        })
+      }
       onLongPress={() => {
-        Alert.alert(quest.name, 'Choose an action', [
-          { text: quest.isArchived ? 'Unarchive' : 'Archive', onPress: () => handleArchive(quest) },
-          { text: 'Delete', style: 'destructive', onPress: () => handleDelete(quest) },
-          { text: 'Cancel', style: 'cancel' },
+        Alert.alert(quest.name, "Choose an action", [
+          {
+            text: quest.isArchived ? "Unarchive" : "Archive",
+            onPress: () => handleArchive(quest),
+          },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: () => handleDelete(quest),
+          },
+          { text: "Cancel", style: "cancel" },
         ]);
       }}
     >
@@ -118,14 +135,21 @@ export default function QuestsScreen() {
         <Text style={styles.questName}>{quest.name}</Text>
         <View style={styles.questMeta}>
           <Text style={styles.questReward}>{quest.rewardMinutes} min</Text>
-          <View style={[styles.badge, quest.stackingType === 'stackable' ? styles.badgeStackable : styles.badgeExpires]}>
+          <View
+            style={[
+              styles.badge,
+              quest.stackingType === "stackable"
+                ? styles.badgeStackable
+                : styles.badgeExpires,
+            ]}
+          >
             <Text style={styles.badgeText}>
-              {quest.stackingType === 'stackable' ? 'Stackable' : 'Today Only'}
+              {quest.stackingType === "stackable" ? "Stackable" : "Today Only"}
             </Text>
           </View>
         </View>
         <Text style={styles.assignedText} numberOfLines={1}>
-          {quest.assignments.map((a) => a.child.name).join(', ')}
+          {quest.assignments.map((a) => a.child.name).join(", ")}
         </Text>
       </View>
       {quest.isArchived && (
@@ -151,13 +175,18 @@ export default function QuestsScreen() {
       </View>
 
       <View style={styles.filterRow}>
-        {(['active', 'archived', 'all'] as FilterTab[]).map((tab) => (
+        {(["active", "archived", "all"] as FilterTab[]).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.filterTab, filter === tab && styles.filterTabActive]}
             onPress={() => setFilter(tab)}
           >
-            <Text style={[styles.filterText, filter === tab && styles.filterTextActive]}>
+            <Text
+              style={[
+                styles.filterText,
+                filter === tab && styles.filterTextActive,
+              ]}
+            >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Text>
           </TouchableOpacity>
@@ -168,19 +197,29 @@ export default function QuestsScreen() {
         data={Object.entries(groupedQuests)}
         keyExtractor={([cat]) => cat}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchQuests(); }} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchQuests();
+            }}
+          />
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyText}>No quests yet</Text>
-            <Text style={styles.emptyHint}>Tap + to create your first quest</Text>
+            <Text style={styles.emptyHint}>
+              Tap + to create your first quest
+            </Text>
           </View>
         }
         renderItem={({ item: [category, categoryQuests] }) => (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{CATEGORY_LABELS[category] || category}</Text>
+            <Text style={styles.sectionTitle}>
+              {CATEGORY_LABELS[category] || category}
+            </Text>
             {categoryQuests.map(renderQuest)}
           </View>
         )}
@@ -188,7 +227,9 @@ export default function QuestsScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => router.push('/(app)/parent/quest-edit')}
+        onPress={() => router.push("/(app)/parent/quest-edit")}
+        accessibilityLabel="Create new quest"
+        accessibilityRole="button"
       >
         <Ionicons name="add" size={28} color="#FFF" />
       </TouchableOpacity>
@@ -199,12 +240,17 @@ export default function QuestsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary },
-  counterRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  counter: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  upgradeHint: { fontSize: 12, color: colors.accent, fontWeight: '600' },
+  title: { fontSize: 28, fontWeight: "800", color: colors.textPrimary },
+  counterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  counter: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
+  upgradeHint: { fontSize: 12, color: colors.accent, fontWeight: "600" },
   filterRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,
@@ -217,20 +263,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  filterTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  filterTextActive: { color: '#FFF' },
+  filterTabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
+  filterTextActive: { color: "#FFF" },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   section: { marginBottom: spacing.lg },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   questCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -238,30 +294,44 @@ const styles = StyleSheet.create({
   },
   questIcon: { fontSize: 32, marginRight: spacing.md },
   questInfo: { flex: 1 },
-  questName: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  questMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 },
-  questReward: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  questName: { fontSize: 16, fontWeight: "700", color: colors.textPrimary },
+  questMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: 2,
+  },
+  questReward: { fontSize: 14, fontWeight: "600", color: colors.primary },
   badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  badgeStackable: { backgroundColor: '#E8F5E9' },
-  badgeExpires: { backgroundColor: '#FFF3E0' },
-  badgeText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary },
+  badgeStackable: { backgroundColor: "#E8F5E9" },
+  badgeExpires: { backgroundColor: "#FFF3E0" },
+  badgeText: { fontSize: 11, fontWeight: "600", color: colors.textSecondary },
   assignedText: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  archivedBadge: { backgroundColor: '#F5F5F5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  archivedBadge: {
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   archivedText: { fontSize: 11, color: colors.textSecondary },
-  empty: { alignItems: 'center', paddingTop: 80 },
+  empty: { alignItems: "center", paddingTop: 80 },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  emptyHint: { fontSize: 14, color: colors.textSecondary, marginTop: spacing.xs },
+  emptyText: { fontSize: 18, fontWeight: "700", color: colors.textPrimary },
+  emptyHint: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     right: spacing.lg,
     bottom: spacing.lg,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

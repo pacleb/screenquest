@@ -6,11 +6,14 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Res,
+  Header,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +21,9 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { FamilyService } from './family.service';
+import { ExportService } from './export.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/guards/roles.guard';
 import {
@@ -30,13 +35,17 @@ import {
   UpdateFamilyDto,
   UpdateGuardianPermissionsDto,
 } from './dto/family.dto';
+import { ExportQueryDto } from './dto/export.dto';
 
 @ApiTags('Families')
 @Controller('families')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class FamilyController {
-  constructor(private familyService: FamilyService) {}
+  constructor(
+    private familyService: FamilyService,
+    private exportService: ExportService,
+  ) {}
 
   @Post()
   @Roles('parent')
@@ -193,6 +202,22 @@ export class FamilyController {
   ) {
     this.ensureFamilyAccess(req.user.familyId, id);
     return this.familyService.updateGuardianPermissions(id, userId, req.user.id, dto);
+  }
+
+  @Get(':id/export')
+  @Roles('parent')
+  @ApiOperation({ summary: 'Export family data as CSV (premium)' })
+  async exportData(
+    @Param('id') id: string,
+    @Query() dto: ExportQueryDto,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    this.ensureFamilyAccess(req.user.familyId, id);
+    const { csv, filename } = await this.exportService.exportCSV(id, dto.range);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
   }
 
   private ensureFamilyAccess(userFamilyId: string | null, requestedFamilyId: string) {

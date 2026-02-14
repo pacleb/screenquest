@@ -55,6 +55,16 @@ export const gamificationService = {
   getProgress: (childId: string) =>
     api.get<ChildProgressData>(`/children/${childId}/gamification/progress`).then((r) => r.data),
 
+  getChildWeeklyStats: (childId: string) =>
+    api.get<{
+      questsCompleted: number;
+      minutesEarned: number;
+      xpEarned: number;
+      totalPlayMinutes: number;
+      currentStreak: number;
+      dailyStats: { date: string; quests: number; minutes: number; xp: number; playMinutes: number }[];
+    }>(`/children/${childId}/gamification/weekly-stats`).then((r) => r.data),
+
   getAchievements: (childId: string) =>
     api.get<AchievementData[]>(`/children/${childId}/gamification/achievements`).then((r) => r.data),
 

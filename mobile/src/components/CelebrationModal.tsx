@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   StyleSheet,
   Animated,
   Modal,
-} from 'react-native';
-import { colors } from '../theme/colors';
-import { fonts, typography } from '../theme/typography';
-import { ConfettiOverlay } from './ConfettiOverlay';
-import { GamificationEvent } from '../services/gamification';
+} from "react-native";
+import { colors } from "../theme/colors";
+import { fonts, typography } from "../theme/typography";
+import { ConfettiOverlay } from "./ConfettiOverlay";
+import { LottieAnimation } from "./LottieAnimation";
+import { Animations } from "../../assets/animations";
+import { SoundEffects } from "../services/soundEffects";
+import { GamificationEvent } from "../services/gamification";
 
 interface CelebrationModalProps {
   event: GamificationEvent | null;
@@ -38,6 +41,18 @@ export function CelebrationModal({ event, onDismiss }: CelebrationModalProps) {
 
       // Auto-dismiss after 4 seconds
       const timer = setTimeout(onDismiss, 4000);
+
+      // Play appropriate sound
+      if (event.newLevel) {
+        SoundEffects.play("levelUp");
+      } else if (event.newAchievements.length > 0) {
+        SoundEffects.play("achievementUnlock");
+      } else if (event.streakUpdated && event.currentStreak > 0) {
+        SoundEffects.play("streakMilestone");
+      } else {
+        SoundEffects.play("questComplete");
+      }
+
       return () => clearTimeout(timer);
     } else {
       fadeAnim.setValue(0);
@@ -67,15 +82,19 @@ export function CelebrationModal({ event, onDismiss }: CelebrationModalProps) {
           <Text style={styles.xpText}>+{event.xpEarned} XP</Text>
 
           {event.currentStreak > 1 && (
-            <Text style={styles.streakBonus}>
-              Streak bonus included!
-            </Text>
+            <Text style={styles.streakBonus}>Streak bonus included!</Text>
           )}
 
           {/* Level Up */}
           {event.newLevel && (
             <View style={styles.levelUpSection}>
-              <Text style={styles.levelUpEmoji}>🎉</Text>
+              <LottieAnimation
+                source={Animations.levelUp}
+                autoPlay
+                width={80}
+                height={80}
+                style={styles.lottieInline}
+              />
               <Text style={styles.levelUpTitle}>Level Up!</Text>
               <Text style={styles.levelUpText}>
                 Level {event.newLevel.level} — {event.newLevel.name}
@@ -86,10 +105,19 @@ export function CelebrationModal({ event, onDismiss }: CelebrationModalProps) {
           {/* New Achievements */}
           {event.newAchievements.map((a) => (
             <View key={a.key} style={styles.achievementRow}>
-              <Text style={styles.achievementIcon}>{a.icon}</Text>
+              <LottieAnimation
+                source={Animations.achievementUnlock}
+                autoPlay
+                width={48}
+                height={48}
+              />
               <View style={{ flex: 1 }}>
-                <Text style={styles.achievementLabel}>Achievement Unlocked!</Text>
-                <Text style={styles.achievementName}>{a.name}</Text>
+                <Text style={styles.achievementLabel}>
+                  Achievement Unlocked!
+                </Text>
+                <Text style={styles.achievementName}>
+                  {a.icon} {a.name}
+                </Text>
               </View>
             </View>
           ))}
@@ -111,19 +139,19 @@ export function CelebrationModal({ event, onDismiss }: CelebrationModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 32,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 32,
-    alignItems: 'center',
-    width: '100%',
+    alignItems: "center",
+    width: "100%",
     maxWidth: 340,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,
@@ -142,16 +170,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   levelUpSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 12,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#F3E8FF',
+    backgroundColor: "#F3E8FF",
     borderRadius: 16,
-    width: '100%',
+    width: "100%",
   },
-  levelUpEmoji: {
-    fontSize: 48,
+  lottieInline: {
+    marginBottom: -4,
   },
   levelUpTitle: {
     ...typography.childH2,
@@ -163,15 +191,15 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   achievementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginVertical: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: "#FFF8E1",
     borderRadius: 12,
-    width: '100%',
+    width: "100%",
   },
   achievementIcon: {
     fontSize: 32,
@@ -180,7 +208,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.semiBold,
     fontSize: 12,
     color: colors.accent,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   achievementName: {
     ...typography.childH3,

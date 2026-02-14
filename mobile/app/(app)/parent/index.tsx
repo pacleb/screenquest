@@ -49,12 +49,25 @@ import {
   StreakFire,
   ProgressBar,
 } from "../../../src/components";
+import {
+  WeeklyCompletionChart,
+  ScreenTimeTrend,
+  StreakCalendar,
+} from "../../../src/components/ParentCharts";
+
+interface ChildWeeklyStats {
+  questsCompleted: number;
+  totalPlayMinutes: number;
+  currentStreak: number;
+  dailyStats: { date: string; quests: number; playMinutes: number }[];
+}
 
 interface ChildData {
   member: FamilyMember;
   balance: TimeBankBalance;
   activeSession: PlaySession | null;
   progress: ChildProgressData | null;
+  weeklyStats: ChildWeeklyStats | null;
 }
 
 export default function ParentDashboard() {
@@ -80,16 +93,18 @@ export default function ParentDashboard() {
 
       // Fetch balance + active session + gamification for each child
       const childDataPromises = children.map(async (child) => {
-        const [balance, activeSession, progress] = await Promise.all([
-          timeBankService.getBalance(child.id).catch(() => ({
-            stackableMinutes: 0,
-            nonStackableMinutes: 0,
-            totalMinutes: 0,
-          })),
-          playSessionService.getActiveSession(child.id).catch(() => null),
-          gamificationService.getProgress(child.id).catch(() => null),
-        ]);
-        return { member: child, balance, activeSession, progress };
+        const [balance, activeSession, progress, weeklyStats] =
+          await Promise.all([
+            timeBankService.getBalance(child.id).catch(() => ({
+              stackableMinutes: 0,
+              nonStackableMinutes: 0,
+              totalMinutes: 0,
+            })),
+            playSessionService.getActiveSession(child.id).catch(() => null),
+            gamificationService.getProgress(child.id).catch(() => null),
+            gamificationService.getChildWeeklyStats(child.id).catch(() => null),
+          ]);
+        return { member: child, balance, activeSession, progress, weeklyStats };
       });
 
       const childData = await Promise.all(childDataPromises);
@@ -128,6 +143,14 @@ export default function ParentDashboard() {
   };
 
   const pendingCount = pendingApprovals.length;
+  const CHILD_CHART_COLORS = [
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    "#9B59B6",
+    "#E74C3C",
+    "#1ABC9C",
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -161,6 +184,8 @@ export default function ParentDashboard() {
           <TouchableOpacity
             onPress={logout}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Log out"
+            accessibilityRole="button"
           >
             <Ionicons
               name="log-out-outline"
@@ -341,6 +366,8 @@ export default function ParentDashboard() {
                       <TouchableOpacity
                         style={styles.denyBtn}
                         onPress={() => router.push("/(app)/parent/approvals")}
+                        accessibilityLabel="Deny quest completion"
+                        accessibilityRole="button"
                       >
                         <Ionicons name="close" size={18} color={colors.error} />
                       </TouchableOpacity>
@@ -356,6 +383,9 @@ export default function ParentDashboard() {
                             /* silent */
                           }
                         }}
+                        accessibilityLabel="Approve quest completion"
+                        accessibilityRole="button"
+                        accessibilityHint="Approves this quest and awards time"
                       >
                         <Ionicons name="checkmark" size={18} color="#FFF" />
                         <Text style={styles.approveBtnText}>Approve</Text>
@@ -409,6 +439,8 @@ export default function ParentDashboard() {
                                 /* silent */
                               }
                             }}
+                            accessibilityLabel={`Stop ${member.name}'s play session`}
+                            accessibilityRole="button"
                           >
                             <Ionicons
                               name="stop-circle-outline"
@@ -445,6 +477,59 @@ export default function ParentDashboard() {
                 <Text style={styles.statLabel}>Playing</Text>
               </Card>
             </View>
+
+            {/* Insights Charts */}
+            {childrenData.length > 0 && (
+              <View style={styles.chartsSection}>
+                <SectionHeader title="Weekly Insights" />
+
+                {/* Weekly quest completions per child */}
+                <WeeklyCompletionChart
+                  children={childrenData
+                    .filter((c) => c.weeklyStats)
+                    .map((c, idx) => ({
+                      childName: c.member.name,
+                      questsCompleted: c.weeklyStats!.questsCompleted,
+                      color:
+                        CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length],
+                    }))}
+                />
+
+                {/* Screen time trend per child */}
+                {childrenData.map((c, idx) =>
+                  c.weeklyStats && c.weeklyStats.dailyStats.length > 0 ? (
+                    <ScreenTimeTrend
+                      key={c.member.id}
+                      data={c.weeklyStats.dailyStats.map((d) => ({
+                        date: d.date,
+                        minutesUsed: d.playMinutes,
+                      }))}
+                      label={`${c.member.name}'s Screen Time`}
+                      accentColor={
+                        CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length]
+                      }
+                    />
+                  ) : null,
+                )}
+
+                {/* Streak calendar per child */}
+                {childrenData.map((c, idx) =>
+                  c.weeklyStats && c.weeklyStats.dailyStats.length > 0 ? (
+                    <StreakCalendar
+                      key={c.member.id}
+                      childName={c.member.name}
+                      streakColor={
+                        CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length]
+                      }
+                      days={c.weeklyStats.dailyStats.map((d) => ({
+                        date: d.date,
+                        completed: d.quests > 0,
+                      }))}
+                    />
+                  ) : null,
+                )}
+              </View>
+            )}
 
             {/* Activity Feed */}
             {activityFeed.length > 0 && (
@@ -693,6 +778,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   feedSection: {
+    marginTop: spacing.lg,
+  },
+  chartsSection: {
     marginTop: spacing.lg,
   },
   feedItem: {

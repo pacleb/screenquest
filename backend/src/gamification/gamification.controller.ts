@@ -22,12 +22,21 @@ import { EquipItemDto, ToggleLeaderboardDto, SetActiveThemeDto, SetShowcaseDto, 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ChildGamificationController {
-  constructor(private gamificationService: GamificationService) {}
+  constructor(
+    private gamificationService: GamificationService,
+    private themeService: ThemeService,
+  ) {}
 
   @Get('progress')
   @ApiOperation({ summary: 'Get child XP, level, streak progress' })
   async getProgress(@Param('childId') childId: string) {
     return this.gamificationService.getChildProgress(childId);
+  }
+
+  @Get('weekly-stats')
+  @ApiOperation({ summary: 'Weekly quest/XP/time stats for a child (parent-accessible)' })
+  async getChildWeeklyStats(@Param('childId') childId: string) {
+    return this.themeService.getWeeklyStats(childId);
   }
 
   @Get('achievements')

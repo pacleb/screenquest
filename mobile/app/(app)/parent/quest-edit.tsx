@@ -668,6 +668,7 @@ export default function QuestEditScreen() {
               value={requiresProof}
               onValueChange={setRequiresProof}
               trackColor={{ false: colors.border, true: colors.primary }}
+              accessibilityLabel="Requires photo proof"
             />
           </View>
           <View style={styles.toggleRow}>
@@ -681,6 +682,7 @@ export default function QuestEditScreen() {
               value={autoApprove}
               onValueChange={setAutoApprove}
               trackColor={{ false: colors.border, true: colors.primary }}
+              accessibilityLabel="Auto-approve quest completions"
             />
           </View>
 

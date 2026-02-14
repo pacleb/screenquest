@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,17 +11,21 @@ import {
   Share,
   ActivityIndicator,
   TextInput,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { useAuthStore } from '../../../src/store/auth';
-import { familyService, Family, FamilyMember } from '../../../src/services/family';
-import { colors, spacing, borderRadius } from '../../../src/theme';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { useAuthStore } from "../../../src/store/auth";
+import {
+  familyService,
+  Family,
+  FamilyMember,
+} from "../../../src/services/family";
+import { colors, spacing, borderRadius } from "../../../src/theme";
 
 const ROLE_LABELS: Record<string, string> = {
-  parent: 'Parent',
-  guardian: 'Guardian',
-  child: 'Child',
+  parent: "Parent",
+  guardian: "Guardian",
+  child: "Child",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -41,15 +45,15 @@ export default function FamilyScreen() {
 
   // Add Child form
   const [showAddChild, setShowAddChild] = useState(false);
-  const [childName, setChildName] = useState('');
-  const [childAge, setChildAge] = useState('');
-  const [childPin, setChildPin] = useState('');
+  const [childName, setChildName] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [childPin, setChildPin] = useState("");
   const [consentChecked, setConsentChecked] = useState(false);
   const [addingChild, setAddingChild] = useState(false);
 
   // Invite form
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -62,7 +66,7 @@ export default function FamilyScreen() {
       setFamily(familyData);
       setMembers(membersData);
     } catch {
-      Alert.alert('Error', 'Failed to load family data');
+      Alert.alert("Error", "Failed to load family data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,7 +80,7 @@ export default function FamilyScreen() {
   const handleCopyCode = async () => {
     if (!family) return;
     await Clipboard.setStringAsync(family.familyCode);
-    Alert.alert('Copied!', 'Family code copied to clipboard');
+    Alert.alert("Copied!", "Family code copied to clipboard");
   };
 
   const handleShareCode = async () => {
@@ -93,19 +97,26 @@ export default function FamilyScreen() {
   const handleAddChild = async () => {
     if (!familyId) return;
     if (!childName.trim()) {
-      Alert.alert('Validation', 'Child name is required');
+      Alert.alert("Validation", "Child name is required");
       return;
     }
-    if (!childAge || parseInt(childAge, 10) < 1 || parseInt(childAge, 10) > 17) {
-      Alert.alert('Validation', 'Please enter a valid age (1-17)');
+    if (
+      !childAge ||
+      parseInt(childAge, 10) < 1 ||
+      parseInt(childAge, 10) > 17
+    ) {
+      Alert.alert("Validation", "Please enter a valid age (1-17)");
       return;
     }
     if (!childPin || childPin.length < 4) {
-      Alert.alert('Validation', 'PIN must be at least 4 digits');
+      Alert.alert("Validation", "PIN must be at least 4 digits");
       return;
     }
     if (!consentChecked) {
-      Alert.alert('Consent Required', 'You must provide parental consent to add a child under COPPA regulations.');
+      Alert.alert(
+        "Consent Required",
+        "You must provide parental consent to add a child under COPPA regulations.",
+      );
       return;
     }
 
@@ -115,17 +126,18 @@ export default function FamilyScreen() {
         name: childName.trim(),
         age: parseInt(childAge, 10),
         pin: childPin,
-        consentText: 'I, the parent/guardian, consent to the collection and use of my child\'s information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.',
+        consentText:
+          "I, the parent/guardian, consent to the collection and use of my child's information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.",
       });
-      setChildName('');
-      setChildAge('');
-      setChildPin('');
+      setChildName("");
+      setChildAge("");
+      setChildPin("");
       setConsentChecked(false);
       setShowAddChild(false);
       fetchData();
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to add child';
-      Alert.alert('Error', msg);
+      const msg = error.response?.data?.message || "Failed to add child";
+      Alert.alert("Error", msg);
     } finally {
       setAddingChild(false);
     }
@@ -133,20 +145,20 @@ export default function FamilyScreen() {
 
   const handleInvite = async () => {
     if (!familyId) return;
-    if (!inviteEmail.trim() || !inviteEmail.includes('@')) {
-      Alert.alert('Validation', 'Please enter a valid email');
+    if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
+      Alert.alert("Validation", "Please enter a valid email");
       return;
     }
 
     setInviting(true);
     try {
       await familyService.invite(familyId, inviteEmail.trim());
-      Alert.alert('Invited!', `Invitation sent to ${inviteEmail}`);
-      setInviteEmail('');
+      Alert.alert("Invited!", `Invitation sent to ${inviteEmail}`);
+      setInviteEmail("");
       setShowInvite(false);
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to send invite';
-      Alert.alert('Error', msg);
+      const msg = error.response?.data?.message || "Failed to send invite";
+      Alert.alert("Error", msg);
     } finally {
       setInviting(false);
     }
@@ -154,30 +166,36 @@ export default function FamilyScreen() {
 
   const handleRemoveChild = (child: FamilyMember) => {
     if (!familyId) return;
-    Alert.alert('Remove Child', `Remove ${child.name} from the family?`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert("Remove Child", `Remove ${child.name} from the family?`, [
+      { text: "Cancel", style: "cancel" },
       {
-        text: 'Remove',
-        style: 'destructive',
+        text: "Remove",
+        style: "destructive",
         onPress: async () => {
           try {
             await familyService.removeChild(familyId, child.id);
             fetchData();
           } catch {
-            Alert.alert('Error', 'Failed to remove child');
+            Alert.alert("Error", "Failed to remove child");
           }
         },
       },
     ]);
   };
 
-  const parents = members.filter((m) => m.role === 'parent' || m.role === 'guardian');
-  const childMembers = members.filter((m) => m.role === 'child');
+  const parents = members.filter(
+    (m) => m.role === "parent" || m.role === "guardian",
+  );
+  const childMembers = members.filter((m) => m.role === "child");
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 100 }} />
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ marginTop: 100 }}
+        />
       </SafeAreaView>
     );
   }
@@ -187,14 +205,22 @@ export default function FamilyScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchData();
+            }}
+          />
         }
       >
         {/* Family Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{family?.name || 'My Family'}</Text>
+          <Text style={styles.title}>{family?.name || "My Family"}</Text>
           <View style={styles.planBadge}>
-            <Text style={styles.planText}>{family?.plan === 'premium' ? 'Premium' : 'Free Plan'}</Text>
+            <Text style={styles.planText}>
+              {family?.plan === "premium" ? "Premium" : "Free Plan"}
+            </Text>
           </View>
         </View>
 
@@ -205,7 +231,9 @@ export default function FamilyScreen() {
             <Text style={styles.codeLabel}>Family Code</Text>
           </View>
           <Text style={styles.codeValue}>{family?.familyCode}</Text>
-          <Text style={styles.codeHint}>Share this code with family members to join</Text>
+          <Text style={styles.codeHint}>
+            Share this code with family members to join
+          </Text>
           <View style={styles.codeActions}>
             <TouchableOpacity style={styles.codeBtn} onPress={handleCopyCode}>
               <Ionicons name="copy-outline" size={18} color={colors.primary} />
@@ -223,7 +251,11 @@ export default function FamilyScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Parents & Guardians</Text>
             <TouchableOpacity onPress={() => setShowInvite(!showInvite)}>
-              <Ionicons name="person-add-outline" size={22} color={colors.primary} />
+              <Ionicons
+                name="person-add-outline"
+                size={22}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </View>
 
@@ -237,12 +269,20 @@ export default function FamilyScreen() {
                 onChangeText={setInviteEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                accessibilityLabel="Email address for invitation"
               />
               <View style={styles.formActions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowInvite(false)}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setShowInvite(false)}
+                >
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.submitBtn} onPress={handleInvite} disabled={inviting}>
+                <TouchableOpacity
+                  style={styles.submitBtn}
+                  onPress={handleInvite}
+                  disabled={inviting}
+                >
                   {inviting ? (
                     <ActivityIndicator size="small" color="#FFF" />
                   ) : (
@@ -256,7 +296,9 @@ export default function FamilyScreen() {
           {parents.map((member) => (
             <View key={member.id} style={styles.memberCard}>
               <View style={styles.memberAvatar}>
-                <Text style={styles.avatarText}>{member.name.charAt(0).toUpperCase()}</Text>
+                <Text style={styles.avatarText}>
+                  {member.name.charAt(0).toUpperCase()}
+                </Text>
               </View>
               <View style={styles.memberInfo}>
                 <Text style={styles.memberName}>
@@ -267,8 +309,15 @@ export default function FamilyScreen() {
                 </Text>
                 <Text style={styles.memberEmail}>{member.email}</Text>
               </View>
-              <View style={[styles.roleBadge, { backgroundColor: ROLE_COLORS[member.role] + '20' }]}>
-                <Text style={[styles.roleText, { color: ROLE_COLORS[member.role] }]}>
+              <View
+                style={[
+                  styles.roleBadge,
+                  { backgroundColor: ROLE_COLORS[member.role] + "20" },
+                ]}
+              >
+                <Text
+                  style={[styles.roleText, { color: ROLE_COLORS[member.role] }]}
+                >
                   {ROLE_LABELS[member.role] || member.role}
                 </Text>
               </View>
@@ -279,9 +328,15 @@ export default function FamilyScreen() {
         {/* Children */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Children ({childMembers.length}/6)</Text>
+            <Text style={styles.sectionTitle}>
+              Children ({childMembers.length}/6)
+            </Text>
             <TouchableOpacity onPress={() => setShowAddChild(!showAddChild)}>
-              <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
+              <Ionicons
+                name="add-circle-outline"
+                size={24}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </View>
 
@@ -293,6 +348,7 @@ export default function FamilyScreen() {
                 placeholderTextColor={colors.textSecondary}
                 value={childName}
                 onChangeText={setChildName}
+                accessibilityLabel="Child's name"
               />
               <View style={styles.formRow}>
                 <TextInput
@@ -303,6 +359,7 @@ export default function FamilyScreen() {
                   onChangeText={setChildAge}
                   keyboardType="number-pad"
                   maxLength={2}
+                  accessibilityLabel="Child's age"
                 />
                 <TextInput
                   style={[styles.formInput, { flex: 2 }]}
@@ -313,27 +370,40 @@ export default function FamilyScreen() {
                   keyboardType="number-pad"
                   maxLength={6}
                   secureTextEntry
+                  accessibilityLabel="Child's PIN code"
+                  accessibilityHint="Enter at least 4 digits"
                 />
               </View>
               <TouchableOpacity
                 style={styles.consentRow}
                 onPress={() => setConsentChecked(!consentChecked)}
                 activeOpacity={0.7}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: consentChecked }}
+                accessibilityLabel="COPPA parental consent"
               >
                 <Ionicons
-                  name={consentChecked ? 'checkbox' : 'square-outline'}
+                  name={consentChecked ? "checkbox" : "square-outline"}
                   size={22}
                   color={consentChecked ? colors.primary : colors.textSecondary}
                 />
                 <Text style={styles.consentText}>
-                  I consent to ScreenQuest collecting my child's data as described in the Privacy Policy (COPPA).
+                  I consent to ScreenQuest collecting my child's data as
+                  described in the Privacy Policy (COPPA).
                 </Text>
               </TouchableOpacity>
               <View style={styles.formActions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddChild(false)}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setShowAddChild(false)}
+                >
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.submitBtn} onPress={handleAddChild} disabled={addingChild}>
+                <TouchableOpacity
+                  style={styles.submitBtn}
+                  onPress={handleAddChild}
+                  disabled={addingChild}
+                >
                   {addingChild ? (
                     <ActivityIndicator size="small" color="#FFF" />
                   ) : (
@@ -347,7 +417,9 @@ export default function FamilyScreen() {
           {childMembers.length === 0 ? (
             <View style={styles.emptyChildren}>
               <Text style={styles.emptyText}>No children added yet</Text>
-              <Text style={styles.emptyHint}>Tap + to add your first child</Text>
+              <Text style={styles.emptyHint}>
+                Tap + to add your first child
+              </Text>
             </View>
           ) : (
             childMembers.map((child) => (
@@ -356,8 +428,15 @@ export default function FamilyScreen() {
                 style={styles.memberCard}
                 onLongPress={() => handleRemoveChild(child)}
               >
-                <View style={[styles.memberAvatar, { backgroundColor: colors.secondary + '30' }]}>
-                  <Text style={[styles.avatarText, { color: colors.secondary }]}>
+                <View
+                  style={[
+                    styles.memberAvatar,
+                    { backgroundColor: colors.secondary + "30" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.avatarText, { color: colors.secondary }]}
+                  >
                     {child.name.charAt(0).toUpperCase()}
                   </Text>
                 </View>
@@ -367,8 +446,15 @@ export default function FamilyScreen() {
                     <Text style={styles.memberEmail}>Age {child.age}</Text>
                   )}
                 </View>
-                <View style={[styles.roleBadge, { backgroundColor: ROLE_COLORS.child + '20' }]}>
-                  <Text style={[styles.roleText, { color: ROLE_COLORS.child }]}>Child</Text>
+                <View
+                  style={[
+                    styles.roleBadge,
+                    { backgroundColor: ROLE_COLORS.child + "20" },
+                  ]}
+                >
+                  <Text style={[styles.roleText, { color: ROLE_COLORS.child }]}>
+                    Child
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -385,19 +471,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.lg },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.lg,
   },
-  title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary },
+  title: { fontSize: 28, fontWeight: "800", color: colors.textPrimary },
   planBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.xl,
-    backgroundColor: colors.accent + '20',
+    backgroundColor: colors.accent + "20",
   },
-  planText: { fontSize: 12, fontWeight: '700', color: colors.accent },
+  planText: { fontSize: 12, fontWeight: "700", color: colors.accent },
   codeCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -406,43 +492,57 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  codeHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
-  codeLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  codeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  codeLabel: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
   codeValue: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.primary,
     letterSpacing: 4,
-    textAlign: 'center',
+    textAlign: "center",
     marginVertical: spacing.sm,
   },
-  codeHint: { fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.md },
-  codeActions: { flexDirection: 'row', justifyContent: 'center', gap: spacing.lg },
+  codeHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  codeActions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.lg,
+  },
   codeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary + '10',
+    backgroundColor: colors.primary + "10",
   },
-  codeBtnText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  codeBtnText: { fontSize: 14, fontWeight: "600", color: colors.primary },
   section: { marginBottom: spacing.lg },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
   },
   memberCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
@@ -454,29 +554,29 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.primary + "20",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: spacing.md,
   },
-  avatarText: { fontSize: 18, fontWeight: '700', color: colors.primary },
+  avatarText: { fontSize: 18, fontWeight: "700", color: colors.primary },
   memberInfo: { flex: 1 },
-  memberName: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+  memberName: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
   memberEmail: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  ownerBadge: { fontSize: 12, fontWeight: '600', color: colors.accent },
+  ownerBadge: { fontSize: 12, fontWeight: "600", color: colors.accent },
   roleBadge: {
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },
-  roleText: { fontSize: 12, fontWeight: '700' },
+  roleText: { fontSize: 12, fontWeight: "700" },
   addForm: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.primary + '40',
+    borderColor: colors.primary + "40",
   },
   formInput: {
     height: 44,
@@ -489,10 +589,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.sm,
   },
-  formRow: { flexDirection: 'row', gap: spacing.sm },
+  formRow: { flexDirection: "row", gap: spacing.sm },
   formActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: spacing.sm,
     marginTop: spacing.xs,
   },
@@ -501,19 +601,23 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
   },
-  cancelBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
   submitBtn: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     backgroundColor: colors.primary,
     minWidth: 100,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  submitBtnText: { fontSize: 14, fontWeight: '700', color: '#FFF' },
+  submitBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
   consentRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.sm,
     marginBottom: spacing.sm,
     paddingVertical: spacing.xs,
@@ -524,7 +628,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 18,
   },
-  emptyChildren: { alignItems: 'center', paddingVertical: spacing.xl },
-  emptyText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
+  emptyChildren: { alignItems: "center", paddingVertical: spacing.xl },
+  emptyText: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
+  emptyHint: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
 });

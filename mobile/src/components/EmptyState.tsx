@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, fonts } from '../theme';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, spacing, fonts } from "../theme";
+import { LottieAnimation } from "./LottieAnimation";
+import { Animations } from "../../assets/animations";
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -9,15 +11,36 @@ interface EmptyStateProps {
   title: string;
   message?: string;
   childUI?: boolean;
+  animated?: boolean;
 }
 
-export function EmptyState({ icon, emoji, title, message, childUI }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  emoji,
+  title,
+  message,
+  childUI,
+  animated,
+}: EmptyStateProps) {
   return (
-    <View style={styles.container}>
-      {emoji ? (
+    <View
+      style={styles.container}
+      accessibilityRole="text"
+      accessibilityLabel={`${title}. ${message || ""}`.trim()}
+    >
+      {animated ? (
+        <LottieAnimation
+          source={Animations.emptyState}
+          autoPlay
+          loop
+          width={120}
+          height={120}
+          style={{ marginBottom: spacing.sm }}
+        />
+      ) : emoji ? (
         <Text style={styles.emoji}>{emoji}</Text>
       ) : icon ? (
-        <Ionicons name={icon} size={56} color={colors.textSecondary + '60'} />
+        <Ionicons name={icon} size={56} color={colors.textSecondary + "60"} />
       ) : null}
       <Text
         style={[
@@ -31,7 +54,9 @@ export function EmptyState({ icon, emoji, title, message, childUI }: EmptyStateP
         <Text
           style={[
             styles.message,
-            { fontFamily: childUI ? fonts.child.regular : fonts.parent.regular },
+            {
+              fontFamily: childUI ? fonts.child.regular : fonts.parent.regular,
+            },
           ]}
         >
           {message}
@@ -42,19 +67,23 @@ export function EmptyState({ icon, emoji, title, message, childUI }: EmptyStateP
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingTop: 60, paddingHorizontal: spacing.xl },
+  container: {
+    alignItems: "center",
+    paddingTop: 60,
+    paddingHorizontal: spacing.xl,
+  },
   emoji: { fontSize: 56, marginBottom: spacing.md },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
     marginTop: spacing.md,
-    textAlign: 'center',
+    textAlign: "center",
   },
   message: {
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: spacing.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

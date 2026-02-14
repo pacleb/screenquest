@@ -90,7 +90,9 @@ export default function ChildHome() {
       ]);
       if (cachedBal?.data) setBalance(cachedBal.data);
       if (cachedQuests?.data) {
-        setQuests(cachedQuests.data.filter((q) => q.availableToComplete).slice(0, 5));
+        setQuests(
+          cachedQuests.data.filter((q) => q.availableToComplete).slice(0, 5),
+        );
       }
     } finally {
       setLoading(false);
@@ -211,6 +213,10 @@ export default function ChildHome() {
               }}
               disabled={!canPlay}
               activeOpacity={0.85}
+              accessibilityLabel="Start playing"
+              accessibilityRole="button"
+              accessibilityHint="Opens the play timer screen"
+              accessibilityState={{ disabled: !canPlay }}
             >
               <Ionicons
                 name="play-circle"
@@ -268,6 +274,7 @@ export default function ChildHome() {
                 title="No quests available"
                 message="Check back later or ask your parents!"
                 childUI
+                animated
               />
             )}
           </>

@@ -210,14 +210,14 @@ export class ThemeService {
 
   async getWeeklyStats(childId: string) {
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
 
     const [completions, progress, playSessions] = await Promise.all([
       this.prisma.questCompletion.findMany({
         where: {
           childId,
           status: 'approved',
-          completedAt: { gte: weekAgo },
+          completedAt: { gte: fourWeeksAgo },
         },
         include: { quest: { select: { rewardMinutes: true } } },
       }),
@@ -226,22 +226,31 @@ export class ThemeService {
         where: {
           childId,
           status: 'completed',
-          startedAt: { gte: weekAgo },
+          startedAt: { gte: fourWeeksAgo },
         },
         select: { startedAt: true, endedAt: true },
       }),
     ]);
 
-    const questsCompleted = completions.length;
-    const minutesEarned = completions.reduce(
+    // Only count last 7 days for the summary totals
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekCompletions = completions.filter((c) => c.completedAt >= weekAgo);
+    const weekPlaySessions = playSessions.filter((s) => s.startedAt! >= weekAgo);
+
+    const questsCompleted = weekCompletions.length;
+    const minutesEarned = weekCompletions.reduce(
       (sum, c) => sum + (c.quest?.rewardMinutes ?? 0),
       0,
     );
     const xpEarned = progress?.weeklyXp ?? 0;
+    const totalPlayMinutes = weekPlaySessions.reduce((sum, s) => {
+      if (!s.endedAt) return sum;
+      return sum + Math.round((s.endedAt.getTime() - s.startedAt!.getTime()) / 60000);
+    }, 0);
 
-    // Daily breakdown for charts
-    const dailyStats: { date: string; quests: number; minutes: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
+    // Daily breakdown for charts — 28 days for streak calendar
+    const dailyStats: { date: string; quests: number; minutes: number; xp: number; playMinutes: number }[] = [];
+    for (let i = 27; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().slice(0, 10);
@@ -250,21 +259,23 @@ export class ThemeService {
         (c) => c.completedAt.toISOString().slice(0, 10) === dateStr,
       );
 
+      const dayPlayMinutes = playSessions
+        .filter((s) => s.startedAt!.toISOString().slice(0, 10) === dateStr && s.endedAt)
+        .reduce((sum, s) => sum + Math.round((s.endedAt!.getTime() - s.startedAt!.getTime()) / 60000), 0);
+
+      const dayMinutes = dayCompletions.reduce(
+        (sum, c) => sum + (c.quest?.rewardMinutes ?? 0),
+        0,
+      );
+
       dailyStats.push({
         date: dateStr,
         quests: dayCompletions.length,
-        minutes: dayCompletions.reduce(
-          (sum, c) => sum + (c.quest?.rewardMinutes ?? 0),
-          0,
-        ),
+        minutes: dayMinutes,
+        xp: dayCompletions.length * 10, // approximate XP based on quest count
+        playMinutes: dayPlayMinutes,
       });
     }
-
-    // Total play time in minutes
-    const totalPlayMinutes = playSessions.reduce((sum, s) => {
-      if (!s.endedAt) return sum;
-      return sum + Math.round((s.endedAt.getTime() - s.startedAt!.getTime()) / 60000);
-    }, 0);
 
     return {
       questsCompleted,

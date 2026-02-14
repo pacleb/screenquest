@@ -21,17 +21,11 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { diskStorage } from 'multer';
-import { extname, join, basename } from 'path';
+import { memoryStorage } from 'multer';
+import { basename } from 'path';
 import { v4 as uuid } from 'uuid';
-import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'fs';
-
-const UPLOAD_DIR = join(process.cwd(), 'uploads', 'proofs');
-
-// Ensure upload dir exists
-if (!existsSync(UPLOAD_DIR)) {
-  mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+import sharp from 'sharp';
+import { StorageService } from './storage.service';
 
 // Magic byte signatures for allowed image types
 const MAGIC_BYTES: { mime: string; bytes: number[] }[] = [
@@ -41,14 +35,12 @@ const MAGIC_BYTES: { mime: string; bytes: number[] }[] = [
   { mime: 'image/webp', bytes: [0x52, 0x49, 0x46, 0x46] },
 ];
 
-function validateMagicBytes(filePath: string): boolean {
-  const buffer = readFileSync(filePath);
+function validateMagicBytes(buffer: Buffer): boolean {
   if (buffer.length < 12) return false;
 
   for (const { mime, bytes } of MAGIC_BYTES) {
     const matches = bytes.every((b, i) => buffer[i] === b);
     if (matches) {
-      // Extra check for WebP: bytes 8-11 must be "WEBP"
       if (mime === 'image/webp') {
         return (
           buffer[8] === 0x57 &&
@@ -68,6 +60,8 @@ function validateMagicBytes(filePath: string): boolean {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UploadController {
+  constructor(private storageService: StorageService) {}
+
   @Post('proof')
   @ApiOperation({ summary: 'Upload proof photo for quest completion' })
   @ApiConsumes('multipart/form-data')
@@ -81,13 +75,7 @@ export class UploadController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: UPLOAD_DIR,
-        filename: (_req, file, cb) => {
-          const uniqueName = `${uuid()}${extname(file.originalname)}`;
-          cb(null, uniqueName);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
       fileFilter: (_req, file, cb) => {
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -99,25 +87,31 @@ export class UploadController {
       },
     }),
   )
-  uploadProof(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
+  async uploadProof(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
     // Validate magic bytes to prevent MIME spoofing
-    const filePath = join(UPLOAD_DIR, file.filename);
-    if (!validateMagicBytes(filePath)) {
-      unlinkSync(filePath); // Delete the invalid file
+    if (!validateMagicBytes(file.buffer)) {
       throw new BadRequestException('File content does not match an allowed image type');
     }
 
-    // Return a URL path — in production this would be an S3/signed URL
-    const url = `/api/uploads/proofs/${file.filename}`;
+    // Process image: resize to max 1200px wide, compress to JPEG
+    const processed = await sharp(file.buffer)
+      .resize({ width: 1200, withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    const key = `proofs/${uuid()}.jpg`;
+
+    await this.storageService.upload(key, processed, 'image/jpeg');
+    const url = await this.storageService.getSignedDownloadUrl(key);
 
     return {
       url,
-      filename: file.filename,
-      size: file.size,
+      key,
+      size: processed.length,
     };
   }
 
@@ -127,11 +121,19 @@ export class UploadController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {
-    // Sanitize filename to prevent path traversal
     const sanitized = basename(filename);
-    const filePath = join(UPLOAD_DIR, sanitized);
+    const key = `proofs/${sanitized}`;
 
-    if (!existsSync(filePath)) {
+    // If S3 enabled, redirect to signed URL
+    if (this.storageService.isS3Enabled()) {
+      const signedUrl = await this.storageService.getSignedDownloadUrl(key);
+      res.redirect(signedUrl);
+      return;
+    }
+
+    // Local fallback: serve file from disk
+    const filePath = this.storageService.getLocalFilePath(key);
+    if (!filePath) {
       throw new NotFoundException('File not found');
     }
 

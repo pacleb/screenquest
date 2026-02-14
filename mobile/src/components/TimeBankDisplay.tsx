@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fonts, typography } from '../theme';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { colors, spacing, borderRadius, fonts, typography } from "../theme";
 
 interface TimeBankDisplayProps {
   stackableMinutes: number;
@@ -19,16 +19,19 @@ export function TimeBankDisplay({
   const deficit = Math.abs(totalMinutes);
   const maxDisplay = Math.max(stackableMinutes + nonStackableMinutes, 120); // 2h baseline
   const stackFill = isNegative ? 0 : Math.min(stackableMinutes / maxDisplay, 1);
-  const nonStackFill = isNegative ? 0 : Math.min(nonStackableMinutes / maxDisplay, 1);
+  const nonStackFill = isNegative
+    ? 0
+    : Math.min(nonStackableMinutes / maxDisplay, 1);
 
   if (compact) {
     return (
-      <View style={styles.compactContainer}>
+      <View
+        style={styles.compactContainer}
+        accessibilityRole="text"
+        accessibilityLabel={`Time bank: ${totalMinutes} minutes`}
+      >
         <Text
-          style={[
-            styles.compactValue,
-            isNegative && { color: colors.error },
-          ]}
+          style={[styles.compactValue, isNegative && { color: colors.error }]}
         >
           {totalMinutes}
         </Text>
@@ -38,15 +41,16 @@ export function TimeBankDisplay({
   }
 
   return (
-    <View style={[styles.container, isNegative && styles.containerNegative]}>
+    <View
+      style={[styles.container, isNegative && styles.containerNegative]}
+      accessibilityRole="summary"
+      accessibilityLabel={`Time bank: ${totalMinutes} minutes. ${stackableMinutes} saved, ${nonStackableMinutes} expiring today`}
+    >
       <Text style={styles.label}>Time Bank</Text>
 
       {/* Large balance display */}
       <Text
-        style={[
-          styles.balanceValue,
-          isNegative && { color: colors.error },
-        ]}
+        style={[styles.balanceValue, isNegative && { color: colors.error }]}
       >
         {totalMinutes}
       </Text>
@@ -56,10 +60,7 @@ export function TimeBankDisplay({
       <View style={styles.barContainer}>
         <View style={styles.barTrack}>
           <View
-            style={[
-              styles.barFillStackable,
-              { width: `${stackFill * 100}%` },
-            ]}
+            style={[styles.barFillStackable, { width: `${stackFill * 100}%` }]}
           />
           <View
             style={[
@@ -75,14 +76,20 @@ export function TimeBankDisplay({
         <View style={styles.legendRow}>
           {stackableMinutes > 0 && (
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.primary }]}
+              />
               <Text style={styles.legendText}>{stackableMinutes}m saved</Text>
             </View>
           )}
           {nonStackableMinutes > 0 && (
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-              <Text style={styles.legendText}>{nonStackableMinutes}m today</Text>
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.accent }]}
+              />
+              <Text style={styles.legendText}>
+                {nonStackableMinutes}m today
+              </Text>
             </View>
           )}
         </View>
@@ -119,7 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -129,12 +136,12 @@ const styles = StyleSheet.create({
   containerNegative: {
     shadowColor: colors.error,
     borderWidth: 1.5,
-    borderColor: colors.error + '25',
+    borderColor: colors.error + "25",
   },
   label: {
     ...typography.childCaption,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: spacing.xs,
   },
@@ -150,33 +157,33 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   barContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: spacing.sm,
   },
   barTrack: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: 10,
     backgroundColor: colors.border,
     borderRadius: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   barFillStackable: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.primary,
     borderRadius: 5,
   },
   barFillNonStackable: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.accent,
   },
   legendRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
     marginTop: spacing.xs,
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
   },
   legendDot: {
@@ -193,7 +200,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
-    backgroundColor: colors.error + '12',
+    backgroundColor: colors.error + "12",
     borderRadius: borderRadius.xl,
   },
   deficitText: {
@@ -205,7 +212,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
-    backgroundColor: colors.accent + '15',
+    backgroundColor: colors.accent + "15",
     borderRadius: borderRadius.xl,
   },
   expiringText: {
@@ -219,8 +226,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   compactContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 2,
   },
   compactValue: {

@@ -15,15 +15,13 @@ import { Platform } from "react-native";
 // Sound asset map — maps keys to require() paths
 // We use a factory pattern so the sounds are lazy-loaded
 const SOUND_ASSETS: Record<string, () => any> = {
-  // These will be populated when actual sound files are added.
-  // For now we define the API shape and gracefully handle missing files.
-  // questComplete: () => require("../../assets/sounds/quest-complete.mp3"),
-  // levelUp: () => require("../../assets/sounds/level-up.mp3"),
-  // achievementUnlock: () => require("../../assets/sounds/achievement.mp3"),
-  // streakMilestone: () => require("../../assets/sounds/streak.mp3"),
-  // timerWarning: () => require("../../assets/sounds/timer-warning.mp3"),
-  // timerComplete: () => require("../../assets/sounds/timer-complete.mp3"),
-  // buttonTap: () => require("../../assets/sounds/tap.mp3"),
+  questComplete: () => require("../../assets/sounds/quest-complete.wav"),
+  levelUp: () => require("../../assets/sounds/level-up.wav"),
+  achievementUnlock: () => require("../../assets/sounds/achievement.wav"),
+  streakMilestone: () => require("../../assets/sounds/streak.wav"),
+  timerWarning: () => require("../../assets/sounds/timer-warning.wav"),
+  timerComplete: () => require("../../assets/sounds/timer-complete.wav"),
+  buttonTap: () => require("../../assets/sounds/tap.wav"),
 };
 
 class SoundEffectsManager {

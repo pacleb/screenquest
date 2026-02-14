@@ -87,6 +87,8 @@ export function StreakFire({ streak, size = "md" }: StreakFireProps) {
         styles.container,
         { width: dims.container, height: dims.container },
       ]}
+      accessibilityRole="text"
+      accessibilityLabel={`${streak} day streak`}
     >
       {/* Glow background for high streaks */}
       {streak >= 7 && (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -8,24 +8,53 @@ import {
   Alert,
   ActivityIndicator,
   AppState,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../../src/store/auth';
-import { playSessionService, PlaySession } from '../../../src/services/playSession';
-import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
-import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
-import { CountdownRing, Button, ConfettiOverlay } from '../../../src/components';
-import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../../src/store/auth";
+import {
+  playSessionService,
+  PlaySession,
+} from "../../../src/services/playSession";
+import {
+  timeBankService,
+  TimeBankBalance,
+} from "../../../src/services/timeBank";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  fonts,
+  typography,
+} from "../../../src/theme";
+import {
+  CountdownRing,
+  Button,
+  ConfettiOverlay,
+  LottieAnimation,
+} from "../../../src/components";
+import { Animations } from "../../../assets/animations";
+import { SoundEffects } from "../../../src/services/soundEffects";
+import { useNetworkStatus } from "../../../src/hooks/useNetworkStatus";
 
 const PRESETS = [15, 30, 45, 60, 90, 120];
 
-type ScreenState = 'select' | 'requesting' | 'waiting' | 'active' | 'paused' | 'completed';
+type ScreenState =
+  | "select"
+  | "requesting"
+  | "waiting"
+  | "active"
+  | "paused"
+  | "completed";
 
 export default function ChildPlay() {
   const user = useAuthStore((s) => s.user);
   const { isConnected } = useNetworkStatus();
-  const [screenState, setScreenState] = useState<ScreenState>('select');
-  const [balance, setBalance] = useState<TimeBankBalance>({ stackableMinutes: 0, nonStackableMinutes: 0, totalMinutes: 0 });
+  const [screenState, setScreenState] = useState<ScreenState>("select");
+  const [balance, setBalance] = useState<TimeBankBalance>({
+    stackableMinutes: 0,
+    nonStackableMinutes: 0,
+    totalMinutes: 0,
+  });
   const [selectedMinutes, setSelectedMinutes] = useState(30);
   const [session, setSession] = useState<PlaySession | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -47,14 +76,14 @@ export default function ChildPlay() {
 
       if (activeSession) {
         setSession(activeSession);
-        if (activeSession.status === 'active') {
+        if (activeSession.status === "active") {
           setRemainingSeconds(activeSession.remainingSeconds);
-          setScreenState('active');
-        } else if (activeSession.status === 'paused') {
+          setScreenState("active");
+        } else if (activeSession.status === "paused") {
           setRemainingSeconds(activeSession.remainingSeconds);
-          setScreenState('paused');
-        } else if (activeSession.status === 'requested') {
-          setScreenState('waiting');
+          setScreenState("paused");
+        } else if (activeSession.status === "requested") {
+          setScreenState("waiting");
         }
       }
     } catch {
@@ -69,8 +98,11 @@ export default function ChildPlay() {
   }, [init]);
 
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (nextState) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextState === "active"
+      ) {
         syncWithServer();
       }
       appStateRef.current = nextState;
@@ -79,14 +111,19 @@ export default function ChildPlay() {
   }, [session?.id]);
 
   useEffect(() => {
-    if (screenState === 'active' && remainingSeconds > 0) {
+    if (screenState === "active" && remainingSeconds > 0) {
       timerRef.current = setInterval(() => {
         setRemainingSeconds((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
-            setScreenState('completed');
+            setScreenState("completed");
             setShowConfetti(true);
+            SoundEffects.play("timerComplete");
             return 0;
+          }
+          // Play warning sound at 60 seconds remaining
+          if (prev === 60) {
+            SoundEffects.play("timerWarning");
           }
           return prev - 1;
         });
@@ -98,7 +135,10 @@ export default function ChildPlay() {
   }, [screenState]);
 
   useEffect(() => {
-    if ((screenState === 'active' || screenState === 'waiting') && session?.id) {
+    if (
+      (screenState === "active" || screenState === "waiting") &&
+      session?.id
+    ) {
       syncRef.current = setInterval(syncWithServer, 60000);
     }
     return () => {
@@ -112,21 +152,27 @@ export default function ChildPlay() {
       const updated = await playSessionService.getSession(session.id);
       setSession(updated);
 
-      if (updated.status === 'active') {
+      if (updated.status === "active") {
         setRemainingSeconds(updated.remainingSeconds);
-        setScreenState('active');
-      } else if (updated.status === 'paused') {
+        setScreenState("active");
+      } else if (updated.status === "paused") {
         setRemainingSeconds(updated.remainingSeconds);
-        setScreenState('paused');
-      } else if (updated.status === 'completed' || updated.status === 'stopped') {
-        setScreenState('completed');
+        setScreenState("paused");
+      } else if (
+        updated.status === "completed" ||
+        updated.status === "stopped"
+      ) {
+        setScreenState("completed");
         setRemainingSeconds(0);
-      } else if (updated.status === 'denied') {
-        setScreenState('select');
+      } else if (updated.status === "denied") {
+        setScreenState("select");
         setSession(null);
-        Alert.alert('Request Denied', 'Your play request was denied by a parent.');
-      } else if (updated.status === 'requested') {
-        setScreenState('waiting');
+        Alert.alert(
+          "Request Denied",
+          "Your play request was denied by a parent.",
+        );
+      } else if (updated.status === "requested") {
+        setScreenState("waiting");
       }
     } catch {
       // silent
@@ -136,22 +182,29 @@ export default function ChildPlay() {
   const handleRequestPlay = async () => {
     if (!user?.id) return;
     if (!isConnected) {
-      Alert.alert('No Internet', 'Connect to the internet to start a play session.');
+      Alert.alert(
+        "No Internet",
+        "Connect to the internet to start a play session.",
+      );
       return;
     }
     setActionLoading(true);
     try {
-      const result = await playSessionService.requestPlay(user.id, selectedMinutes);
+      const result = await playSessionService.requestPlay(
+        user.id,
+        selectedMinutes,
+      );
       setSession(result);
-      if (result.status === 'active') {
+      if (result.status === "active") {
         setRemainingSeconds(result.remainingSeconds);
-        setScreenState('active');
+        setScreenState("active");
       } else {
-        setScreenState('waiting');
+        setScreenState("waiting");
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to start play session';
-      Alert.alert('Error', msg);
+      const msg =
+        error.response?.data?.message || "Failed to start play session";
+      Alert.alert("Error", msg);
     } finally {
       setActionLoading(false);
     }
@@ -164,9 +217,9 @@ export default function ChildPlay() {
       const updated = await playSessionService.pause(session.id);
       setSession(updated);
       setRemainingSeconds(updated.remainingSeconds);
-      setScreenState('paused');
+      setScreenState("paused");
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to pause');
+      Alert.alert("Error", error.response?.data?.message || "Failed to pause");
     } finally {
       setActionLoading(false);
     }
@@ -179,9 +232,9 @@ export default function ChildPlay() {
       const updated = await playSessionService.resume(session.id);
       setSession(updated);
       setRemainingSeconds(updated.remainingSeconds);
-      setScreenState('active');
+      setScreenState("active");
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to resume');
+      Alert.alert("Error", error.response?.data?.message || "Failed to resume");
     } finally {
       setActionLoading(false);
     }
@@ -189,19 +242,22 @@ export default function ChildPlay() {
 
   const handleStop = async () => {
     if (!session?.id) return;
-    Alert.alert("I'm Done!", 'Stop playing and save remaining time?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert("I'm Done!", "Stop playing and save remaining time?", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: 'Stop',
+        text: "Stop",
         onPress: async () => {
           setActionLoading(true);
           try {
             await playSessionService.stop(session.id);
-            setScreenState('completed');
+            setScreenState("completed");
             setRemainingSeconds(0);
             setShowConfetti(true);
           } catch (error: any) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to stop');
+            Alert.alert(
+              "Error",
+              error.response?.data?.message || "Failed to stop",
+            );
           } finally {
             setActionLoading(false);
           }
@@ -211,7 +267,7 @@ export default function ChildPlay() {
   };
 
   const handleDone = () => {
-    setScreenState('select');
+    setScreenState("select");
     setSession(null);
     setRemainingSeconds(0);
     setShowConfetti(false);
@@ -223,20 +279,35 @@ export default function ChildPlay() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 100 }} />
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ marginTop: 100 }}
+        />
       </SafeAreaView>
     );
   }
 
   // --- Completed State ---
-  if (screenState === 'completed') {
+  if (screenState === "completed") {
     return (
       <SafeAreaView style={styles.container}>
-        <ConfettiOverlay active={showConfetti} onComplete={() => setShowConfetti(false)} />
+        <ConfettiOverlay
+          active={showConfetti}
+          onComplete={() => setShowConfetti(false)}
+        />
         <View style={styles.centered}>
-          <Text style={styles.completedEmoji}>🌟</Text>
+          <LottieAnimation
+            source={Animations.timerComplete}
+            autoPlay
+            width={140}
+            height={140}
+            style={{ marginBottom: spacing.sm }}
+          />
           <Text style={styles.completedTitle}>Great job!</Text>
-          <Text style={styles.completedSubtitle}>You managed your screen time well!</Text>
+          <Text style={styles.completedSubtitle}>
+            You managed your screen time well!
+          </Text>
           <Button
             title="Back to Play"
             onPress={handleDone}
@@ -249,12 +320,16 @@ export default function ChildPlay() {
   }
 
   // --- Waiting for Approval ---
-  if (screenState === 'waiting') {
+  if (screenState === "waiting") {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
           <Text style={styles.waitingEmoji}>⏳</Text>
-          <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: spacing.md }} />
+          <ActivityIndicator
+            size="large"
+            color={colors.accent}
+            style={{ marginVertical: spacing.md }}
+          />
           <Text style={styles.waitingTitle}>Request Sent!</Text>
           <Text style={styles.waitingSubtitle}>
             Waiting for your parent to approve {selectedMinutes} minutes...
@@ -268,11 +343,11 @@ export default function ChildPlay() {
   }
 
   // --- Active / Paused Timer ---
-  if (screenState === 'active' || screenState === 'paused') {
+  if (screenState === "active" || screenState === "paused") {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.timerContainer}>
-          {screenState === 'paused' && (
+          {screenState === "paused" && (
             <View style={styles.pausedBanner}>
               <Ionicons name="snow-outline" size={18} color={colors.accent} />
               <Text style={styles.pausedText}>PAUSED</Text>
@@ -287,19 +362,38 @@ export default function ChildPlay() {
 
           {/* Controls */}
           <View style={styles.controlRow}>
-            {screenState === 'active' ? (
-              <TouchableOpacity style={styles.pauseBtn} onPress={handlePause} disabled={actionLoading}>
+            {screenState === "active" ? (
+              <TouchableOpacity
+                style={styles.pauseBtn}
+                onPress={handlePause}
+                disabled={actionLoading}
+                accessibilityLabel="Pause timer"
+                accessibilityRole="button"
+              >
                 <Ionicons name="pause" size={28} color={colors.primary} />
                 <Text style={styles.controlText}>Pause</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.resumeBtn} onPress={handleResume} disabled={actionLoading}>
+              <TouchableOpacity
+                style={styles.resumeBtn}
+                onPress={handleResume}
+                disabled={actionLoading}
+                accessibilityLabel="Resume timer"
+                accessibilityRole="button"
+              >
                 <Ionicons name="play" size={28} color="#FFF" />
                 <Text style={styles.resumeBtnText}>Resume</Text>
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity style={styles.stopBtn} onPress={handleStop} disabled={actionLoading}>
+            <TouchableOpacity
+              style={styles.stopBtn}
+              onPress={handleStop}
+              disabled={actionLoading}
+              accessibilityLabel="Stop playing"
+              accessibilityRole="button"
+              accessibilityHint="Ends the current play session"
+            >
               <Ionicons name="stop" size={24} color={colors.error} />
               <Text style={styles.stopText}>I'm Done</Text>
             </TouchableOpacity>
@@ -341,12 +435,20 @@ export default function ChildPlay() {
                 ]}
                 onPress={() => !disabled && setSelectedMinutes(mins)}
                 disabled={disabled}
+                accessibilityLabel={`${mins} minutes`}
+                accessibilityRole="button"
+                accessibilityState={{
+                  selected: selectedMinutes === mins,
+                  disabled,
+                }}
               >
-                <Text style={[
-                  styles.presetText,
-                  selectedMinutes === mins && styles.presetTextActive,
-                  disabled && styles.presetTextDisabled,
-                ]}>
+                <Text
+                  style={[
+                    styles.presetText,
+                    selectedMinutes === mins && styles.presetTextActive,
+                    disabled && styles.presetTextDisabled,
+                  ]}
+                >
                   {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
                 </Text>
               </TouchableOpacity>
@@ -378,7 +480,12 @@ export default function ChildPlay() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.xl,
+  },
 
   // Select screen
   selectContainer: { flex: 1, padding: spacing.lg },
@@ -391,7 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.xl,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
@@ -421,18 +528,26 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
-  presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  presetGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   presetBtn: {
-    width: '30%' as any,
+    width: "30%" as any,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.card,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
     borderColor: colors.border,
     flexGrow: 1,
   },
-  presetBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
+  presetBtnActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + "10",
+  },
   presetBtnDisabled: { opacity: 0.4 },
   presetText: {
     fontFamily: fonts.child.bold,
@@ -441,7 +556,7 @@ const styles = StyleSheet.create({
   },
   presetTextActive: { color: colors.primary },
   presetTextDisabled: { color: colors.textSecondary },
-  selectedDisplay: { alignItems: 'center', marginBottom: spacing.xl },
+  selectedDisplay: { alignItems: "center", marginBottom: spacing.xl },
   selectedValue: {
     fontFamily: fonts.child.extraBold,
     fontSize: 56,
@@ -470,7 +585,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.sm,
   },
   cancelWaitBtn: { marginTop: spacing.xl },
@@ -481,12 +596,17 @@ const styles = StyleSheet.create({
   },
 
   // Timer
-  timerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
+  timerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.lg,
+  },
   pausedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.accent + '18',
+    backgroundColor: colors.accent + "18",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.xl,
@@ -498,13 +618,13 @@ const styles = StyleSheet.create({
     color: colors.accent,
     letterSpacing: 2,
   },
-  controlRow: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xl },
+  controlRow: { flexDirection: "row", gap: spacing.lg, marginTop: spacing.xl },
   pauseBtn: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary + '12',
+    backgroundColor: colors.primary + "12",
   },
   controlText: {
     fontFamily: fonts.child.semiBold,
@@ -513,7 +633,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   resumeBtn: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
@@ -522,17 +642,17 @@ const styles = StyleSheet.create({
   resumeBtnText: {
     fontFamily: fonts.child.semiBold,
     fontSize: 14,
-    color: '#FFF',
+    color: "#FFF",
     marginTop: spacing.xs,
   },
   stopBtn: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.error + '10',
+    backgroundColor: colors.error + "10",
     borderWidth: 1,
-    borderColor: colors.error + '25',
+    borderColor: colors.error + "25",
   },
   stopText: {
     fontFamily: fonts.child.semiBold,
@@ -552,6 +672,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     marginTop: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
