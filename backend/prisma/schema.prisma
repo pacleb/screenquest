@@ -72,6 +72,10 @@ model User {
   childAchievements    ChildAchievement[]    @relation("ChildAchievements")
   equippedItems        ChildEquippedItem[]   @relation("ChildEquippedItems")
   activeTheme          Theme?                @relation("UserActiveTheme", fields: [activeThemeId], references: [id])
+  childConsents        ParentalConsent[]     @relation("ChildConsent")
+  parentConsents       ParentalConsent[]     @relation("ParentConsent")
+  deletionRequests     AccountDeletionRequest[] @relation("UserDeletionRequest")
+  policyAcceptances    PolicyAcceptance[]    @relation("UserPolicyAcceptances")
 
   @@map("users")
 }
@@ -394,4 +398,57 @@ model Theme {
   users User[] @relation("UserActiveTheme")
 
   @@map("themes")
+}
+
+model ParentalConsent {
+  id          String    @id @default(uuid()) @db.Uuid
+  childId     String    @map("child_id") @db.Uuid
+  parentId    String    @map("parent_id") @db.Uuid
+  consentText String    @map("consent_text") @db.Text
+  consentedAt DateTime  @default(now()) @map("consented_at") @db.Timestamptz()
+  ipAddress   String?   @map("ip_address") @db.VarChar(45)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz()
+
+  child  User @relation("ChildConsent", fields: [childId], references: [id])
+  parent User @relation("ParentConsent", fields: [parentId], references: [id])
+
+  @@map("parental_consents")
+}
+
+model AccountDeletionRequest {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  requestedAt       DateTime  @default(now()) @map("requested_at") @db.Timestamptz()
+  gracePeriodEndsAt DateTime  @map("grace_period_ends_at") @db.Timestamptz()
+  cancelledAt       DateTime? @map("cancelled_at") @db.Timestamptz()
+  purgedAt          DateTime? @map("purged_at") @db.Timestamptz()
+  reason            String?   @db.VarChar(500)
+
+  user User @relation("UserDeletionRequest", fields: [userId], references: [id])
+
+  @@map("account_deletion_requests")
+}
+
+model DeletionAuditLog {
+  id               String   @id @default(uuid()) @db.Uuid
+  anonymizedHash   String   @map("anonymized_hash") @db.VarChar(64)
+  deletionDate     DateTime @default(now()) @map("deletion_date") @db.Timestamptz()
+  dataTypesDeleted String[] @map("data_types_deleted")
+  userRole         String   @map("user_role") @db.VarChar(20)
+
+  @@map("deletion_audit_logs")
+}
+
+model PolicyAcceptance {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  documentType    String   @map("document_type") @db.VarChar(30)
+  documentVersion String   @map("document_version") @db.VarChar(20)
+  acceptedAt      DateTime @default(now()) @map("accepted_at") @db.Timestamptz()
+  ipAddress       String?  @map("ip_address") @db.VarChar(45)
+
+  user User @relation("UserPolicyAcceptances", fields: [userId], references: [id])
+
+  @@unique([userId, documentType, documentVersion])
+  @@map("policy_acceptances")
 }

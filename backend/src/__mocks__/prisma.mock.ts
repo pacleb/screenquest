@@ -34,6 +34,11 @@ export const createMockPrisma = () => ({
   avatarItem: createModelMock(),
   childEquippedItem: createModelMock(),
   notificationPreference: createModelMock(),
+  parentalConsent: createModelMock(),
+  accountDeletionRequest: createModelMock(),
+  deletionAuditLog: createModelMock(),
+  policyAcceptance: createModelMock(),
+  theme: createModelMock(),
   $queryRaw: jest.fn(),
   $executeRawUnsafe: jest.fn(),
   $transaction: jest.fn((fn: any) => {

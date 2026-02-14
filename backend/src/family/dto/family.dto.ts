@@ -61,6 +61,11 @@ export class CreateChildDto {
   @MinLength(4)
   @MaxLength(6)
   pin: string;
+
+  @ApiProperty({ example: 'I consent to the collection of my child\'s data for app functionality.' })
+  @IsString()
+  @IsNotEmpty()
+  consentText: string;
 }
 
 export class UpdateChildDto {

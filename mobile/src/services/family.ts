@@ -22,6 +22,7 @@ export interface CreateChildData {
   name: string;
   age: number;
   pin: string;
+  consentText: string;
   avatarUrl?: string;
   email?: string;
 }

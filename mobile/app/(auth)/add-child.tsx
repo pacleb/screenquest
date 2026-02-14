@@ -53,6 +53,7 @@ export default function AddChildScreen() {
         name: name.trim(),
         age: ageNum,
         pin,
+        consentText: 'I, the parent/guardian, consent to the collection and use of my child\'s information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.',
       });
 
       Alert.alert('Child Added!', `${name} has been added to your family!`, [

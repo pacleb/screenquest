@@ -16,6 +16,7 @@ import { ViolationModule } from './violation/violation.module';
 import { NotificationModule } from './notification/notification.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { PrivacyModule } from './privacy/privacy.module';
 import { MailModule } from './mail/mail.module';
 import { HealthModule } from './health/health.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -57,6 +58,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     NotificationModule,
     SubscriptionModule,
     GamificationModule,
+    PrivacyModule,
   ],
 })
 export class AppModule {}

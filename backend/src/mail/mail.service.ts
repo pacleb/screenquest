@@ -5,6 +5,8 @@ import {
   verifyEmailTemplate,
   passwordResetTemplate,
   familyInviteTemplate,
+  accountDeletionRequestedTemplate,
+  accountDeletedTemplate,
 } from './templates';
 
 @Injectable()
@@ -62,6 +64,29 @@ export class MailService {
     return this.send({
       to: email,
       subject: `You're invited to join ${familyName} on ScreenQuest!`,
+      html,
+    });
+  }
+
+  async sendDeletionRequestedEmail(email: string, name: string, gracePeriodEndsAt: Date) {
+    const html = accountDeletionRequestedTemplate({
+      name,
+      gracePeriodEndsAt: gracePeriodEndsAt.toISOString().split('T')[0],
+    });
+
+    return this.send({
+      to: email,
+      subject: 'ScreenQuest Account Deletion Request',
+      html,
+    });
+  }
+
+  async sendAccountDeletedEmail(email: string, name: string) {
+    const html = accountDeletedTemplate({ name });
+
+    return this.send({
+      to: email,
+      subject: 'Your ScreenQuest Account Has Been Deleted',
       html,
     });
   }

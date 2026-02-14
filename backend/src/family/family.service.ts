@@ -165,7 +165,7 @@ export class FamilyService {
     return invite;
   }
 
-  async createChild(familyId: string, parentId: string, dto: CreateChildDto) {
+  async createChild(familyId: string, parentId: string, dto: CreateChildDto, ipAddress?: string | null) {
     const family = await this.prisma.family.findUnique({ where: { id: familyId } });
     if (!family) throw new NotFoundException('Family not found');
 
@@ -181,26 +181,41 @@ export class FamilyService {
     // Hash the PIN before storing
     const hashedPin = dto.pin ? await bcrypt.hash(dto.pin, 10) : null;
 
-    const child = await this.prisma.user.create({
-      data: {
-        name: dto.name,
-        age: dto.age,
-        avatarUrl: dto.avatarUrl || null,
-        email: dto.email?.toLowerCase() || null,
-        pin: hashedPin,
-        role: 'child',
-        familyId,
-        authProvider: 'email',
-        emailVerified: true, // children don't need email verification
-      },
+    // Create child and parental consent in a single transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      const child = await tx.user.create({
+        data: {
+          name: dto.name,
+          age: dto.age,
+          avatarUrl: dto.avatarUrl || null,
+          email: dto.email?.toLowerCase() || null,
+          pin: hashedPin,
+          role: 'child',
+          familyId,
+          authProvider: 'email',
+          emailVerified: true, // children don't need email verification
+        },
+      });
+
+      // Record COPPA parental consent
+      await tx.parentalConsent.create({
+        data: {
+          childId: child.id,
+          parentId,
+          consentText: dto.consentText,
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return child;
     });
 
     return {
-      id: child.id,
-      name: child.name,
-      age: child.age,
-      avatarUrl: child.avatarUrl,
-      familyId: child.familyId,
+      id: result.id,
+      name: result.name,
+      age: result.age,
+      avatarUrl: result.avatarUrl,
+      familyId: result.familyId,
     };
   }
 

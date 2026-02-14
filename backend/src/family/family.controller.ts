@@ -88,7 +88,11 @@ export class FamilyController {
     @Body() dto: CreateChildDto,
   ) {
     this.ensureFamilyAccess(req.user.familyId, id);
-    return this.familyService.createChild(id, req.user.id, dto);
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      req.ip ||
+      null;
+    return this.familyService.createChild(id, req.user.id, dto, ipAddress);
   }
 
   @Put(':id/children/:childId')

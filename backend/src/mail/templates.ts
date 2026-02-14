@@ -129,3 +129,46 @@ export function familyInviteTemplate(data: {
     </p>
   `);
 }
+
+export function accountDeletionRequestedTemplate(data: {
+  name: string;
+  gracePeriodEndsAt: string;
+}): string {
+  return layout(`
+    <h2 style="margin:0 0 16px; color:#333; font-size:22px;">Account Deletion Requested</h2>
+    <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
+      Hi ${escapeHtml(data.name)}, we've received your request to delete your ScreenQuest account.
+    </p>
+    <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
+      Your account and all associated data will be <strong>permanently deleted after ${escapeHtml(data.gracePeriodEndsAt)}</strong>.
+    </p>
+    <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
+      If you change your mind, you can cancel this request from the app Settings before that date.
+    </p>
+    <div style="margin:24px 0; padding:16px; background-color:#fff3f3; border-radius:8px; border:1px solid #ffcccc;">
+      <p style="margin:0; color:#cc0000; font-size:14px; line-height:22px;">
+        <strong>What will be deleted:</strong> Your profile, family data, quest history, Time Bank records, achievements, and any uploaded photos.
+      </p>
+    </div>
+    <p style="margin:0; color:#999; font-size:13px; line-height:20px;">
+      If you did not request this, please log in immediately and cancel the deletion.
+    </p>
+  `);
+}
+
+export function accountDeletedTemplate(data: {
+  name: string;
+}): string {
+  return layout(`
+    <h2 style="margin:0 0 16px; color:#333; font-size:22px;">Account Deleted</h2>
+    <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
+      Hi ${escapeHtml(data.name)}, your ScreenQuest account has been permanently deleted along with all associated data.
+    </p>
+    <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
+      We're sorry to see you go. If you ever want to return, you can create a new account at any time.
+    </p>
+    <p style="margin:0; color:#999; font-size:13px; line-height:20px;">
+      This is an automated confirmation. No further action is needed.
+    </p>
+  `);
+}

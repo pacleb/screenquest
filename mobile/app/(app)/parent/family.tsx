@@ -44,6 +44,7 @@ export default function FamilyScreen() {
   const [childName, setChildName] = useState('');
   const [childAge, setChildAge] = useState('');
   const [childPin, setChildPin] = useState('');
+  const [consentChecked, setConsentChecked] = useState(false);
   const [addingChild, setAddingChild] = useState(false);
 
   // Invite form
@@ -103,6 +104,10 @@ export default function FamilyScreen() {
       Alert.alert('Validation', 'PIN must be at least 4 digits');
       return;
     }
+    if (!consentChecked) {
+      Alert.alert('Consent Required', 'You must provide parental consent to add a child under COPPA regulations.');
+      return;
+    }
 
     setAddingChild(true);
     try {
@@ -110,10 +115,12 @@ export default function FamilyScreen() {
         name: childName.trim(),
         age: parseInt(childAge, 10),
         pin: childPin,
+        consentText: 'I, the parent/guardian, consent to the collection and use of my child\'s information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.',
       });
       setChildName('');
       setChildAge('');
       setChildPin('');
+      setConsentChecked(false);
       setShowAddChild(false);
       fetchData();
     } catch (error: any) {
@@ -308,6 +315,20 @@ export default function FamilyScreen() {
                   secureTextEntry
                 />
               </View>
+              <TouchableOpacity
+                style={styles.consentRow}
+                onPress={() => setConsentChecked(!consentChecked)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={consentChecked ? 'checkbox' : 'square-outline'}
+                  size={22}
+                  color={consentChecked ? colors.primary : colors.textSecondary}
+                />
+                <Text style={styles.consentText}>
+                  I consent to ScreenQuest collecting my child's data as described in the Privacy Policy (COPPA).
+                </Text>
+              </TouchableOpacity>
               <View style={styles.formActions}>
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddChild(false)}>
                   <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -490,6 +511,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitBtnText: { fontSize: 14, fontWeight: '700', color: '#FFF' },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   emptyChildren: { alignItems: 'center', paddingVertical: spacing.xl },
   emptyText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
   emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },

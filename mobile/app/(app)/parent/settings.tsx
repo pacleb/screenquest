@@ -20,6 +20,7 @@ import { familyService, FamilyMember } from '../../../src/services/family';
 import { playSessionService, PlaySettings } from '../../../src/services/playSession';
 import { subscriptionService } from '../../../src/services/subscription';
 import { gamificationService } from '../../../src/services/gamification';
+import { privacyService, DeletionStatus } from '../../../src/services/privacy';
 import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 import { Badge } from '../../../src/components';
 
@@ -37,6 +38,8 @@ export default function SettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [leaderboardEnabled, setLeaderboardEnabled] = useState(false);
   const [togglingLeaderboard, setTogglingLeaderboard] = useState(false);
+  const [deletionStatus, setDeletionStatus] = useState<DeletionStatus | null>(null);
+  const [deletionLoading, setDeletionLoading] = useState(false);
 
   // Fetch children + leaderboard setting
   useEffect(() => {
@@ -49,6 +52,10 @@ export default function SettingsScreen() {
     gamificationService
       .getLeaderboardSetting(familyId)
       .then((r) => setLeaderboardEnabled(r.enabled))
+      .catch(() => {});
+    privacyService
+      .getDeletionStatus()
+      .then((s) => setDeletionStatus(s))
       .catch(() => {});
   }, [familyId]);
 
@@ -363,6 +370,108 @@ export default function SettingsScreen() {
           </View>
         )}
 
+        {/* Privacy & Legal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Privacy & Legal</Text>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => Linking.openURL('https://screenquest.app/privacy')}
+          >
+            <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
+            <Text style={styles.linkText}>Privacy Policy</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => Linking.openURL('https://screenquest.app/terms')}
+          >
+            <Ionicons name="shield-checkmark-outline" size={20} color={colors.textSecondary} />
+            <Text style={styles.linkText}>Terms of Service</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Account Deletion */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+
+          {deletionStatus && !deletionStatus.cancelledAt && !deletionStatus.purgedAt && (
+            <View style={styles.deletionBanner}>
+              <Ionicons name="warning-outline" size={20} color={colors.error} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.deletionBannerTitle}>Deletion Scheduled</Text>
+                <Text style={styles.deletionBannerText}>
+                  Your account will be deleted on{' '}
+                  {new Date(deletionStatus.gracePeriodEndsAt).toLocaleDateString()}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.cancelDeletionBtn}
+                disabled={deletionLoading}
+                onPress={async () => {
+                  setDeletionLoading(true);
+                  try {
+                    await privacyService.cancelDeletion();
+                    setDeletionStatus(null);
+                    Alert.alert('Cancelled', 'Account deletion has been cancelled.');
+                  } catch {
+                    Alert.alert('Error', 'Failed to cancel deletion.');
+                  } finally {
+                    setDeletionLoading(false);
+                  }
+                }}
+              >
+                <Text style={styles.cancelDeletionText}>
+                  {deletionLoading ? 'Cancelling...' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {(!deletionStatus || deletionStatus.cancelledAt) && (
+            <TouchableOpacity
+              style={styles.deleteAccountBtn}
+              onPress={() => {
+                Alert.alert(
+                  'Delete Account',
+                  'Your account and all associated data will be permanently deleted after a 30-day grace period. This action can be cancelled within 30 days.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete My Account',
+                      style: 'destructive',
+                      onPress: async () => {
+                        setDeletionLoading(true);
+                        try {
+                          const result = await privacyService.requestDeletion();
+                          setDeletionStatus({
+                            id: result.id,
+                            requestedAt: new Date().toISOString(),
+                            gracePeriodEndsAt: result.gracePeriodEndsAt,
+                            cancelledAt: null,
+                            purgedAt: null,
+                          });
+                          Alert.alert('Scheduled', result.message);
+                        } catch (error: any) {
+                          Alert.alert(
+                            'Error',
+                            error.response?.data?.message || 'Failed to request deletion',
+                          );
+                        } finally {
+                          setDeletionLoading(false);
+                        }
+                      },
+                    },
+                  ],
+                );
+              }}
+            >
+              <Ionicons name="trash-outline" size={18} color={colors.error} />
+              <Text style={styles.deleteAccountText}>Delete My Account</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Sign out */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Text style={styles.logoutText}>Sign Out</Text>
@@ -504,6 +613,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.sm,
+  },
+  linkText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textPrimary,
+  },
+  deletionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.error + '10',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.error + '30',
+    gap: spacing.sm,
+  },
+  deletionBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.error,
+  },
+  deletionBannerText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  cancelDeletionBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cancelDeletionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
+  },
+  deleteAccountText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.error,
   },
   logoutButton: {
     backgroundColor: colors.error,
