@@ -18,7 +18,9 @@
     "test:e2e": "pnpm --filter backend test:e2e",
     "test:all": "pnpm --filter backend test:all",
     "test:cov": "pnpm --filter backend test:cov",
-    "lint": "pnpm --filter backend exec tsc --noEmit"
+    "lint": "pnpm --filter backend exec tsc --noEmit",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -35,5 +37,10 @@
       "@sentry/cli"
     ],
     "overrides": {}
+  },
+  "dependencies": {
+    "expo": "~54.0.33",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   }
 }
