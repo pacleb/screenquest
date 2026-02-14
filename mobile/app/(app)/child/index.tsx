@@ -45,6 +45,7 @@ import {
 } from "../../../src/components";
 import { useThemeStore } from "../../../src/store/theme";
 import { useHaptics } from "../../../src/hooks/useAccessibility";
+import { offlineCache } from "../../../src/services/offlineCache";
 
 export default function ChildHome() {
   const router = useRouter();
@@ -78,8 +79,19 @@ export default function ChildHome() {
       setBalance(bal);
       setQuests(q.filter((quest) => quest.availableToComplete).slice(0, 5));
       setViolationStatus(vs);
+      // Cache for offline use
+      offlineCache.setTimeBank(user.id, bal).catch(() => {});
+      offlineCache.setQuests(user.id, q).catch(() => {});
     } catch {
-      // Silently handle
+      // Try loading from cache
+      const [cachedBal, cachedQuests] = await Promise.all([
+        offlineCache.getTimeBank<TimeBankBalance>(user.id).catch(() => null),
+        offlineCache.getQuests<ChildQuest[]>(user.id).catch(() => null),
+      ]);
+      if (cachedBal?.data) setBalance(cachedBal.data);
+      if (cachedQuests?.data) {
+        setQuests(cachedQuests.data.filter((q) => q.availableToComplete).slice(0, 5));
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

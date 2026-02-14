@@ -9,6 +9,8 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { QuestCreatedEvent } from '../common/analytics/analytics.events';
 import { CreateQuestDto, UpdateQuestDto, CreateFromLibraryDto } from './dto/quest.dto';
 
 const FREE_PLAN_QUEST_LIMIT = 3;
@@ -18,6 +20,7 @@ export class QuestService {
   constructor(
     private prisma: PrismaService,
     private subscriptionService: SubscriptionService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(familyId: string, userId: string, dto: CreateQuestDto) {
@@ -51,6 +54,10 @@ export class QuestService {
         },
       },
     });
+
+    this.eventEmitter.emit('quest.created', new QuestCreatedEvent(
+      userId, familyId, quest.id, dto.category, 'custom',
+    ));
 
     return quest;
   }
@@ -98,6 +105,10 @@ export class QuestService {
         },
       },
     });
+
+    this.eventEmitter.emit('quest.created', new QuestCreatedEvent(
+      userId, familyId, quest.id, libraryQuest.category, 'library',
+    ));
 
     return quest;
   }

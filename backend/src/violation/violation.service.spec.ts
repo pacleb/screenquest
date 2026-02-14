@@ -4,6 +4,7 @@ import { ViolationService } from './violation.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 import { createMockNotification, MockNotification } from '../__mocks__/notification.mock';
 
@@ -24,6 +25,7 @@ describe('ViolationService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: TimeBankService, useValue: timeBankService },
         { provide: NotificationService, useValue: notificationService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

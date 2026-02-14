@@ -5,9 +5,15 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { getLevelForXp, getNextLevel, LEVEL_THRESHOLDS } from './constants/levels';
+import {
+  AchievementEarnedEvent,
+  LevelUpEvent,
+  AvatarCustomizedEvent,
+} from '../common/analytics/analytics.events';
 
 export interface GamificationEvent {
   xpEarned: number;
@@ -24,6 +30,7 @@ export class GamificationService {
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   // ─── Core: Process Completion ───────────────────────────────
@@ -99,6 +106,13 @@ export class GamificationService {
         data: { level: newLevelInfo.level },
       });
       events.newLevel = { level: newLevelInfo.level, name: newLevelInfo.name };
+
+      // Emit level up analytics event
+      const childUser = await this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } });
+      this.eventEmitter.emit(
+        'level.up',
+        new LevelUpEvent(childId, childUser?.familyId || '', newLevelInfo.level, newLevelInfo.name),
+      );
 
       this.notificationService.sendToUser(
         childId,
@@ -229,6 +243,13 @@ export class GamificationService {
             data: { type: 'achievement_unlocked', achievementKey: achievement.key },
           },
           'gamification',
+        );
+
+        // Emit achievement earned analytics event
+        const childUser = await this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } });
+        this.eventEmitter.emit(
+          'achievement.earned',
+          new AchievementEarnedEvent(childId, childUser?.familyId || '', achievement.key, achievement.name),
         );
       }
     }
@@ -443,6 +464,13 @@ export class GamificationService {
       create: { childId, avatarItemId, slot: item.slot },
       update: { avatarItemId, equippedAt: new Date() },
     });
+
+    // Emit avatar customized analytics event
+    const child = await this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } });
+    this.eventEmitter.emit(
+      'avatar.customized',
+      new AvatarCustomizedEvent(childId, child?.familyId || ''),
+    );
 
     return { success: true };
   }

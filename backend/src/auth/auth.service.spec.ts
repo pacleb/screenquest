@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 import { createMockRedis, MockRedis } from '../__mocks__/redis.mock';
 
@@ -34,6 +35,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: RedisService, useValue: redis },
         { provide: MailService, useValue: mailService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

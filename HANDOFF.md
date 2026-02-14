@@ -1,6 +1,6 @@
 # ScreenQuest — Developer Handoff Document
 
-> **Last updated:** Phase 11 (partial) complete (Feb 14, 2026)
+> **Last updated:** Phase 13 complete (Feb 14, 2026)
 > **Purpose:** Gives any AI agent or developer full context to continue implementation from any phase.
 
 ---
@@ -32,10 +32,11 @@ screenquest/
 │   │   ├── gamification/  XP, levels, streaks, achievements, avatars
 │   │   ├── upload/        Proof photo uploads
 │   │   ├── mail/          Email templates (Resend)
-│   │   ├── health/        Health check endpoint
+│   │   ├── health/        Health check + metrics endpoints
 │   │   ├── redis/         Redis service (ioredis)
 │   │   ├── prisma/        PrismaService wrapper
-│   │   └── common/        Filters, interceptors, Sentry
+│   │   ├── privacy/       COPPA consent, deletion, privacy policy
+│   │   └── common/        Logging (Pino), analytics (PostHog), metrics, filters, Sentry
 │   └── test/         E2E integration tests
 ├── mobile/           Expo + React Native app
 │   ├── app/          Expo Router screens
@@ -63,7 +64,9 @@ screenquest/
 - **Validation:** `class-validator` DTOs with `ValidationPipe` (whitelist + forbidNonWhitelisted + transform)
 - **Global prefix:** All routes start with `/api`
 - **Error handling:** `GlobalExceptionFilter` catches all errors, Sentry integration
-- **Request ID:** `RequestIdInterceptor` adds correlation IDs
+- **Logging:** Structured JSON logging via `nestjs-pino` (Pino); request ID correlation via `X-Request-Id` header; `pino-pretty` in dev
+- **Analytics:** PostHog server-side tracking via event-driven architecture (`EventEmitter2` → `AnalyticsListener` → PostHog)
+- **Metrics:** In-memory request metrics (p50/p95/p99), error rates, DB/Redis health checks; `/health/metrics` endpoint
 - **Database:** Prisma ORM with PostgreSQL, `PrismaService` extends `PrismaClient`
 - **Redis:** `RedisService` extends ioredis `Redis`, `@Global()` module
 - **Auth tokens:** JWT access (15min) + refresh token rotation (nanoid(64), SHA-256 hashed, 30-day expiry)
@@ -115,6 +118,8 @@ screenquest/
 | `QuestLibrary`           | CMS quest templates                                                  |
 | `QuestCategory`          | Quest categories (Chores, Learning, etc.)                            |
 | `AvatarPackPurchase`     | IAP avatar pack records                                              |
+| `ParentalConsent`        | COPPA consent records per child (Phase 12)                           |
+| `DeletionRequest`        | Account/data deletion requests with scheduled processing             |
 
 ---
 
@@ -165,6 +170,8 @@ CMS_URL               CMS URL (CORS)
 RESEND_API_KEY        Email service API key
 REVENUECAT_WEBHOOK_AUTH_KEY  Webhook verification
 SENTRY_DSN            Error tracking
+POSTHOG_API_KEY       PostHog project API key (analytics disabled if unset)
+POSTHOG_HOST          PostHog host (default: https://us.i.posthog.com)
 ```
 
 ---
@@ -185,6 +192,8 @@ SENTRY_DSN            Error tracking
 | 10    | Backend unit tests, integration tests, CI/CD setup, Sentry error tracking             |
 | 10b   | Security hardening — PIN hashing, rate limiting, auth fixes, webhook idempotency      |
 | 11\*  | Visual polish — dynamic themes, enhanced avatars, streak fire, weekly stats, badges   |
+| 12    | COPPA compliance — parental consent, account deletion, privacy policy endpoints       |
+| 13    | Monitoring — structured logging (Pino), analytics (PostHog), metrics, alerting        |
 
 \*Phase 11 is partially complete. See "Phase 11 Progress" below for details.
 
@@ -234,13 +243,97 @@ SENTRY_DSN            Error tracking
 
 ---
 
+## Phase 12 — COPPA Compliance & Account Deletion
+
+*Implemented by another AI agent.*
+
+- `ParentalConsent` model: Records consent per child with parent ID, consent text, IP address
+- `DeletionRequest` model: Account/data deletion requests with status tracking
+- `PrivacyModule` with `ConsentService`, `DeletionService`, `PolicyService`, `DeletionScheduler`
+- Privacy policy and terms of service endpoints
+- Account deletion flow with scheduled data purge
+- Child email hiding from other children
+- Unit tests: `consent.service.spec.ts`, `policy.service.spec.ts`, `deletion.service.spec.ts`, `deletion.scheduler.spec.ts`
+- `createChild()` now requires `consentText` field for COPPA compliance
+
+---
+
+## Phase 13 — Monitoring, Analytics & Observability
+
+### Structured Logging (Pino)
+
+- `backend/src/common/logging/logging.module.ts` — `nestjs-pino` configured with:
+  - JSON output in production, `pino-pretty` in development
+  - Request ID correlation via `X-Request-Id` (generated or propagated)
+  - Sensitive field redaction (authorization, cookies, passwords, tokens)
+  - Health check request filtering (no noise from `/api/health`)
+  - Custom log levels: 5xx → error, 4xx → warn
+- `main.ts` updated to use `bufferLogs: true` + `app.useLogger(app.get(Logger))`
+- Old `RequestIdInterceptor` replaced by pino-http's built-in request ID handling
+
+### Analytics (PostHog — Server-Side Only)
+
+- `backend/src/common/analytics/analytics.service.ts` — PostHog wrapper with typed methods:
+  - **Parent funnel:** `signup_completed`, `family_created`, `child_added`, `quest_created`, `quest_completion_approved/denied`, `play_session_approved/denied`, `violation_recorded`, `paywall_viewed`, `trial_started`, `subscription_purchased/cancelled`
+  - **Child engagement:** `quest_completed`, `play_session_started/completed`, `achievement_earned`, `level_up`, `avatar_customized`
+- `backend/src/common/analytics/analytics.events.ts` — 19 domain event classes
+- `backend/src/common/analytics/analytics.listener.ts` — `@OnEvent` listener bridging domain events → PostHog
+- `backend/src/common/analytics/analytics.module.ts` — Global module
+- **Architecture:** Event-driven (services emit via `EventEmitter2`, listener forwards to PostHog). Business logic stays clean.
+- **Gracefully disabled** when `POSTHOG_API_KEY` is not set.
+
+### Event Wiring (6 services modified)
+
+| Service                  | Events Emitted                                              |
+| ------------------------ | ----------------------------------------------------------- |
+| `auth.service.ts`        | `user.registered`, `user.logged_in`                         |
+| `family.service.ts`      | `family.created`, `child.added`                             |
+| `quest.service.ts`       | `quest.created` (custom + library)                          |
+| `completion.service.ts`  | `quest.completed`, `quest.approved`, `quest.denied`         |
+| `gamification.service.ts`| `level.up`, `achievement.earned`, `avatar.customized`       |
+| `play-session.service.ts`| `play_session.started/approved/denied/completed`            |
+| `violation.service.ts`   | `violation.recorded`                                        |
+
+### Backend Metrics
+
+- `backend/src/common/metrics/metrics.service.ts` — In-memory request metrics:
+  - Percentiles: p50, p95, p99
+  - Error rate calculation (5-minute sliding window)
+  - Slow request warnings (>500ms)
+  - DB + Redis health status
+  - Process memory usage
+  - 5-minute cron summary with alerts (high error rate >5%, DB/Redis disconnected)
+- `backend/src/common/metrics/metrics.interceptor.ts` — Records request duration, normalizes UUID paths
+- `backend/src/common/metrics/metrics.module.ts` — Global module
+
+### Health Endpoints Enhanced
+
+- `GET /api/health` — Added `uptime` field
+- `GET /api/health/metrics` — Full MetricsSnapshot (requests, DB, Redis, memory)
+- `GET /api/health/metrics/errors` — Per-endpoint error rates
+
+### Dependencies Added
+
+- `nestjs-pino`, `pino`, `pino-http`, `pino-pretty` — Structured logging
+- `posthog-node` — Server-side analytics
+- `@nestjs/event-emitter` — Decoupled event architecture
+
+### Tests
+
+- `analytics.service.spec.ts` — 20 tests (all event methods gracefully handle no PostHog)
+- `analytics.listener.spec.ts` — 19 tests (verifies all event→PostHog forwarding)
+- `metrics.service.spec.ts` — 9 tests (percentiles, error rates, DB/Redis status)
+- `monitoring.e2e-spec.ts` — 3 tests (health, metrics, error rates endpoints)
+- All 7 existing service specs updated with `EventEmitter2` mock
+- **222 unit tests passing, 3 monitoring e2e tests passing**
+
+---
+
 ## Remaining Phases
 
 | Phase | Focus                                                                       |
 | ----- | --------------------------------------------------------------------------- |
 | 11    | Visual polish — remaining: Lottie, sound, parent dashboard, a11y, dark mode |
-| 12    | COPPA compliance — parental consent, account deletion, privacy              |
-| 13    | Monitoring — structured logging, analytics, alerting                        |
 | 14    | Offline support — error boundaries, offline queue, caching                  |
 | 15    | Deployment — hosting, S3, database backups, data export                     |
 | 16    | Mobile E2E tests, app store submission                                      |

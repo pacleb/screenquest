@@ -5,10 +5,12 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
 import { RecordViolationDto } from './dto/violation.dto';
+import { ViolationRecordedEvent } from '../common/analytics/analytics.events';
 
 @Injectable()
 export class ViolationService {
@@ -18,6 +20,7 @@ export class ViolationService {
     private prisma: PrismaService,
     private timeBankService: TimeBankService,
     private notificationService: NotificationService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -72,6 +75,13 @@ export class ViolationService {
         data: { type: 'violation_recorded', violationId: violation.id },
       },
       'violations',
+    );
+
+    // Emit violation recorded analytics event
+    const child = await this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } });
+    this.eventEmitter.emit(
+      'violation.recorded',
+      new ViolationRecordedEvent(parentId, child?.familyId || '', childId),
     );
 
     return {

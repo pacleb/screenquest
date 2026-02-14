@@ -17,3 +17,6 @@ export { WeeklyStatsChart } from './WeeklyStatsChart';
 export { AnimatedHeader } from './AnimatedHeader';
 export { SkeletonLoader, SkeletonQuestCard, SkeletonDashboard } from './SkeletonLoader';
 export { LottieAnimation } from './LottieAnimation';
+export { ErrorBoundary } from './ErrorBoundary';
+export { OfflineBanner } from './OfflineBanner';
+export { ToastProvider } from './Toast';

@@ -3,6 +3,7 @@ import { ForbiddenException, NotFoundException, HttpException, HttpStatus } from
 import { QuestService } from './quest.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 
 describe('QuestService', () => {
@@ -19,6 +20,7 @@ describe('QuestService', () => {
         QuestService,
         { provide: PrismaService, useValue: prisma },
         { provide: SubscriptionService, useValue: subscriptionService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

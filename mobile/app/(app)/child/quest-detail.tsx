@@ -18,6 +18,9 @@ import { completionService, ChildQuest } from '../../../src/services/completion'
 import { uploadService } from '../../../src/services/upload';
 import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 import { Button, Card, Badge, ConfettiOverlay } from '../../../src/components';
+import { getNetworkStatus } from '../../../src/hooks/useNetworkStatus';
+import { offlineQueue } from '../../../src/services/offlineQueue';
+import { showToast } from '../../../src/services/toastBridge';
 
 export default function QuestDetailScreen() {
   const router = useRouter();
@@ -85,6 +88,22 @@ export default function QuestDetailScreen() {
         { text: 'Choose from Library', onPress: handlePickFromLibrary },
         { text: 'Cancel', style: 'cancel' },
       ]);
+      return;
+    }
+
+    // Offline handling
+    if (!getNetworkStatus().isConnected) {
+      if (quest.requiresProof) {
+        Alert.alert('No Internet', 'Connect to the internet to submit proof photos.');
+        return;
+      }
+      await offlineQueue.enqueue({
+        type: 'quest_completion',
+        payload: { childId: user.id, questId: quest.id },
+      });
+      showToast('Quest queued! It will be submitted when you reconnect.', 'info');
+      setCompleted(true);
+      setResultStatus('pending');
       return;
     }
 

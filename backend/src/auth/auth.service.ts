@@ -10,9 +10,11 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
 import { nanoid } from 'nanoid';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
+import { UserRegisteredEvent, UserLoggedInEvent } from '../common/analytics/analytics.events';
 import {
   RegisterDto,
   LoginDto,
@@ -29,6 +31,7 @@ export class AuthService {
     private configService: ConfigService,
     private redis: RedisService,
     private mail: MailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -66,6 +69,8 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
 
+    this.eventEmitter.emit('user.registered', new UserRegisteredEvent(user.id, 'parent', user.email!));
+
     return {
       ...tokens,
       user: this.sanitizeUser(user),
@@ -94,6 +99,8 @@ export class AuthService {
     await this.clearLoginAttempts(dto.email.toLowerCase());
 
     const tokens = await this.generateTokens(user);
+
+    this.eventEmitter.emit('user.logged_in', new UserLoggedInEvent(user.id, user.role));
 
     return {
       ...tokens,

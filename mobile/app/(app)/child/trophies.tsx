@@ -17,6 +17,8 @@ import { Badge, Card, ProgressBar, StreakFire } from "../../../src/components";
 import { useAuthStore } from "../../../src/store/auth";
 import { useGamificationStore } from "../../../src/store/gamification";
 import { useThemeStore } from "../../../src/store/theme";
+import { offlineCache } from "../../../src/services/offlineCache";
+import { AchievementData } from "../../../src/services/gamification";
 
 export default function ChildTrophies() {
   const user = useAuthStore((s) => s.user);
@@ -37,12 +39,25 @@ export default function ChildTrophies() {
 
   const loadData = useCallback(async () => {
     if (!user) return;
-    await Promise.all([
-      fetchProgress(user.id),
-      fetchAchievements(user.id),
-      fetchShowcase(user.id),
-      user.familyId ? fetchLeaderboard(user.familyId) : Promise.resolve(),
-    ]);
+    try {
+      await Promise.all([
+        fetchProgress(user.id),
+        fetchAchievements(user.id),
+        fetchShowcase(user.id),
+        user.familyId ? fetchLeaderboard(user.familyId) : Promise.resolve(),
+      ]);
+      // Cache achievements for offline use
+      const { achievements: current } = useGamificationStore.getState();
+      if (current.length > 0) {
+        offlineCache.setAchievements(user.id, current).catch(() => {});
+      }
+    } catch {
+      // Load cached achievements if network fails
+      const cached = await offlineCache.getAchievements<AchievementData[]>(user.id).catch(() => null);
+      if (cached?.data && cached.data.length > 0) {
+        useGamificationStore.setState({ achievements: cached.data });
+      }
+    }
   }, [user]);
 
   useEffect(() => {

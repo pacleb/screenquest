@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import * as bcrypt from 'bcrypt';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateFamilyDto, CreateChildDto, UpdateChildDto, UpdateFamilyDto, UpdateGuardianPermissionsDto } from './dto/family.dto';
+import { FamilyCreatedEvent, ChildAddedEvent } from '../common/analytics/analytics.events';
 
 export interface GuardianPermissions {
   canApproveQuests: boolean;
@@ -30,6 +32,7 @@ export class FamilyService {
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createFamily(userId: string, dto: CreateFamilyDto) {
@@ -51,6 +54,12 @@ export class FamilyService {
       where: { id: userId },
       data: { familyId: family.id, role: 'parent' },
     });
+
+    // Emit family created analytics event
+    this.eventEmitter.emit(
+      'family.created',
+      new FamilyCreatedEvent(userId, family.id),
+    );
 
     return family;
   }
@@ -209,6 +218,12 @@ export class FamilyService {
 
       return child;
     });
+
+    // Emit child added analytics event
+    this.eventEmitter.emit(
+      'child.added',
+      new ChildAddedEvent(parentId, familyId, result.id),
+    );
 
     return {
       id: result.id,

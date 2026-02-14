@@ -25,6 +25,7 @@ import {
 } from "../src/services/notification";
 import { subscriptionService } from "../src/services/subscription";
 import { colors, ThemeProvider } from "../src/theme";
+import { ErrorBoundary, OfflineBanner, ToastProvider } from "../src/components";
 
 setupNotificationHandler();
 
@@ -91,13 +92,18 @@ function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <StatusBar style="dark" />
+          <OfflineBanner />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

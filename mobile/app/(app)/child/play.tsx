@@ -15,6 +15,7 @@ import { playSessionService, PlaySession } from '../../../src/services/playSessi
 import { timeBankService, TimeBankBalance } from '../../../src/services/timeBank';
 import { colors, spacing, borderRadius, fonts, typography } from '../../../src/theme';
 import { CountdownRing, Button, ConfettiOverlay } from '../../../src/components';
+import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
 
 const PRESETS = [15, 30, 45, 60, 90, 120];
 
@@ -22,6 +23,7 @@ type ScreenState = 'select' | 'requesting' | 'waiting' | 'active' | 'paused' | '
 
 export default function ChildPlay() {
   const user = useAuthStore((s) => s.user);
+  const { isConnected } = useNetworkStatus();
   const [screenState, setScreenState] = useState<ScreenState>('select');
   const [balance, setBalance] = useState<TimeBankBalance>({ stackableMinutes: 0, nonStackableMinutes: 0, totalMinutes: 0 });
   const [selectedMinutes, setSelectedMinutes] = useState(30);
@@ -133,6 +135,10 @@ export default function ChildPlay() {
 
   const handleRequestPlay = async () => {
     if (!user?.id) return;
+    if (!isConnected) {
+      Alert.alert('No Internet', 'Connect to the internet to start a play session.');
+      return;
+    }
     setActionLoading(true);
     try {
       const result = await playSessionService.requestPlay(user.id, selectedMinutes);

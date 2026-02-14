@@ -3,14 +3,19 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+
+  // Use pino logger for all NestJS logging (structured JSON in prod, pretty in dev)
+  app.useLogger(app.get(Logger));
 
   app.use(helmet());
 
@@ -26,7 +31,6 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.useGlobalInterceptors(new RequestIdInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.useGlobalPipes(
@@ -51,9 +55,11 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
+
+  const logger = app.get(Logger);
+  logger.log(`ScreenQuest API running on http://localhost:${port}`);
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`ScreenQuest API running on http://localhost:${port}`);
-    console.log(`Swagger docs at http://localhost:${port}/api/docs`);
+    logger.log(`Swagger docs at http://localhost:${port}/api/docs`);
   }
 
   // Graceful shutdown

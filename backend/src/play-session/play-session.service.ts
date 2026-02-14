@@ -5,10 +5,17 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
 import { RequestPlayDto, ExtendSessionDto, UpdatePlaySettingsDto } from './dto/play-session.dto';
+import {
+  PlaySessionStartedEvent,
+  PlaySessionCompletedEvent,
+  PlaySessionApprovedEvent,
+  PlaySessionDeniedEvent,
+} from '../common/analytics/analytics.events';
 
 export interface PlaySettings {
   playApprovalMode: 'require_approval' | 'notify_only';
@@ -38,6 +45,7 @@ export class PlaySessionService {
     private prisma: PrismaService,
     private timeBankService: TimeBankService,
     private notificationService: NotificationService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -100,6 +108,12 @@ export class PlaySessionService {
       });
 
       this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${dto.requestedMinutes}min)`);
+
+      // Emit play session started analytics event
+      this.eventEmitter.emit(
+        'play_session.started',
+        new PlaySessionStartedEvent(childId, child.familyId || '', session.id, dto.requestedMinutes),
+      );
 
       // Notify parents
       if (child.familyId) {
@@ -169,6 +183,19 @@ export class PlaySessionService {
 
     this.logger.log(`Play session ${sessionId} approved by ${userId}`);
 
+    // Emit play session approved analytics event
+    this.eventEmitter.emit(
+      'play_session.approved',
+      new PlaySessionApprovedEvent(userId, sessionId, session.childId),
+    );
+
+    // Emit play session started (it starts upon approval)
+    const child = await this.prisma.user.findUnique({ where: { id: session.childId }, select: { familyId: true } });
+    this.eventEmitter.emit(
+      'play_session.started',
+      new PlaySessionStartedEvent(session.childId, child?.familyId || '', sessionId, session.requestedMinutes),
+    );
+
     // Notify child that play was approved
     this.notificationService.sendToUser(
       session.childId,
@@ -203,6 +230,12 @@ export class PlaySessionService {
     });
 
     this.logger.log(`Play session ${sessionId} denied by ${userId}`);
+
+    // Emit play session denied analytics event
+    this.eventEmitter.emit(
+      'play_session.denied',
+      new PlaySessionDeniedEvent(userId, sessionId, session.childId),
+    );
 
     // Notify child that play was denied
     this.notificationService.sendToUser(
@@ -329,6 +362,14 @@ export class PlaySessionService {
       await this.timeBankService.creditTime(session.childId, refundMinutes, 'stackable', null);
       this.logger.log(`Refunded ${refundMinutes} min to child ${session.childId}`);
     }
+
+    // Emit play session completed analytics event
+    const usedMinutes = session.requestedMinutes - refundMinutes;
+    const childForEvent = await this.prisma.user.findUnique({ where: { id: session.childId }, select: { familyId: true } });
+    this.eventEmitter.emit(
+      'play_session.completed',
+      new PlaySessionCompletedEvent(session.childId, childForEvent?.familyId || '', sessionId, usedMinutes),
+    );
 
     // Notify parents
     const childUser = await this.prisma.user.findUnique({ where: { id: session.childId } });

@@ -4,11 +4,17 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
 import { GamificationService } from '../gamification/gamification.service';
 import { CompleteQuestDto, ReviewCompletionDto } from './dto/completion.dto';
+import {
+  QuestCompletedEvent,
+  QuestApprovedEvent,
+  QuestDeniedEvent,
+} from '../common/analytics/analytics.events';
 
 @Injectable()
 export class CompletionService {
@@ -17,6 +23,7 @@ export class CompletionService {
     private timeBankService: TimeBankService,
     private notificationService: NotificationService,
     private gamificationService: GamificationService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -76,6 +83,12 @@ export class CompletionService {
         quest: { select: { id: true, name: true, icon: true, category: true } },
       },
     });
+
+    // Emit quest completed event
+    this.eventEmitter.emit(
+      'quest.completed',
+      new QuestCompletedEvent(childId, child.familyId || '', questId, quest.category || '', earnedMinutes),
+    );
 
     // If auto-approve, credit Time Bank and process gamification
     if (quest.autoApprove) {
@@ -202,6 +215,12 @@ export class CompletionService {
       completionId,
     );
 
+    // Emit quest approved event
+    this.eventEmitter.emit(
+      'quest.approved',
+      new QuestApprovedEvent(userId, completionId, completion.childId),
+    );
+
     return { ...updated, gamificationEvent };
   }
 
@@ -239,6 +258,12 @@ export class CompletionService {
         data: { type: 'quest_denied', completionId },
       },
       'quest_completions',
+    );
+
+    // Emit quest denied event
+    this.eventEmitter.emit(
+      'quest.denied',
+      new QuestDeniedEvent(userId, completionId, completion.childId),
     );
 
     return denied;

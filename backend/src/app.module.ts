@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -20,11 +21,18 @@ import { PrivacyModule } from './privacy/privacy.module';
 import { MailModule } from './mail/mail.module';
 import { HealthModule } from './health/health.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AppLoggingModule } from './common/logging/logging.module';
+import { AnalyticsModule } from './common/analytics/analytics.module';
+import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
+    AppLoggingModule,
+    AnalyticsModule,
+    MetricsModule,
     ThrottlerModule.forRoot([
       {
         name: 'short',

@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
 import { GamificationService } from '../gamification/gamification.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 import { createMockNotification, MockNotification } from '../__mocks__/notification.mock';
 
@@ -30,6 +31,7 @@ describe('CompletionService', () => {
         { provide: TimeBankService, useValue: timeBankService },
         { provide: NotificationService, useValue: notificationService },
         { provide: GamificationService, useValue: gamificationService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

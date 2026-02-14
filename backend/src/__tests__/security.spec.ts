@@ -12,6 +12,7 @@ import { AuthService } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 import { createMockRedis, MockRedis } from '../__mocks__/redis.mock';
 
@@ -38,6 +39,7 @@ describe('Security – Login Lockout', () => {
             sendPasswordResetEmail: jest.fn(),
           },
         },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
@@ -130,6 +132,7 @@ describe('Security – PIN Hashing (childLogin)', () => {
             sendPasswordResetEmail: jest.fn(),
           },
         },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
