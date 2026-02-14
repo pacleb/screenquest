@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#4A90D9"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.screenquest.app"
@@ -26,10 +24,6 @@
       },
       "package": "com.screenquest.app"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      "expo-font"
-    ]
+    "plugins": ["expo-router", "expo-secure-store", "expo-font"]
   }
 }
