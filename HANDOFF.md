@@ -245,7 +245,7 @@ POSTHOG_HOST          PostHog host (default: https://us.i.posthog.com)
 
 ## Phase 12 — COPPA Compliance & Account Deletion
 
-*Implemented by another AI agent.*
+_Implemented by another AI agent._
 
 - `ParentalConsent` model: Records consent per child with parent ID, consent text, IP address
 - `DeletionRequest` model: Account/data deletion requests with status tracking
@@ -284,15 +284,15 @@ POSTHOG_HOST          PostHog host (default: https://us.i.posthog.com)
 
 ### Event Wiring (6 services modified)
 
-| Service                  | Events Emitted                                              |
-| ------------------------ | ----------------------------------------------------------- |
-| `auth.service.ts`        | `user.registered`, `user.logged_in`                         |
-| `family.service.ts`      | `family.created`, `child.added`                             |
-| `quest.service.ts`       | `quest.created` (custom + library)                          |
-| `completion.service.ts`  | `quest.completed`, `quest.approved`, `quest.denied`         |
-| `gamification.service.ts`| `level.up`, `achievement.earned`, `avatar.customized`       |
-| `play-session.service.ts`| `play_session.started/approved/denied/completed`            |
-| `violation.service.ts`   | `violation.recorded`                                        |
+| Service                   | Events Emitted                                        |
+| ------------------------- | ----------------------------------------------------- |
+| `auth.service.ts`         | `user.registered`, `user.logged_in`                   |
+| `family.service.ts`       | `family.created`, `child.added`                       |
+| `quest.service.ts`        | `quest.created` (custom + library)                    |
+| `completion.service.ts`   | `quest.completed`, `quest.approved`, `quest.denied`   |
+| `gamification.service.ts` | `level.up`, `achievement.earned`, `avatar.customized` |
+| `play-session.service.ts` | `play_session.started/approved/denied/completed`      |
+| `violation.service.ts`    | `violation.recorded`                                  |
 
 ### Backend Metrics
 
