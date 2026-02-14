@@ -6,6 +6,7 @@ export const createMockRedis = () => ({
   setex: jest.fn(),
   expire: jest.fn(),
   ttl: jest.fn(),
+  incr: jest.fn(),
 });
 
 export type MockRedis = ReturnType<typeof createMockRedis>;

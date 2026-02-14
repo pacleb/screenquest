@@ -7,7 +7,10 @@ import {
   Headers,
   HttpCode,
   UnauthorizedException,
+  ForbiddenException,
+  InternalServerErrorException,
   UseGuards,
+  Request,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -35,12 +38,16 @@ export class SubscriptionController {
   ) {
     const webhookAuthKey = this.configService.get<string>('REVENUECAT_WEBHOOK_AUTH_KEY');
 
-    if (webhookAuthKey) {
-      const expectedHeader = `Bearer ${webhookAuthKey}`;
-      if (authHeader !== expectedHeader) {
-        this.logger.warn('RevenueCat webhook: invalid auth key');
-        throw new UnauthorizedException('Invalid webhook auth key');
-      }
+    // Fail-closed: reject if auth key is not configured
+    if (!webhookAuthKey) {
+      this.logger.error('REVENUECAT_WEBHOOK_AUTH_KEY is not configured');
+      throw new InternalServerErrorException('Webhook auth key not configured');
+    }
+
+    const expectedHeader = `Bearer ${webhookAuthKey}`;
+    if (authHeader !== expectedHeader) {
+      this.logger.warn('RevenueCat webhook: invalid auth key');
+      throw new UnauthorizedException('Invalid webhook auth key');
     }
 
     await this.subscriptionService.handleWebhookEvent(body);
@@ -52,7 +59,10 @@ export class SubscriptionController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('families/:familyId/subscription')
-  async getStatus(@Param('familyId') familyId: string) {
+  async getStatus(@Param('familyId') familyId: string, @Request() req: any) {
+    if (req.user.familyId !== familyId) {
+      throw new ForbiddenException('Access denied');
+    }
     return this.subscriptionService.getSubscriptionStatus(familyId);
   }
 
@@ -64,7 +74,11 @@ export class SubscriptionController {
   async archiveQuests(
     @Param('familyId') familyId: string,
     @Body() dto: ArchiveQuestsDto,
+    @Request() req: any,
   ) {
+    if (req.user.familyId !== familyId) {
+      throw new ForbiddenException('Access denied');
+    }
     await this.subscriptionService.archiveExcessQuests(familyId, dto.keepQuestIds);
     return { ok: true };
   }
@@ -74,7 +88,10 @@ export class SubscriptionController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('users/:userId/avatar-packs')
-  async getAvatarPacks(@Param('userId') userId: string) {
+  async getAvatarPacks(@Param('userId') userId: string, @Request() req: any) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
     const packs = await this.subscriptionService.getOwnedPacks(userId);
     return { packs };
   }
@@ -87,7 +104,11 @@ export class SubscriptionController {
   async recordAvatarPack(
     @Param('userId') userId: string,
     @Body() body: { packId: string },
+    @Request() req: any,
   ) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
     await this.subscriptionService.purchaseAvatarPack(userId, body.packId);
     return { ok: true };
   }

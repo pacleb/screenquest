@@ -73,18 +73,25 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    // Check for account lockout
+    await this.checkLoginAttempts(dto.email.toLowerCase());
+
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
 
     if (!user || !user.passwordHash) {
+      await this.recordFailedAttempt(dto.email.toLowerCase());
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
+      await this.recordFailedAttempt(dto.email.toLowerCase());
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    await this.clearLoginAttempts(dto.email.toLowerCase());
 
     const tokens = await this.generateTokens(user);
 
@@ -95,26 +102,40 @@ export class AuthService {
   }
 
   async childLogin(dto: ChildLoginDto) {
+    const lockoutKey = `child:${dto.familyCode.toUpperCase()}:${dto.name}`;
+    await this.checkLoginAttempts(lockoutKey);
+
     const family = await this.prisma.family.findUnique({
       where: { familyCode: dto.familyCode.toUpperCase() },
     });
 
     if (!family) {
+      await this.recordFailedAttempt(lockoutKey);
       throw new UnauthorizedException('Invalid family code');
     }
 
+    // Find child by family + name only (PIN is hashed, can't query directly)
     const child = await this.prisma.user.findFirst({
       where: {
         familyId: family.id,
         name: dto.name,
         role: 'child',
-        pin: dto.pin,
       },
     });
 
-    if (!child) {
+    if (!child || !child.pin) {
+      await this.recordFailedAttempt(lockoutKey);
       throw new UnauthorizedException('Invalid name or PIN');
     }
+
+    // Compare PIN with bcrypt
+    const pinValid = await bcrypt.compare(dto.pin, child.pin);
+    if (!pinValid) {
+      await this.recordFailedAttempt(lockoutKey);
+      throw new UnauthorizedException('Invalid name or PIN');
+    }
+
+    await this.clearLoginAttempts(lockoutKey);
 
     const tokens = await this.generateTokens(child);
 
@@ -244,6 +265,30 @@ export class AuthService {
     }
 
     return this.sanitizeUser(user);
+  }
+
+  // --- Login attempt tracking for brute-force protection ---
+
+  private async checkLoginAttempts(key: string): Promise<void> {
+    const attempts = await this.redis.get(`login_attempts:${key}`);
+    if (attempts && parseInt(attempts) >= 5) {
+      const ttl = await this.redis.ttl(`login_attempts:${key}`);
+      throw new UnauthorizedException(
+        `Too many failed attempts. Try again in ${Math.ceil(Math.max(ttl, 0) / 60)} minutes.`,
+      );
+    }
+  }
+
+  private async recordFailedAttempt(key: string): Promise<void> {
+    const attemptsKey = `login_attempts:${key}`;
+    const current = await this.redis.incr(attemptsKey);
+    if (current === 1) {
+      await this.redis.expire(attemptsKey, 900); // 15-minute lockout window
+    }
+  }
+
+  private async clearLoginAttempts(key: string): Promise<void> {
+    await this.redis.del(`login_attempts:${key}`);
   }
 
   private async generateTokens(user: { id: string; email: string | null; role: string; familyId: string | null }) {

@@ -15,6 +15,7 @@ export class SubscriptionStatusDto {
 export interface RevenueCatWebhookEvent {
   api_version: string;
   event: {
+    id?: string;
     type: string;
     app_user_id: string;
     product_id: string;

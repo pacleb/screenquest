@@ -1,4 +1,13 @@
 // Shared layout wrapper for all emails
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function layout(content: string): string {
   return `
 <!DOCTYPE html>
@@ -63,7 +72,7 @@ export function verifyEmailTemplate(data: {
   verifyUrl: string;
 }): string {
   return layout(`
-    <h2 style="margin:0 0 16px; color:#333; font-size:22px;">Welcome, ${data.name}! 👋</h2>
+    <h2 style="margin:0 0 16px; color:#333; font-size:22px;">Welcome, ${escapeHtml(data.name)}! 👋</h2>
     <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
       Thanks for signing up for ScreenQuest! Please verify your email address to get started.
     </p>
@@ -81,7 +90,7 @@ export function passwordResetTemplate(data: {
   return layout(`
     <h2 style="margin:0 0 16px; color:#333; font-size:22px;">Reset Your Password</h2>
     <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
-      Hi ${data.name}, we received a request to reset your password. Click the button below to choose a new one.
+      Hi ${escapeHtml(data.name)}, we received a request to reset your password. Click the button below to choose a new one.
     </p>
     ${button('Reset Password', data.resetUrl)}
     <p style="margin:0; color:#999; font-size:13px; line-height:20px;">
@@ -98,7 +107,7 @@ export function familyInviteTemplate(data: {
   return layout(`
     <h2 style="margin:0 0 16px; color:#333; font-size:22px;">You're Invited! 🎉</h2>
     <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
-      <strong>${data.inviterName}</strong> has invited you to join the <strong>${data.familyName}</strong> family on ScreenQuest.
+      <strong>${escapeHtml(data.inviterName)}</strong> has invited you to join the <strong>${escapeHtml(data.familyName)}</strong> family on ScreenQuest.
     </p>
     <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
       ScreenQuest helps kids earn screen time by completing real-world quests — chores, learning activities, and more!
@@ -116,7 +125,7 @@ export function familyInviteTemplate(data: {
       <li>Tap <strong>"Join a Family"</strong> and enter the code above</li>
     </ol>
     <p style="margin:0; color:#999; font-size:13px; line-height:20px;">
-      This invitation was sent to you by ${data.inviterName}. If you don't know this person, you can safely ignore this email.
+      This invitation was sent to you by ${escapeHtml(data.inviterName)}. If you don't know this person, you can safely ignore this email.
     </p>
   `);
 }

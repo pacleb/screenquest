@@ -23,26 +23,26 @@ export class ViolationController {
     @Body() dto: RecordViolationDto,
     @Request() req: any,
   ) {
-    return this.violationService.recordViolation(childId, req.user.sub, dto);
+    return this.violationService.recordViolation(childId, req.user.id, dto);
   }
 
   @Get('children/:childId/violations')
   listViolations(@Param('childId') childId: string, @Request() req: any) {
-    return this.violationService.listViolations(childId, req.user.sub);
+    return this.violationService.listViolations(childId, req.user.id);
   }
 
   @Post('children/:childId/violations/reset')
   resetCounter(@Param('childId') childId: string, @Request() req: any) {
-    return this.violationService.resetCounter(childId, req.user.sub);
+    return this.violationService.resetCounter(childId, req.user.id);
   }
 
   @Get('children/:childId/violation-status')
   getViolationStatus(@Param('childId') childId: string, @Request() req: any) {
-    return this.violationService.getViolationStatus(childId, req.user.sub);
+    return this.violationService.getViolationStatus(childId, req.user.id);
   }
 
   @Put('violations/:violationId/forgive')
   forgiveViolation(@Param('violationId') violationId: string, @Request() req: any) {
-    return this.violationService.forgiveViolation(violationId, req.user.sub);
+    return this.violationService.forgiveViolation(violationId, req.user.id);
   }
 }

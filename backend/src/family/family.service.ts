@@ -99,8 +99,8 @@ export class FamilyService {
     return family;
   }
 
-  async getMembers(familyId: string) {
-    return this.prisma.user.findMany({
+  async getMembers(familyId: string, requestingUserRole?: string) {
+    const members = await this.prisma.user.findMany({
       where: { familyId },
       select: {
         id: true,
@@ -111,6 +111,13 @@ export class FamilyService {
         age: true,
       },
     });
+
+    // Hide emails from children
+    if (requestingUserRole === 'child') {
+      return members.map((m: any) => ({ ...m, email: undefined }));
+    }
+
+    return members;
   }
 
   async inviteMember(familyId: string, invitedByUserId: string, email: string) {
@@ -147,7 +154,6 @@ export class FamilyService {
     }
 
     // Send invite email
-    console.log('[INVITE] invitedByUserId:', invitedByUserId, 'type:', typeof invitedByUserId);
     const inviter = await this.prisma.user.findUnique({ where: { id: invitedByUserId } });
     await this.mail.sendFamilyInviteEmail(
       email,
@@ -172,13 +178,16 @@ export class FamilyService {
       throw new BadRequestException('Maximum of 6 children per family');
     }
 
+    // Hash the PIN before storing
+    const hashedPin = dto.pin ? await bcrypt.hash(dto.pin, 10) : null;
+
     const child = await this.prisma.user.create({
       data: {
         name: dto.name,
         age: dto.age,
         avatarUrl: dto.avatarUrl || null,
         email: dto.email?.toLowerCase() || null,
-        pin: dto.pin,
+        pin: hashedPin,
         role: 'child',
         familyId,
         authProvider: 'email',
@@ -202,14 +211,19 @@ export class FamilyService {
 
     if (!child) throw new NotFoundException('Child not found');
 
+    // Hash the PIN if it's being updated
+    const updateData: any = {
+      name: dto.name,
+      age: dto.age,
+      avatarUrl: dto.avatarUrl,
+    };
+    if (dto.pin) {
+      updateData.pin = await bcrypt.hash(dto.pin, 10);
+    }
+
     return this.prisma.user.update({
       where: { id: childId },
-      data: {
-        name: dto.name,
-        age: dto.age,
-        avatarUrl: dto.avatarUrl,
-        pin: dto.pin,
-      },
+      data: updateData,
       select: {
         id: true,
         name: true,

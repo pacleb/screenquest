@@ -14,9 +14,6 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  // Serve uploaded proof photos
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
-
   app.enableCors({
     origin: process.env.NODE_ENV === 'production'
       ? [
@@ -40,20 +37,24 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('ScreenQuest API')
-    .setDescription('API for the ScreenQuest screen time management app')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('ScreenQuest API')
+      .setDescription('API for the ScreenQuest screen time management app')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`ScreenQuest API running on http://localhost:${port}`);
-  console.log(`Swagger docs at http://localhost:${port}/api/docs`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`ScreenQuest API running on http://localhost:${port}`);
+    console.log(`Swagger docs at http://localhost:${port}/api/docs`);
+  }
 
   // Graceful shutdown
   app.enableShutdownHooks();

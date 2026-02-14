@@ -6,10 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
+import { RedisService } from '../redis/redis.service';
 import { RevenueCatWebhookEvent, SubscriptionStatusDto } from './dto/subscription.dto';
 
 const FREE_PLAN_QUEST_LIMIT = 3;
 const GRACE_PERIOD_DAYS = 7;
+const WEBHOOK_IDEMPOTENCY_TTL = 60 * 60 * 24 * 7; // 7 days
 
 @Injectable()
 export class SubscriptionService {
@@ -18,6 +20,7 @@ export class SubscriptionService {
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
+    private redis: RedisService,
   ) {}
 
   async isPremium(familyId: string): Promise<boolean> {
@@ -75,6 +78,15 @@ export class SubscriptionService {
 
   async handleWebhookEvent(event: RevenueCatWebhookEvent) {
     const { type, app_user_id, expiration_at_ms, product_id } = event.event;
+
+    // Idempotency: skip duplicate webhook events
+    const eventId = event.event.id || `${type}:${app_user_id}:${expiration_at_ms}`;
+    const idempotencyKey = `webhook:${eventId}`;
+    const already = await this.redis.get(idempotencyKey);
+    if (already) {
+      this.logger.log(`Webhook: duplicate event ${eventId}, skipping`);
+      return;
+    }
 
     // app_user_id is the familyId we set during RevenueCat identification
     const family = await this.prisma.family.findFirst({
@@ -185,6 +197,9 @@ export class SubscriptionService {
       default:
         this.logger.log(`Webhook: unhandled event type ${type}`);
     }
+
+    // Mark event as processed for idempotency
+    await this.redis.set(idempotencyKey, '1', 'EX', WEBHOOK_IDEMPOTENCY_TTL);
   }
 
   async archiveExcessQuests(familyId: string, keepQuestIds?: string[]) {

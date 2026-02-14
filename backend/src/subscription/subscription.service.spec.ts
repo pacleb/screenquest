@@ -3,23 +3,28 @@ import { NotFoundException } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
+import { RedisService } from '../redis/redis.service';
 import { createMockPrisma, MockPrisma } from '../__mocks__/prisma.mock';
 import { createMockNotification, MockNotification } from '../__mocks__/notification.mock';
+import { createMockRedis, MockRedis } from '../__mocks__/redis.mock';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
   let prisma: MockPrisma;
   let notificationService: MockNotification;
+  let redis: MockRedis;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     notificationService = createMockNotification();
+    redis = createMockRedis();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubscriptionService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: notificationService },
+        { provide: RedisService, useValue: redis },
       ],
     }).compile();
 

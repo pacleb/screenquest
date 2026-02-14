@@ -8,6 +8,7 @@ import {
   Body,
   Request,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { NotificationService } from './notification.service';
@@ -25,9 +26,8 @@ export class NotificationController {
     @Request() req: any,
   ) {
     // Users can only register their own tokens
-    const requesterId = req.user.sub;
-    if (requesterId !== userId) {
-      return { error: 'Access denied' };
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
     }
     return this.notificationService.registerToken(userId, dto.token, dto.platform);
   }
@@ -38,18 +38,16 @@ export class NotificationController {
     @Body() dto: { token: string },
     @Request() req: any,
   ) {
-    const requesterId = req.user.sub;
-    if (requesterId !== userId) {
-      return { error: 'Access denied' };
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
     }
     return this.notificationService.unregisterToken(userId, dto.token);
   }
 
   @Get('users/:userId/notification-preferences')
   getPreferences(@Param('userId') userId: string, @Request() req: any) {
-    const requesterId = req.user.sub;
-    if (requesterId !== userId) {
-      return { error: 'Access denied' };
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
     }
     return this.notificationService.getPreferences(userId);
   }
@@ -60,9 +58,8 @@ export class NotificationController {
     @Body() dto: UpdateNotificationPreferencesDto,
     @Request() req: any,
   ) {
-    const requesterId = req.user.sub;
-    if (requesterId !== userId) {
-      return { error: 'Access denied' };
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
     }
     return this.notificationService.updatePreferences(userId, dto);
   }

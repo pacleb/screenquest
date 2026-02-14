@@ -10,6 +10,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -63,7 +64,7 @@ export class FamilyController {
   @ApiOperation({ summary: 'List family members' })
   async getMembers(@Param('id') id: string, @Request() req: any) {
     this.ensureFamilyAccess(req.user.familyId, id);
-    return this.familyService.getMembers(id);
+    return this.familyService.getMembers(id, req.user.role);
   }
 
   @Post(':id/invite')
@@ -192,7 +193,7 @@ export class FamilyController {
 
   private ensureFamilyAccess(userFamilyId: string | null, requestedFamilyId: string) {
     if (userFamilyId !== requestedFamilyId) {
-      throw new Error('Access denied');
+      throw new ForbiddenException('Access denied');
     }
   }
 }
