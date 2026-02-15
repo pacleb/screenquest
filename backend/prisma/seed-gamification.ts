@@ -194,8 +194,8 @@ const ACHIEVEMENT_DEFINITIONS = [
   // Special
   { key: 'early_bird', name: 'Early Bird', description: 'Complete a quest before 9 AM', icon: '🐦', category: 'special', criteria: { type: 'early_completion', beforeHour: 9 }, badgeTier: 'bronze', badgeColor: '#CD7F32', xpReward: 10 },
   { key: 'night_owl', name: 'Night Owl', description: 'Complete a quest after 6 PM', icon: '🦉', category: 'special', criteria: { type: 'late_completion', afterHour: 18 }, badgeTier: 'bronze', badgeColor: '#CD7F32', xpReward: 10 },
-  { key: 'time_master', name: 'Time Master', description: 'Earn 500 total minutes', icon: '⏰', category: 'milestones', criteria: { type: 'total_earned_minutes', value: 500 }, badgeTier: 'silver', badgeColor: '#C0C0C0', xpReward: 50 },
-  { key: 'time_lord', name: 'Time Lord', description: 'Earn 2000 total minutes', icon: '🕐', category: 'milestones', criteria: { type: 'total_earned_minutes', value: 2000 }, badgeTier: 'gold', badgeColor: '#FFD700', xpReward: 200 },
+  { key: 'time_master', name: 'Time Master', description: 'Earn 30000 total seconds', icon: '⏰', category: 'milestones', criteria: { type: 'total_earned_seconds', value: 30000 }, badgeTier: 'silver', badgeColor: '#C0C0C0', xpReward: 50 },
+  { key: 'time_lord', name: 'Time Lord', description: 'Earn 120000 total seconds', icon: '🕐', category: 'milestones', criteria: { type: 'total_earned_seconds', value: 120000 }, badgeTier: 'gold', badgeColor: '#FFD700', xpReward: 200 },
   { key: 'perfect_day', name: 'Perfect Day', description: 'Complete all assigned quests in a day', icon: '🎯', category: 'special', criteria: { type: 'perfect_day' }, badgeTier: 'silver', badgeColor: '#C0C0C0', xpReward: 25 },
   { key: 'proof_pro', name: 'Proof Pro', description: 'Submit 10 photo proofs', icon: '📸', category: 'special', criteria: { type: 'photo_proofs', value: 10 }, badgeTier: 'bronze', badgeColor: '#CD7F32', xpReward: 10 },
   { key: 'easter_egg', name: 'Easter Egg', description: 'Find the hidden secret!', icon: '🥚', category: 'special', criteria: { type: 'easter_egg' }, badgeTier: 'bronze', badgeColor: '#CD7F32', xpReward: 10, isSecret: true },

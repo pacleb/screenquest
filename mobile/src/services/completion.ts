@@ -6,7 +6,7 @@ export interface QuestCompletion {
   childId: string;
   status: 'pending' | 'approved' | 'denied';
   proofImageUrl: string | null;
-  earnedMinutes: number;
+  earnedSeconds: number;
   stackingType: 'stackable' | 'non_stackable';
   expiresAt: string | null;
   parentNote: string | null;
@@ -17,7 +17,7 @@ export interface QuestCompletion {
     name: string;
     icon: string;
     category: string;
-    rewardMinutes: number;
+    rewardSeconds: number;
   };
   child?: {
     id: string;
@@ -33,7 +33,7 @@ export interface ChildQuest {
   description: string | null;
   icon: string;
   category: string;
-  rewardMinutes: number;
+  rewardSeconds: number;
   stackingType: 'stackable' | 'non_stackable';
   recurrence: string;
   requiresProof: boolean;

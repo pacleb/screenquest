@@ -74,7 +74,7 @@ export class AnalyticsListener {
     this.analytics.trackQuestCompleted(event.childId, {
       questId: event.questId,
       category: event.category,
-      rewardMinutes: event.rewardMinutes,
+      rewardSeconds: event.rewardSeconds,
       familyId: event.familyId,
     });
   }
@@ -95,7 +95,7 @@ export class AnalyticsListener {
   handlePlaySessionStarted(event: PlaySessionStartedEvent) {
     this.analytics.trackPlaySessionStarted(event.childId, {
       sessionId: event.sessionId,
-      durationMinutes: event.durationMinutes,
+      durationSeconds: event.durationSeconds,
       familyId: event.familyId,
     });
   }
@@ -104,7 +104,7 @@ export class AnalyticsListener {
   handlePlaySessionCompleted(event: PlaySessionCompletedEvent) {
     this.analytics.trackPlaySessionCompleted(event.childId, {
       sessionId: event.sessionId,
-      actualMinutes: event.actualMinutes,
+      actualSeconds: event.actualSeconds,
       familyId: event.familyId,
     });
   }

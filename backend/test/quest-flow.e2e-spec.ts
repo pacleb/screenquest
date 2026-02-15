@@ -56,7 +56,7 @@ describe('Quest Flow (E2E)', () => {
         .send({
           name: 'Clean Room',
           category: 'chores',
-          rewardMinutes: 30,
+          rewardSeconds: 1800,
           stackingType: 'stackable',
           recurrence: 'daily',
           assignedChildIds: [childId],
@@ -98,7 +98,7 @@ describe('Quest Flow (E2E)', () => {
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
-      expect(balanceRes.body.stackableMinutes).toBeGreaterThanOrEqual(30);
+      expect(balanceRes.body.stackableSeconds).toBeGreaterThanOrEqual(1800);
     });
   });
 
@@ -115,7 +115,7 @@ describe('Quest Flow (E2E)', () => {
           .send({
             name: `Quest ${i}`,
             category: 'chores',
-            rewardMinutes: 15,
+            rewardSeconds: 900,
             stackingType: 'stackable',
             assignedChildIds: [childId],
           })
@@ -129,7 +129,7 @@ describe('Quest Flow (E2E)', () => {
         .send({
           name: 'Quest 4',
           category: 'learning',
-          rewardMinutes: 10,
+          rewardSeconds: 600,
           stackingType: 'stackable',
           assignedChildIds: [childId],
         })

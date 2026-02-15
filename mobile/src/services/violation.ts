@@ -5,7 +5,7 @@ export interface Violation {
   childId: string;
   recordedByUserId: string;
   violationNumber: number;
-  penaltyMinutes: number;
+  penaltySeconds: number;
   penaltyHours?: number;
   description: string | null;
   forgiven: boolean;
@@ -16,7 +16,7 @@ export interface Violation {
 export interface ViolationStatus {
   currentCount: number;
   nextPenaltyHours: number;
-  nextPenaltyMinutes: number;
+  nextPenaltySeconds: number;
   lastResetAt: string | null;
 }
 

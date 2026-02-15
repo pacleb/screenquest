@@ -39,7 +39,7 @@ export class CreateLibraryQuestDto {
   @IsInt()
   @Min(1)
   @Max(480)
-  suggestedRewardMinutes: number;
+  suggestedRewardSeconds: number;
 
   @ApiPropertyOptional({ default: 'stackable' })
   @IsOptional()
@@ -88,7 +88,7 @@ export class UpdateLibraryQuestDto {
   @IsInt()
   @Min(1)
   @Max(480)
-  suggestedRewardMinutes?: number;
+  suggestedRewardSeconds?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -136,7 +136,7 @@ export class BulkImportRowDto {
   @IsInt()
   @Min(1)
   @Max(480)
-  suggestedRewardMinutes: number;
+  suggestedRewardSeconds: number;
 
   @IsOptional()
   @IsString()

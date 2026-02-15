@@ -54,7 +54,7 @@ export class ExportService {
     if (children.length === 0) {
       const csv = stringify([], {
         header: true,
-        columns: ['Date', 'Child Name', 'Activity', 'Quest Name', 'Minutes Earned', 'Minutes Used'],
+        columns: ['Date', 'Child Name', 'Activity', 'Quest Name', 'Seconds Earned', 'Seconds Used'],
       });
       await this.redis.setex(rateLimitKey, RATE_LIMIT_TTL, '1');
       return { csv, filename: this.getFilename(familyId) };
@@ -93,20 +93,20 @@ export class ExportService {
         childNameMap.get(c.childId) || 'Unknown',
         'Quest Completed',
         c.quest.name,
-        String(c.earnedMinutes),
+        String(c.earnedSeconds),
         '0',
       ]);
     }
 
     for (const s of sessions) {
-      const usedMinutes = s.requestedMinutes;
+      const usedSeconds = s.requestedSeconds;
       rows.push([
         (s.endedAt || s.createdAt).toISOString().split('T')[0],
         childNameMap.get(s.childId) || 'Unknown',
         'Play Session',
         '-',
         '0',
-        String(usedMinutes),
+        String(usedSeconds),
       ]);
     }
 
@@ -115,7 +115,7 @@ export class ExportService {
 
     const csv = stringify(rows, {
       header: true,
-      columns: ['Date', 'Child Name', 'Activity', 'Quest Name', 'Minutes Earned', 'Minutes Used'],
+      columns: ['Date', 'Child Name', 'Activity', 'Quest Name', 'Seconds Earned', 'Seconds Used'],
     });
 
     // Set rate limit

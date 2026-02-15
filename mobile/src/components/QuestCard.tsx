@@ -2,11 +2,12 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors, spacing, borderRadius, fonts } from "../theme";
+import { formatTimeLabel } from "../utils/formatTime";
 
 interface QuestCardProps {
   icon: string;
   name: string;
-  rewardMinutes: number;
+  rewardSeconds: number;
   stackingType: "stackable" | "non_stackable";
   category?: string;
   statusLabel?: string;
@@ -58,7 +59,7 @@ const STATUS_DISPLAY: Record<
 export function QuestCard({
   icon,
   name,
-  rewardMinutes,
+  rewardSeconds,
   stackingType,
   category,
   statusLabel = "available",
@@ -71,7 +72,7 @@ export function QuestCard({
   const catColor = category
     ? CATEGORY_COLORS[category.toLowerCase()]
     : undefined;
-  const difficulty = rewardMinutes <= 5 ? 1 : rewardMinutes <= 15 ? 2 : 3;
+  const difficulty = rewardSeconds <= 300 ? 1 : rewardSeconds <= 900 ? 2 : 3;
   const stars = Array(difficulty).fill("⭐").join("");
 
   if (compact) {
@@ -84,7 +85,7 @@ export function QuestCard({
         onPress={onPress}
         activeOpacity={0.8}
         disabled={!onPress}
-        accessibilityLabel={`Quest: ${name}, ${rewardMinutes} minutes reward`}
+        accessibilityLabel={`Quest: ${name}, ${formatTimeLabel(rewardSeconds)} reward`}
         accessibilityRole="button"
       >
         <Text style={styles.compactIcon}>{icon}</Text>
@@ -93,7 +94,9 @@ export function QuestCard({
         </Text>
         <View style={styles.compactRewardRow}>
           <View style={styles.compactReward}>
-            <Text style={styles.compactRewardText}>🕐 +{rewardMinutes}m</Text>
+            <Text style={styles.compactRewardText}>
+              🕐 +{formatTimeLabel(rewardSeconds)}
+            </Text>
           </View>
         </View>
         <Text style={styles.compactDifficulty}>{stars}</Text>
@@ -111,7 +114,7 @@ export function QuestCard({
       onPress={onPress}
       activeOpacity={0.85}
       disabled={!onPress}
-      accessibilityLabel={`Quest: ${name}, ${rewardMinutes} minutes reward, difficulty ${difficulty}`}
+      accessibilityLabel={`Quest: ${name}, ${formatTimeLabel(rewardSeconds)} reward, difficulty ${difficulty}`}
       accessibilityRole="button"
     >
       {/* Icon */}
@@ -131,7 +134,9 @@ export function QuestCard({
         </Text>
         <View style={styles.metaRow}>
           <View style={styles.rewardBadge}>
-            <Text style={styles.rewardText}>🕐 +{rewardMinutes} min</Text>
+            <Text style={styles.rewardText}>
+              🕐 +{formatTimeLabel(rewardSeconds)}
+            </Text>
           </View>
           <View
             style={[

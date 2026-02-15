@@ -17,6 +17,7 @@ import { useAuthStore } from "../../store/auth";
 import { completionService, ChildQuest } from "../../services/completion";
 import { uploadService } from "../../services/upload";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { formatTimeLabel } from "../../utils/formatTime";
 import {
   Button,
   Card,
@@ -199,8 +200,8 @@ export default function QuestDetailScreen() {
           </Text>
           <Text style={styles.successMessage}>
             {resultStatus === "approved"
-              ? `You earned ${quest.rewardMinutes} minutes! It's been added to your Time Bank.`
-              : `Waiting for your parent to approve. You'll earn ${quest.rewardMinutes} minutes!`}
+              ? `You earned ${formatTimeLabel(quest.rewardSeconds)}! It's been added to your Time Bank.`
+              : `Waiting for your parent to approve. You'll earn ${formatTimeLabel(quest.rewardSeconds)}!`}
           </Text>
           <Button
             title="Done"
@@ -253,8 +254,9 @@ export default function QuestDetailScreen() {
         <View style={styles.rewardCard}>
           <Text style={styles.rewardLabel}>Reward</Text>
           <View style={styles.rewardRow}>
-            <Text style={styles.rewardValue}>{quest.rewardMinutes}</Text>
-            <Text style={styles.rewardUnit}>minutes</Text>
+            <Text style={styles.rewardValue}>
+              {formatTimeLabel(quest.rewardSeconds)}
+            </Text>
           </View>
         </View>
 

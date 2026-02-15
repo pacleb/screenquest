@@ -208,12 +208,12 @@ export class GamificationService {
           }
           break;
         }
-        case 'total_earned_minutes': {
+        case 'total_earned_seconds': {
           const result = await this.prisma.questCompletion.aggregate({
             where: { childId, status: 'approved' },
-            _sum: { earnedMinutes: true },
+            _sum: { earnedSeconds: true },
           });
-          earned = (result._sum.earnedMinutes || 0) >= criteria.value;
+          earned = (result._sum.earnedSeconds || 0) >= criteria.value;
           break;
         }
         case 'streak': {

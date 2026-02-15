@@ -2,73 +2,94 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing, borderRadius, fonts, typography } from "../theme";
 
-function formatTime(minutes: number): { value: string; unit: string } {
-  const abs = Math.abs(minutes);
-  if (abs >= 60) {
-    const h = Math.floor(abs / 60);
-    const m = abs % 60;
+function formatTime(seconds: number): { value: string; unit: string } {
+  const abs = Math.abs(seconds);
+  const sign = seconds < 0 ? "-" : "";
+  if (abs >= 3600) {
+    const h = Math.floor(abs / 3600);
+    const m = Math.floor((abs % 3600) / 60);
+    const s = abs % 60;
     return {
-      value: `${minutes < 0 ? "-" : ""}${h}:${m.toString().padStart(2, "0")}`,
+      value: `${sign}${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`,
       unit: "hours",
     };
   }
-  return { value: String(minutes), unit: minutes === 1 ? "minute" : "minutes" };
+  if (abs >= 60) {
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    return {
+      value: `${sign}${m}:${s.toString().padStart(2, "0")}`,
+      unit: "minutes",
+    };
+  }
+  return { value: `${sign}${abs}`, unit: abs === 1 ? "second" : "seconds" };
 }
 
-function formatShort(minutes: number): string {
-  const abs = Math.abs(minutes);
-  if (abs >= 60) {
-    const h = Math.floor(abs / 60);
-    const m = abs % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+function formatShort(seconds: number): string {
+  const abs = Math.abs(seconds);
+  const sign = seconds < 0 ? "-" : "";
+  if (abs >= 3600) {
+    const h = Math.floor(abs / 3600);
+    const m = Math.floor((abs % 3600) / 60);
+    const s = abs % 60;
+    return s > 0
+      ? `${sign}${h}h ${m}m ${s}s`
+      : m > 0
+        ? `${sign}${h}h ${m}m`
+        : `${sign}${h}h`;
   }
-  return `${minutes}m`;
+  if (abs >= 60) {
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    return s > 0 ? `${sign}${m}m ${s}s` : `${sign}${m}m`;
+  }
+  return `${sign}${abs}s`;
 }
 
 interface TimeBankDisplayProps {
-  stackableMinutes: number;
-  nonStackableMinutes: number;
-  totalMinutes: number;
+  stackableSeconds: number;
+  nonStackableSeconds: number;
+  totalSeconds: number;
   compact?: boolean;
 }
 
 export function TimeBankDisplay({
-  stackableMinutes,
-  nonStackableMinutes,
-  totalMinutes,
+  stackableSeconds,
+  nonStackableSeconds,
+  totalSeconds,
   compact,
 }: TimeBankDisplayProps) {
-  const isNegative = totalMinutes < 0;
-  const deficit = Math.abs(totalMinutes);
-  const maxDisplay = Math.max(stackableMinutes + nonStackableMinutes, 120); // 2h baseline
-  const stackFill = isNegative ? 0 : Math.min(stackableMinutes / maxDisplay, 1);
+  const isNegative = totalSeconds < 0;
+  const deficit = Math.abs(totalSeconds);
+  const maxDisplay = Math.max(stackableSeconds + nonStackableSeconds, 7200); // 2h baseline
+  const stackFill = isNegative ? 0 : Math.min(stackableSeconds / maxDisplay, 1);
   const nonStackFill = isNegative
     ? 0
-    : Math.min(nonStackableMinutes / maxDisplay, 1);
+    : Math.min(nonStackableSeconds / maxDisplay, 1);
 
   if (compact) {
     return (
       <View
         style={styles.compactContainer}
         accessibilityRole="text"
-        accessibilityLabel={`Time bank: ${formatShort(totalMinutes)}`}
+        accessibilityLabel={`Time bank: ${formatShort(totalSeconds)}`}
       >
         <Text
           style={[styles.compactValue, isNegative && { color: colors.error }]}
         >
-          {formatShort(totalMinutes)}
+          {formatShort(totalSeconds)}
         </Text>
       </View>
     );
   }
 
-  const display = formatTime(totalMinutes);
+  const display = formatTime(totalSeconds);
 
   return (
     <View
       style={[styles.container, isNegative && styles.containerNegative]}
       accessibilityRole="summary"
-      accessibilityLabel={`Time bank: ${formatShort(totalMinutes)}. ${formatShort(stackableMinutes)} saved, ${formatShort(nonStackableMinutes)} expiring today`}
+      accessibilityLabel={`Time bank: ${formatShort(totalSeconds)}. ${formatShort(stackableSeconds)} saved, ${formatShort(nonStackableSeconds)} expiring today`}
     >
       <Text style={styles.label}>Time Bank</Text>
 
@@ -96,25 +117,25 @@ export function TimeBankDisplay({
       </View>
 
       {/* Legend */}
-      {!isNegative && totalMinutes > 0 && (
+      {!isNegative && totalSeconds > 0 && (
         <View style={styles.legendRow}>
-          {stackableMinutes > 0 && (
+          {stackableSeconds > 0 && (
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendDot, { backgroundColor: colors.primary }]}
               />
               <Text style={styles.legendText}>
-                {formatShort(stackableMinutes)} saved
+                {formatShort(stackableSeconds)} saved
               </Text>
             </View>
           )}
-          {nonStackableMinutes > 0 && (
+          {nonStackableSeconds > 0 && (
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendDot, { backgroundColor: colors.accent }]}
               />
               <Text style={styles.legendText}>
-                {formatShort(nonStackableMinutes)} today
+                {formatShort(nonStackableSeconds)} today
               </Text>
             </View>
           )}
@@ -131,16 +152,16 @@ export function TimeBankDisplay({
       )}
 
       {/* Expiring hint */}
-      {!isNegative && nonStackableMinutes > 0 && (
+      {!isNegative && nonStackableSeconds > 0 && (
         <View style={styles.expiringBadge}>
           <Text style={styles.expiringText}>
-            {formatShort(nonStackableMinutes)} expires tonight
+            {formatShort(nonStackableSeconds)} expires tonight
           </Text>
         </View>
       )}
 
       {/* Zero balance hint */}
-      {!isNegative && totalMinutes === 0 && (
+      {!isNegative && totalSeconds === 0 && (
         <Text style={styles.hintText}>Complete quests to earn time!</Text>
       )}
     </View>

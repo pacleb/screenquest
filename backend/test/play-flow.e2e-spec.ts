@@ -46,7 +46,7 @@ describe('Play Flow (E2E)', () => {
       .send({
         name: 'Easy Task',
         category: 'chores',
-        rewardMinutes: 60,
+        rewardSeconds: 3600,
         stackingType: 'stackable',
         recurrence: 'daily',
         autoApprove: true,
@@ -85,7 +85,7 @@ describe('Play Flow (E2E)', () => {
       const playRes = await agent
         .post('/api/play-sessions/request')
         .set('Authorization', `Bearer ${childToken}`)
-        .send({ requestedMinutes: 30 })
+        .send({ requestedSeconds: 1800 })
         .expect(201);
 
       expect(playRes.body.status).toBe('active');
@@ -105,8 +105,8 @@ describe('Play Flow (E2E)', () => {
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
-      // Started with 60, deducted 30 for play, refunded ~30 (stopped immediately)
-      expect(balanceRes.body.totalMinutes).toBeGreaterThanOrEqual(55);
+      // Started with 3600, deducted 1800 for play, refunded ~1800 (stopped immediately)
+      expect(balanceRes.body.totalSeconds).toBeGreaterThanOrEqual(3300);
     });
 
     it('rejects play when balance is zero', async () => {
@@ -138,7 +138,7 @@ describe('Play Flow (E2E)', () => {
       await agent
         .post('/api/play-sessions/request')
         .set('Authorization', `Bearer ${childLoginRes.body.accessToken}`)
-        .send({ requestedMinutes: 15 })
+        .send({ requestedSeconds: 900 })
         .expect(400);
     });
   });

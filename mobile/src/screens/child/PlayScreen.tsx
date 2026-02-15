@@ -11,21 +11,9 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
-import {
-  playSessionService,
-  PlaySession,
-} from "../../services/playSession";
-import {
-  timeBankService,
-  TimeBankBalance,
-} from "../../services/timeBank";
-import {
-  colors,
-  spacing,
-  borderRadius,
-  fonts,
-  typography,
-} from "../../theme";
+import { playSessionService, PlaySession } from "../../services/playSession";
+import { timeBankService, TimeBankBalance } from "../../services/timeBank";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import {
   CountdownRing,
   Button,
@@ -35,8 +23,9 @@ import {
 import { Animations } from "../../../assets/animations";
 import { SoundEffects } from "../../services/soundEffects";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
+import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
 
-const PRESETS = [15, 30, 45, 60, 90, 120];
+const PRESETS = [900, 1800, 2700, 3600, 5400, 7200];
 
 type ScreenState =
   | "select"
@@ -51,11 +40,11 @@ export default function ChildPlay() {
   const { isConnected } = useNetworkStatus();
   const [screenState, setScreenState] = useState<ScreenState>("select");
   const [balance, setBalance] = useState<TimeBankBalance>({
-    stackableMinutes: 0,
-    nonStackableMinutes: 0,
-    totalMinutes: 0,
+    stackableSeconds: 0,
+    nonStackableSeconds: 0,
+    totalSeconds: 0,
   });
-  const [selectedMinutes, setSelectedMinutes] = useState(30);
+  const [selectedSeconds, setSelectedSeconds] = useState(1800);
   const [session, setSession] = useState<PlaySession | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -192,7 +181,7 @@ export default function ChildPlay() {
     try {
       const result = await playSessionService.requestPlay(
         user.id,
-        selectedMinutes,
+        selectedSeconds,
       );
       setSession(result);
       if (result.status === "active") {
@@ -274,7 +263,7 @@ export default function ChildPlay() {
     init();
   };
 
-  const totalSeconds = session ? session.requestedMinutes * 60 : 0;
+  const totalSeconds = session ? session.requestedSeconds : 0;
 
   if (loading) {
     return (
@@ -332,7 +321,8 @@ export default function ChildPlay() {
           />
           <Text style={styles.waitingTitle}>Request Sent!</Text>
           <Text style={styles.waitingSubtitle}>
-            Waiting for your parent to approve {selectedMinutes} minutes...
+            Waiting for your parent to approve{" "}
+            {formatTimeLabel(selectedSeconds)}...
           </Text>
           <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleDone}>
             <Text style={styles.cancelWaitText}>Cancel</Text>
@@ -412,10 +402,12 @@ export default function ChildPlay() {
         {/* Balance display */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Available</Text>
-          <Text style={styles.balanceValue}>{balance.totalMinutes} min</Text>
-          {balance.nonStackableMinutes > 0 && (
+          <Text style={styles.balanceValue}>
+            {formatTimeLabel(balance.totalSeconds)}
+          </Text>
+          {balance.nonStackableSeconds > 0 && (
             <Text style={styles.balanceExpiring}>
-              {balance.nonStackableMinutes} min expires today
+              {formatTimeLabel(balance.nonStackableSeconds)} expires today
             </Text>
           )}
         </View>
@@ -423,33 +415,34 @@ export default function ChildPlay() {
         {/* Time presets */}
         <Text style={styles.sectionLabel}>How long?</Text>
         <View style={styles.presetGrid}>
-          {PRESETS.map((mins) => {
-            const disabled = mins > balance.totalMinutes;
+          {PRESETS.map((secs) => {
+            const disabled = secs > balance.totalSeconds;
+            const displayMins = Math.floor(secs / 60);
             return (
               <TouchableOpacity
-                key={mins}
+                key={secs}
                 style={[
                   styles.presetBtn,
-                  selectedMinutes === mins && styles.presetBtnActive,
+                  selectedSeconds === secs && styles.presetBtnActive,
                   disabled && styles.presetBtnDisabled,
                 ]}
-                onPress={() => !disabled && setSelectedMinutes(mins)}
+                onPress={() => !disabled && setSelectedSeconds(secs)}
                 disabled={disabled}
-                accessibilityLabel={`${mins} minutes`}
+                accessibilityLabel={formatTimeLabel(secs)}
                 accessibilityRole="button"
                 accessibilityState={{
-                  selected: selectedMinutes === mins,
+                  selected: selectedSeconds === secs,
                   disabled,
                 }}
               >
                 <Text
                   style={[
                     styles.presetText,
-                    selectedMinutes === mins && styles.presetTextActive,
+                    selectedSeconds === secs && styles.presetTextActive,
                     disabled && styles.presetTextDisabled,
                   ]}
                 >
-                  {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                  {formatTimeCompact(secs)}
                 </Text>
               </TouchableOpacity>
             );
@@ -458,8 +451,9 @@ export default function ChildPlay() {
 
         {/* Selected time display */}
         <View style={styles.selectedDisplay}>
-          <Text style={styles.selectedValue}>{selectedMinutes}</Text>
-          <Text style={styles.selectedUnit}>minutes</Text>
+          <Text style={styles.selectedValue}>
+            {formatTimeLabel(selectedSeconds)}
+          </Text>
         </View>
 
         {/* Start button */}
@@ -467,7 +461,7 @@ export default function ChildPlay() {
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}
-          disabled={balance.totalMinutes < 5}
+          disabled={balance.totalSeconds < 5}
           variant="success"
           size="lg"
           childFont

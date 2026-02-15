@@ -3,7 +3,7 @@ import api from './api';
 export interface PlaySession {
   id: string;
   childId: string;
-  requestedMinutes: number;
+  requestedSeconds: number;
   status: 'requested' | 'approved' | 'denied' | 'active' | 'paused' | 'completed' | 'stopped' | 'cancelled';
   startedAt: string | null;
   pausedAt: string | null;
@@ -26,8 +26,8 @@ export interface PlaySettings {
 
 export const playSessionService = {
   // Child endpoints
-  requestPlay: (childId: string, requestedMinutes: number) =>
-    api.post<PlaySession>(`/children/${childId}/play`, { requestedMinutes }).then((r) => r.data),
+  requestPlay: (childId: string, requestedSeconds: number) =>
+    api.post<PlaySession>(`/children/${childId}/play`, { requestedSeconds }).then((r) => r.data),
 
   getActiveSession: (childId: string) =>
     api.get<PlaySession | null>(`/children/${childId}/play/active`).then((r) => r.data),
@@ -58,8 +58,8 @@ export const playSessionService = {
   deny: (sessionId: string) =>
     api.put<PlaySession>(`/play-sessions/${sessionId}/deny`).then((r) => r.data),
 
-  extend: (sessionId: string, additionalMinutes: number) =>
-    api.post<PlaySession>(`/play-sessions/${sessionId}/extend`, { additionalMinutes }).then((r) => r.data),
+  extend: (sessionId: string, additionalSeconds: number) =>
+    api.post<PlaySession>(`/play-sessions/${sessionId}/extend`, { additionalSeconds }).then((r) => r.data),
 
   end: (sessionId: string) =>
     api.post<PlaySession>(`/play-sessions/${sessionId}/end`).then((r) => r.data),

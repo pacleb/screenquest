@@ -5,9 +5,9 @@ import { fonts, spacing, borderRadius } from "../theme";
 interface DayStats {
   date: string;
   quests: number;
-  minutes: number;
+  seconds: number;
   xp: number;
-  playMinutes: number;
+  playSeconds: number;
 }
 
 interface WeeklyStatsChartProps {

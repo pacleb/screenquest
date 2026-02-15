@@ -23,7 +23,7 @@ describe('TimeBankService', () => {
 
   describe('ensureTimeBank', () => {
     it('returns existing time bank record', async () => {
-      const existing = { childId: 'child-1', stackableBalanceMinutes: 100, nonStackableBalanceMinutes: 30 };
+      const existing = { childId: 'child-1', stackableBalanceSeconds: 100, nonStackableBalanceSeconds: 30 };
       prisma.timeBank.findUnique.mockResolvedValue(existing);
 
       const result = await service.ensureTimeBank('child-1');
@@ -33,7 +33,7 @@ describe('TimeBankService', () => {
 
     it('creates a new time bank if missing', async () => {
       prisma.timeBank.findUnique.mockResolvedValue(null);
-      const created = { childId: 'child-1', stackableBalanceMinutes: 0, nonStackableBalanceMinutes: 0 };
+      const created = { childId: 'child-1', stackableBalanceSeconds: 0, nonStackableBalanceSeconds: 0 };
       prisma.timeBank.create.mockResolvedValue(created);
 
       const result = await service.ensureTimeBank('child-1');
@@ -49,17 +49,17 @@ describe('TimeBankService', () => {
         .mockResolvedValueOnce({ id: 'child-1', role: 'child', familyId: 'fam-1' }); // requester (self)
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 60,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 60,
+        nonStackableBalanceSeconds: 30,
       });
       prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 30 },
+        _sum: { earnedSeconds: 30 },
       });
 
       const balance = await service.getBalance('child-1', 'child-1');
-      expect(balance.stackableMinutes).toBe(60);
-      expect(balance.nonStackableMinutes).toBe(30);
-      expect(balance.totalMinutes).toBe(90);
+      expect(balance.stackableSeconds).toBe(60);
+      expect(balance.nonStackableSeconds).toBe(30);
+      expect(balance.totalSeconds).toBe(90);
     });
 
     it('throws NotFoundException for non-child users', async () => {
@@ -86,15 +86,15 @@ describe('TimeBankService', () => {
         .mockResolvedValueOnce({ id: 'parent-1', role: 'parent', familyId: 'fam-1' });
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 50,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 50,
+        nonStackableBalanceSeconds: 0,
       });
       prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 0 },
+        _sum: { earnedSeconds: 0 },
       });
 
       const balance = await service.getBalance('child-1', 'parent-1');
-      expect(balance.stackableMinutes).toBe(50);
+      expect(balance.stackableSeconds).toBe(50);
     });
   });
 
@@ -102,8 +102,8 @@ describe('TimeBankService', () => {
     it('increments stackable balance', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 30,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 30,
+        nonStackableBalanceSeconds: 0,
       });
       prisma.timeBank.update.mockResolvedValue({});
 
@@ -112,20 +112,17 @@ describe('TimeBankService', () => {
       expect(prisma.timeBank.update).toHaveBeenCalledWith({
         where: { childId: 'child-1' },
         data: {
-          stackableBalanceMinutes: 45,
+          stackableBalanceSeconds: 45,
           lastUpdated: expect.any(Date),
         },
       });
     });
 
-    it('recalculates non-stackable from active completions', async () => {
+    it('adds non-stackable to stored balance', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 0,
-        nonStackableBalanceMinutes: 0,
-      });
-      prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 20 },
+        stackableBalanceSeconds: 0,
+        nonStackableBalanceSeconds: 10,
       });
       prisma.timeBank.update.mockResolvedValue({});
 
@@ -134,7 +131,7 @@ describe('TimeBankService', () => {
       expect(prisma.timeBank.update).toHaveBeenCalledWith({
         where: { childId: 'child-1' },
         data: {
-          nonStackableBalanceMinutes: 20,
+          nonStackableBalanceSeconds: 30,
           lastUpdated: expect.any(Date),
         },
       });
@@ -154,11 +151,11 @@ describe('TimeBankService', () => {
     it('deducts non-stackable first, then stackable', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 60,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 60,
+        nonStackableBalanceSeconds: 20,
       });
       prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 20 },
+        _sum: { earnedSeconds: 20 },
       });
       prisma.timeBank.update.mockResolvedValue({});
 
@@ -168,22 +165,22 @@ describe('TimeBankService', () => {
       expect(prisma.timeBank.update).toHaveBeenLastCalledWith({
         where: { childId: 'child-1' },
         data: {
-          nonStackableBalanceMinutes: 0,
-          stackableBalanceMinutes: 50,
+          nonStackableBalanceSeconds: 0,
+          stackableBalanceSeconds: 50,
           lastUpdated: expect.any(Date),
         },
       });
-      expect(result.totalMinutes).toBe(50);
+      expect(result.totalSeconds).toBe(50);
     });
 
     it('throws ForbiddenException for insufficient balance', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 10,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 10,
+        nonStackableBalanceSeconds: 0,
       });
       prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 5 },
+        _sum: { earnedSeconds: 5 },
       });
 
       await expect(service.deductTime('child-1', 20)).rejects.toThrow(
@@ -194,16 +191,16 @@ describe('TimeBankService', () => {
     it('handles exact balance deduction', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 30,
-        nonStackableBalanceMinutes: 0,
+        stackableBalanceSeconds: 30,
+        nonStackableBalanceSeconds: 0,
       });
       prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 0 },
+        _sum: { earnedSeconds: 0 },
       });
       prisma.timeBank.update.mockResolvedValue({});
 
       const result = await service.deductTime('child-1', 30);
-      expect(result.totalMinutes).toBe(0);
+      expect(result.totalSeconds).toBe(0);
     });
   });
 
@@ -211,36 +208,30 @@ describe('TimeBankService', () => {
     it('deducts non-stackable first, then stackable', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 100,
-        nonStackableBalanceMinutes: 0,
-      });
-      prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 30 },
+        stackableBalanceSeconds: 100,
+        nonStackableBalanceSeconds: 30,
       });
       prisma.timeBank.update.mockResolvedValue({});
 
       const result = await service.deductPenalty('child-1', 50);
 
       // 30 from non-stackable, 20 from stackable
-      expect(result.nonStackableMinutes).toBe(0);
-      expect(result.stackableMinutes).toBe(80);
+      expect(result.nonStackableSeconds).toBe(0);
+      expect(result.stackableSeconds).toBe(80);
     });
 
     it('allows stackable balance to go negative', async () => {
       prisma.timeBank.findUnique.mockResolvedValue({
         childId: 'child-1',
-        stackableBalanceMinutes: 30,
-        nonStackableBalanceMinutes: 0,
-      });
-      prisma.questCompletion.aggregate.mockResolvedValue({
-        _sum: { earnedMinutes: 0 },
+        stackableBalanceSeconds: 30,
+        nonStackableBalanceSeconds: 0,
       });
       prisma.timeBank.update.mockResolvedValue({});
 
       const result = await service.deductPenalty('child-1', 120);
 
-      expect(result.stackableMinutes).toBe(-90);
-      expect(result.totalMinutes).toBe(-90);
+      expect(result.stackableSeconds).toBe(-90);
+      expect(result.totalSeconds).toBe(-90);
     });
   });
 });

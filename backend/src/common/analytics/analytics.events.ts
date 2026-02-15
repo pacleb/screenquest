@@ -55,7 +55,7 @@ export class QuestCompletedEvent {
     public readonly familyId: string,
     public readonly questId: string,
     public readonly category: string,
-    public readonly rewardMinutes: number,
+    public readonly rewardSeconds: number,
   ) {}
 }
 
@@ -82,7 +82,7 @@ export class PlaySessionStartedEvent {
     public readonly childId: string,
     public readonly familyId: string,
     public readonly sessionId: string,
-    public readonly durationMinutes: number,
+    public readonly durationSeconds: number,
   ) {}
 }
 
@@ -91,7 +91,7 @@ export class PlaySessionCompletedEvent {
     public readonly childId: string,
     public readonly familyId: string,
     public readonly sessionId: string,
-    public readonly actualMinutes: number,
+    public readonly actualSeconds: number,
   ) {}
 }
 

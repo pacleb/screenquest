@@ -50,7 +50,7 @@ describe('CompletionService', () => {
         id: 'quest-1',
         name: 'Clean Room',
         isArchived: false,
-        rewardMinutes: 30,
+        rewardSeconds: 30,
         bonusMultiplier: 1.0,
         stackingType: 'stackable',
         recurrence: 'daily',
@@ -64,7 +64,7 @@ describe('CompletionService', () => {
         questId: 'quest-1',
         childId: 'child-1',
         status: 'pending',
-        earnedMinutes: 30,
+        earnedSeconds: 30,
         quest: { id: 'quest-1', name: 'Clean Room', icon: '🧹', category: 'chores' },
       });
     };
@@ -85,7 +85,7 @@ describe('CompletionService', () => {
         questId: 'quest-1',
         childId: 'child-1',
         status: 'approved',
-        earnedMinutes: 30,
+        earnedSeconds: 30,
         quest: { id: 'quest-1', name: 'Clean Room', icon: '🧹', category: 'chores' },
       });
 
@@ -106,14 +106,14 @@ describe('CompletionService', () => {
       prisma.questCompletion.create.mockResolvedValue({
         id: 'comp-1',
         status: 'approved',
-        earnedMinutes: 45,
+        earnedSeconds: 45,
         quest: {},
       });
 
       await service.completeQuest('child-1', 'quest-1', {});
 
       const createCall = prisma.questCompletion.create.mock.calls[0][0];
-      expect(createCall.data.earnedMinutes).toBe(45); // 30 * 1.5
+      expect(createCall.data.earnedSeconds).toBe(45); // 30 * 1.5
     });
 
     it('blocks duplicate daily completion', async () => {
@@ -168,7 +168,7 @@ describe('CompletionService', () => {
         id: 'comp-1',
         childId: 'child-1',
         status: 'pending',
-        earnedMinutes: 30,
+        earnedSeconds: 30,
         stackingType: 'stackable',
         expiresAt: null,
         quest: { familyId: 'fam-1' },

@@ -54,13 +54,13 @@ describe('PlaySessionService', () => {
     it('auto-starts session when notify_only mode', async () => {
       setupChild({ playApprovalMode: 'notify_only' });
       prisma.playSession.findFirst.mockResolvedValue(null);
-      timeBankService.getBalance.mockResolvedValue({ totalMinutes: 60 });
+      timeBankService.getBalance.mockResolvedValue({ totalSeconds: 60 });
       prisma.playSession.findMany.mockResolvedValue([]); // daily usage
       prisma.playSession.create.mockResolvedValue({
         id: 'sess-1',
         childId: 'child-1',
         status: 'active',
-        requestedMinutes: 30,
+        requestedSeconds: 30,
         startedAt: new Date(),
         totalPausedSeconds: 0,
         pausedAt: null,
@@ -69,7 +69,7 @@ describe('PlaySessionService', () => {
       // Mock validatePlayHours — we need to set the time within allowed hours
       jest.spyOn(service as any, 'validatePlayHours').mockImplementation(() => {});
 
-      const result = await service.requestPlay('child-1', { requestedMinutes: 30 });
+      const result = await service.requestPlay('child-1', { requestedSeconds: 30 });
 
       expect(result.status).toBe('active');
       // Time is NOT deducted upfront; it's deducted when the session ends
@@ -79,13 +79,13 @@ describe('PlaySessionService', () => {
     it('creates requested session when require_approval mode', async () => {
       setupChild({ playApprovalMode: 'require_approval' });
       prisma.playSession.findFirst.mockResolvedValue(null);
-      timeBankService.getBalance.mockResolvedValue({ totalMinutes: 60 });
+      timeBankService.getBalance.mockResolvedValue({ totalSeconds: 60 });
       prisma.playSession.findMany.mockResolvedValue([]);
       prisma.playSession.create.mockResolvedValue({
         id: 'sess-1',
         childId: 'child-1',
         status: 'requested',
-        requestedMinutes: 30,
+        requestedSeconds: 30,
         startedAt: null,
         totalPausedSeconds: 0,
         pausedAt: null,
@@ -93,7 +93,7 @@ describe('PlaySessionService', () => {
 
       jest.spyOn(service as any, 'validatePlayHours').mockImplementation(() => {});
 
-      const result = await service.requestPlay('child-1', { requestedMinutes: 30 });
+      const result = await service.requestPlay('child-1', { requestedSeconds: 30 });
 
       expect(result.status).toBe('requested');
       expect(timeBankService.deductTime).not.toHaveBeenCalled();
@@ -102,20 +102,20 @@ describe('PlaySessionService', () => {
     it('rejects when balance is negative', async () => {
       setupChild();
       prisma.playSession.findFirst.mockResolvedValue(null);
-      timeBankService.getBalance.mockResolvedValue({ totalMinutes: -30 });
+      timeBankService.getBalance.mockResolvedValue({ totalSeconds: -30 });
 
       await expect(
-        service.requestPlay('child-1', { requestedMinutes: 15 }),
+        service.requestPlay('child-1', { requestedSeconds: 15 }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('rejects when balance is insufficient', async () => {
       setupChild();
       prisma.playSession.findFirst.mockResolvedValue(null);
-      timeBankService.getBalance.mockResolvedValue({ totalMinutes: 10 });
+      timeBankService.getBalance.mockResolvedValue({ totalSeconds: 10 });
 
       await expect(
-        service.requestPlay('child-1', { requestedMinutes: 30 }),
+        service.requestPlay('child-1', { requestedSeconds: 30 }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -127,7 +127,7 @@ describe('PlaySessionService', () => {
       });
 
       await expect(
-        service.requestPlay('child-1', { requestedMinutes: 30 }),
+        service.requestPlay('child-1', { requestedSeconds: 30 }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -139,7 +139,7 @@ describe('PlaySessionService', () => {
       });
 
       await expect(
-        service.requestPlay('parent-1', { requestedMinutes: 30 }),
+        service.requestPlay('parent-1', { requestedSeconds: 30 }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -151,7 +151,7 @@ describe('PlaySessionService', () => {
         id: 'sess-1',
         childId: 'child-1',
         status: 'active',
-        requestedMinutes: 30,
+        requestedSeconds: 1800,
         startedAt,
         totalPausedSeconds: 0,
         pausedAt: null,
@@ -161,7 +161,7 @@ describe('PlaySessionService', () => {
         status: 'stopped',
         startedAt,
         endedAt: new Date(),
-        requestedMinutes: 30,
+        requestedSeconds: 1800,
         totalPausedSeconds: 0,
         pausedAt: null,
       });
@@ -173,14 +173,14 @@ describe('PlaySessionService', () => {
 
       await service.stopSession('sess-1', 'child-1');
 
-      // Should deduct roughly 10 min (actual elapsed time), not refund remaining
+      // Should deduct roughly 600 seconds (actual elapsed time), not refund remaining
       expect(timeBankService.deductTime).toHaveBeenCalledWith(
         'child-1',
         expect.any(Number),
       );
-      const deductedMinutes = timeBankService.deductTime.mock.calls[0][1];
-      expect(deductedMinutes).toBeGreaterThanOrEqual(10);
-      expect(deductedMinutes).toBeLessThanOrEqual(11);
+      const deductedSeconds = timeBankService.deductTime.mock.calls[0][1];
+      expect(deductedSeconds).toBeGreaterThanOrEqual(590);
+      expect(deductedSeconds).toBeLessThanOrEqual(610);
       // Should NOT credit/refund any time
       expect(timeBankService.creditTime).not.toHaveBeenCalled();
     });
@@ -224,7 +224,7 @@ describe('PlaySessionService', () => {
         id: 'sess-1',
         childId: 'child-1',
         status: 'active',
-        requestedMinutes: 30,
+        requestedSeconds: 30,
         startedAt: new Date(),
         totalPausedSeconds: 0,
         pausedAt: null,
@@ -233,7 +233,7 @@ describe('PlaySessionService', () => {
         id: 'sess-1',
         status: 'paused',
         pausedAt: new Date(),
-        requestedMinutes: 30,
+        requestedSeconds: 30,
         startedAt: new Date(),
         totalPausedSeconds: 0,
       });
@@ -255,7 +255,7 @@ describe('PlaySessionService', () => {
         id: 'sess-1',
         childId: 'child-1',
         status: 'requested',
-        requestedMinutes: 30,
+        requestedSeconds: 30,
       });
       // getSessionWithParentAccess checks child + user
       prisma.user.findUnique
@@ -264,7 +264,7 @@ describe('PlaySessionService', () => {
       prisma.playSession.update.mockResolvedValue({
         id: 'sess-1',
         status: 'active',
-        requestedMinutes: 30,
+        requestedSeconds: 30,
         startedAt: new Date(),
         totalPausedSeconds: 0,
         pausedAt: null,
@@ -283,7 +283,7 @@ describe('PlaySessionService', () => {
       const settings = service.getPlaySettings(null);
 
       expect(settings.playApprovalMode).toBe('notify_only');
-      expect(settings.dailyScreenTimeCap).toBe(120);
+      expect(settings.dailyScreenTimeCap).toBe(7200);
     });
 
     it('merges stored settings with defaults', () => {

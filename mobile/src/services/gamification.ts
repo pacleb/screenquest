@@ -58,11 +58,11 @@ export const gamificationService = {
   getChildWeeklyStats: (childId: string) =>
     api.get<{
       questsCompleted: number;
-      minutesEarned: number;
+      secondsEarned: number;
       xpEarned: number;
-      totalPlayMinutes: number;
+      totalPlaySeconds: number;
       currentStreak: number;
-      dailyStats: { date: string; quests: number; minutes: number; xp: number; playMinutes: number }[];
+      dailyStats: { date: string; quests: number; seconds: number; xp: number; playSeconds: number }[];
     }>(`/children/${childId}/gamification/weekly-stats`).then((r) => r.data),
 
   getAchievements: (childId: string) =>

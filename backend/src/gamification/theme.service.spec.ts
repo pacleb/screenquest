@@ -204,7 +204,7 @@ describe('ThemeService', () => {
       });
 
       const result = await service.getWeeklyStats('child-1');
-      expect(result.dailyStats).toHaveLength(7);
+      expect(result.dailyStats).toHaveLength(28);
       expect(result.currentStreak).toBe(3);
       expect(result.questsCompleted).toBe(0);
     });
@@ -219,7 +219,7 @@ describe('ThemeService', () => {
           id: 'c1',
           completedAt: now,
           child: { id: 'ch1', name: 'Alice', avatarUrl: null },
-          quest: { name: 'Clean room', rewardMinutes: 15 },
+          quest: { name: 'Clean room', rewardSeconds: 15 },
         },
       ]);
       prisma.childAchievement.findMany.mockResolvedValue([]);

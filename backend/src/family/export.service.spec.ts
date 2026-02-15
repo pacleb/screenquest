@@ -43,7 +43,7 @@ describe('ExportService', () => {
       {
         childId: 'child-1',
         completedAt: new Date('2026-02-10'),
-        earnedMinutes: 30,
+        earnedSeconds: 30,
         quest: { name: 'Clean Room' },
       },
     ]);
@@ -52,7 +52,7 @@ describe('ExportService', () => {
         childId: 'child-1',
         endedAt: new Date('2026-02-11'),
         createdAt: new Date('2026-02-11'),
-        requestedMinutes: 15,
+        requestedSeconds: 15,
       },
     ]);
 
@@ -60,8 +60,8 @@ describe('ExportService', () => {
 
     expect(result.csv).toContain('Date');
     expect(result.csv).toContain('Child Name');
-    expect(result.csv).toContain('Minutes Earned');
-    expect(result.csv).toContain('Minutes Used');
+    expect(result.csv).toContain('Seconds Earned');
+    expect(result.csv).toContain('Seconds Used');
     expect(result.csv).toContain('Alice');
     expect(result.csv).toContain('Clean Room');
     expect(result.csv).toContain('30');
@@ -165,7 +165,7 @@ describe('ExportService', () => {
       {
         childId: 'child-1',
         completedAt: new Date('2026-02-10'),
-        earnedMinutes: 20,
+        earnedSeconds: 20,
         quest: { name: 'Homework' },
       },
     ]);
@@ -174,7 +174,7 @@ describe('ExportService', () => {
         childId: 'child-1',
         endedAt: new Date('2026-02-10'),
         createdAt: new Date('2026-02-10'),
-        requestedMinutes: 10,
+        requestedSeconds: 10,
       },
     ]);
 

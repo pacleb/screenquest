@@ -177,7 +177,7 @@ export default function ApprovalsScreen() {
               <View style={styles.questInfo}>
                 <Text style={styles.questName}>{completion.quest.name}</Text>
                 <Text style={styles.questReward}>
-                  {completion.earnedMinutes} min
+                  {completion.earnedSeconds} min
                   {completion.stackingType === 'non_stackable' ? ' (Today Only)' : ''}
                 </Text>
               </View>

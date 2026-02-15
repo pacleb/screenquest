@@ -23,6 +23,7 @@ import {
   ChildProgressData,
 } from "../../services/gamification";
 import { themeService, ActivityFeedEntry } from "../../services/theme";
+import { formatTimeLabel } from "../../utils/formatTime";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import {
   Card,
@@ -42,9 +43,9 @@ import {
 
 interface ChildWeeklyStats {
   questsCompleted: number;
-  totalPlayMinutes: number;
+  totalPlaySeconds: number;
   currentStreak: number;
-  dailyStats: { date: string; quests: number; playMinutes: number }[];
+  dailyStats: { date: string; quests: number; playSeconds: number }[];
 }
 
 interface ChildData {
@@ -84,9 +85,9 @@ export default function ParentDashboard() {
         const [balance, activeSession, progress, weeklyStats] =
           await Promise.all([
             timeBankService.getBalance(child.id).catch(() => ({
-              stackableMinutes: 0,
-              nonStackableMinutes: 0,
-              totalMinutes: 0,
+              stackableSeconds: 0,
+              nonStackableSeconds: 0,
+              totalSeconds: 0,
             })),
             playSessionService.getActiveSession(child.id).catch(() => null),
             gamificationService.getProgress(child.id).catch(() => null),
@@ -288,9 +289,9 @@ export default function ParentDashboard() {
                       )}
 
                       <TimeBankDisplay
-                        stackableMinutes={balance.stackableMinutes}
-                        nonStackableMinutes={balance.nonStackableMinutes}
-                        totalMinutes={balance.totalMinutes}
+                        stackableSeconds={balance.stackableSeconds}
+                        nonStackableSeconds={balance.nonStackableSeconds}
+                        totalSeconds={balance.totalSeconds}
                         compact
                       />
                       {activeSession &&
@@ -306,7 +307,7 @@ export default function ParentDashboard() {
                             />
                             <Text style={styles.activeText}>
                               {activeSession.status === "active"
-                                ? `${activeSession.remainingMinutes}m left`
+                                ? `${formatTimeLabel(activeSession.remainingSeconds)} left`
                                 : "Paused"}
                             </Text>
                           </View>
@@ -346,7 +347,7 @@ export default function ParentDashboard() {
                         </Text>
                       </View>
                       <Badge
-                        label={`${completion.earnedMinutes}m`}
+                        label={formatTimeLabel(completion.earnedSeconds)}
                         variant="primary"
                       />
                     </View>
@@ -413,7 +414,8 @@ export default function ParentDashboard() {
                         <View style={styles.sessionInfo}>
                           <Text style={styles.sessionName}>{member.name}</Text>
                           <Text style={styles.sessionTime}>
-                            {activeSession!.remainingMinutes} min remaining
+                            {formatTimeLabel(activeSession!.remainingSeconds)}{" "}
+                            remaining
                           </Text>
                         </View>
                         <View style={styles.sessionActions}>
@@ -490,7 +492,7 @@ export default function ParentDashboard() {
                       key={c.member.id}
                       data={c.weeklyStats.dailyStats.map((d) => ({
                         date: d.date,
-                        minutesUsed: d.playMinutes,
+                        minutesUsed: Math.ceil(d.playSeconds / 60),
                       }))}
                       label={`${c.member.name}'s Screen Time`}
                       accentColor={

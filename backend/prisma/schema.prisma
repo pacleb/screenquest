@@ -115,7 +115,7 @@ model QuestLibrary {
   description           String?  @db.Text
   icon                  String?  @db.VarChar(50)
   category              String   @db.VarChar(50)
-  suggestedRewardMinutes Int     @map("suggested_reward_minutes")
+  suggestedRewardSeconds Int     @map("suggested_reward_seconds")
   suggestedStackingType String   @default("stackable") @map("suggested_stacking_type") @db.VarChar(20)
   ageRange              String?  @map("age_range") @db.VarChar(20)
   isPublished           Boolean  @default(false) @map("is_published")
@@ -137,7 +137,7 @@ model Quest {
   description     String?  @db.Text
   icon            String   @default("⭐") @db.VarChar(50)
   category        String   @db.VarChar(50)
-  rewardMinutes   Int      @map("reward_minutes")
+  rewardSeconds   Int      @map("reward_seconds")
   stackingType    String   @map("stacking_type") @db.VarChar(20)
   recurrence      String   @default("one_time") @db.VarChar(20)
   recurrenceDays  Json?    @map("recurrence_days") @db.JsonB
@@ -176,7 +176,7 @@ model QuestCompletion {
   status           String    @default("pending") @db.VarChar(20)
   proofImageUrl    String?   @map("proof_image_url") @db.VarChar(500)
   approvedByUserId String?   @map("approved_by_user_id") @db.Uuid
-  earnedMinutes    Int       @map("earned_minutes")
+  earnedSeconds    Int       @map("earned_seconds")
   stackingType     String    @map("stacking_type") @db.VarChar(20)
   expiresAt        DateTime? @map("expires_at") @db.Timestamptz()
   parentNote       String?   @map("parent_note") @db.Text
@@ -193,8 +193,8 @@ model QuestCompletion {
 model TimeBank {
   id                         String   @id @default(uuid()) @db.Uuid
   childId                    String   @unique @map("child_id") @db.Uuid
-  stackableBalanceMinutes    Int      @default(0) @map("stackable_balance_minutes")
-  nonStackableBalanceMinutes Int      @default(0) @map("non_stackable_balance_minutes")
+  stackableBalanceSeconds    Int      @default(0) @map("stackable_balance_seconds")
+  nonStackableBalanceSeconds Int      @default(0) @map("non_stackable_balance_seconds")
   lastUpdated                DateTime @default(now()) @map("last_updated") @db.Timestamptz()
 
   child User @relation("ChildTimeBank", fields: [childId], references: [id])
@@ -205,7 +205,7 @@ model TimeBank {
 model PlaySession {
   id                 String    @id @default(uuid()) @db.Uuid
   childId            String    @map("child_id") @db.Uuid
-  requestedMinutes   Int       @map("requested_minutes")
+  requestedSeconds   Int       @map("requested_seconds")
   status             String    @default("requested") @db.VarChar(20)
   approvedByUserId   String?   @map("approved_by_user_id") @db.Uuid
   startedAt          DateTime? @map("started_at") @db.Timestamptz()
@@ -226,7 +226,7 @@ model Violation {
   childId          String   @map("child_id") @db.Uuid
   recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
   violationNumber  Int      @map("violation_number")
-  penaltyMinutes   Int      @map("penalty_minutes")
+  penaltySeconds   Int      @map("penalty_seconds")
   description      String?  @db.Text
   forgiven         Boolean  @default(false)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()

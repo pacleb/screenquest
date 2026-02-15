@@ -7,7 +7,7 @@ export interface Quest {
   description: string | null;
   icon: string;
   category: string;
-  rewardMinutes: number;
+  rewardSeconds: number;
   stackingType: 'stackable' | 'non_stackable';
   recurrence: string;
   recurrenceDays: string[] | null;
@@ -30,7 +30,7 @@ export interface LibraryQuest {
   description: string | null;
   icon: string;
   category: string;
-  suggestedRewardMinutes: number;
+  suggestedRewardSeconds: number;
   suggestedStackingType: string;
   ageRange: string | null;
 }
@@ -40,7 +40,7 @@ export interface CreateQuestData {
   description?: string;
   icon?: string;
   category: string;
-  rewardMinutes: number;
+  rewardSeconds: number;
   stackingType: string;
   recurrence?: string;
   recurrenceDays?: string[];
@@ -51,7 +51,7 @@ export interface CreateQuestData {
 }
 
 export interface CreateFromLibraryData {
-  rewardMinutes: number;
+  rewardSeconds: number;
   stackingType: string;
   assignedChildIds: string[];
   recurrence?: string;

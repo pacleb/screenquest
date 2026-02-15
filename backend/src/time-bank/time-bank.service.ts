@@ -30,7 +30,7 @@ export class TimeBankService {
     // Ensure time bank exists
     const timeBank = await this.ensureTimeBank(childId);
 
-    // Recalculate non-stackable from active completions
+    // Calculate max possible non-stackable from active (non-expired) completions
     const now = new Date();
     const nonStackableResult = await this.prisma.questCompletion.aggregate({
       where: {
@@ -39,26 +39,30 @@ export class TimeBankService {
         stackingType: 'non_stackable',
         expiresAt: { gt: now },
       },
-      _sum: { earnedMinutes: true },
+      _sum: { earnedSeconds: true },
     });
 
-    const nonStackableMinutes = nonStackableResult._sum.earnedMinutes || 0;
+    const maxNonStackable = nonStackableResult._sum.earnedSeconds || 0;
 
-    // Update the cached values
-    if (timeBank.nonStackableBalanceMinutes !== nonStackableMinutes) {
+    // Cap stored balance at max possible (handles expirations) but never inflate
+    // above stored value (preserves play-session deductions)
+    const effectiveNonStackable = Math.min(timeBank.nonStackableBalanceSeconds, maxNonStackable);
+
+    // Sync stored value if completions expired
+    if (timeBank.nonStackableBalanceSeconds > maxNonStackable) {
       await this.prisma.timeBank.update({
         where: { childId },
         data: {
-          nonStackableBalanceMinutes: nonStackableMinutes,
+          nonStackableBalanceSeconds: effectiveNonStackable,
           lastUpdated: now,
         },
       });
     }
 
     return {
-      stackableMinutes: timeBank.stackableBalanceMinutes,
-      nonStackableMinutes,
-      totalMinutes: timeBank.stackableBalanceMinutes + nonStackableMinutes,
+      stackableSeconds: timeBank.stackableBalanceSeconds,
+      nonStackableSeconds: effectiveNonStackable,
+      totalSeconds: timeBank.stackableBalanceSeconds + effectiveNonStackable,
     };
   }
 
@@ -67,7 +71,7 @@ export class TimeBankService {
    */
   async creditTime(
     childId: string,
-    minutes: number,
+    seconds: number,
     stackingType: string,
     expiresAt: Date | null,
   ) {
@@ -77,28 +81,17 @@ export class TimeBankService {
       await this.prisma.timeBank.update({
         where: { childId },
         data: {
-          stackableBalanceMinutes: timeBank.stackableBalanceMinutes + minutes,
+          stackableBalanceSeconds: timeBank.stackableBalanceSeconds + seconds,
           lastUpdated: new Date(),
         },
       });
     } else {
-      // Non-stackable: recalculate from active completions
-      const now = new Date();
-      const result = await this.prisma.questCompletion.aggregate({
-        where: {
-          childId,
-          status: 'approved',
-          stackingType: 'non_stackable',
-          expiresAt: { gt: now },
-        },
-        _sum: { earnedMinutes: true },
-      });
-
+      // Non-stackable: add to stored balance directly (preserves deductions)
       await this.prisma.timeBank.update({
         where: { childId },
         data: {
-          nonStackableBalanceMinutes: result._sum.earnedMinutes || 0,
-          lastUpdated: now,
+          nonStackableBalanceSeconds: timeBank.nonStackableBalanceSeconds + seconds,
+          lastUpdated: new Date(),
         },
       });
     }
@@ -108,18 +101,18 @@ export class TimeBankService {
    * Deduct time from a child's Time Bank (used when play timer starts).
    * Non-stackable time is used FIRST (use it or lose it).
    */
-  async deductTime(childId: string, minutes: number) {
+  async deductTime(childId: string, seconds: number) {
     const balance = await this.getBalance(childId, childId);
-    const total = balance.totalMinutes;
+    const total = balance.totalSeconds;
 
-    if (minutes > total) {
+    if (seconds > total) {
       throw new ForbiddenException('Insufficient time balance');
     }
 
-    let remainingDeduction = minutes;
+    let remainingDeduction = seconds;
 
     // Deduct non-stackable first
-    const nonStackDeduct = Math.min(remainingDeduction, balance.nonStackableMinutes);
+    const nonStackDeduct = Math.min(remainingDeduction, balance.nonStackableSeconds);
     remainingDeduction -= nonStackDeduct;
 
     // Deduct stackable for the rest
@@ -128,17 +121,17 @@ export class TimeBankService {
     await this.prisma.timeBank.update({
       where: { childId },
       data: {
-        nonStackableBalanceMinutes: balance.nonStackableMinutes - nonStackDeduct,
-        stackableBalanceMinutes: balance.stackableMinutes - stackDeduct,
+        nonStackableBalanceSeconds: balance.nonStackableSeconds - nonStackDeduct,
+        stackableBalanceSeconds: balance.stackableSeconds - stackDeduct,
         lastUpdated: new Date(),
       },
     });
 
     return {
-      deducted: minutes,
-      stackableMinutes: balance.stackableMinutes - stackDeduct,
-      nonStackableMinutes: balance.nonStackableMinutes - nonStackDeduct,
-      totalMinutes: total - minutes,
+      deducted: seconds,
+      stackableSeconds: balance.stackableSeconds - stackDeduct,
+      nonStackableSeconds: balance.nonStackableSeconds - nonStackDeduct,
+      totalSeconds: total - seconds,
     };
   }
 
@@ -146,44 +139,34 @@ export class TimeBankService {
    * Deduct penalty from Time Bank (violations). Balance CAN go negative.
    * Non-stackable is used first, then stackable goes negative.
    */
-  async deductPenalty(childId: string, minutes: number) {
+  async deductPenalty(childId: string, seconds: number) {
     const timeBank = await this.ensureTimeBank(childId);
 
-    const now = new Date();
-    const nonStackResult = await this.prisma.questCompletion.aggregate({
-      where: {
-        childId,
-        status: 'approved',
-        stackingType: 'non_stackable',
-        expiresAt: { gt: now },
-      },
-      _sum: { earnedMinutes: true },
-    });
-
-    const currentNonStackable = nonStackResult._sum.earnedMinutes || 0;
-    let remainingDeduction = minutes;
+    const currentNonStackable = timeBank.nonStackableBalanceSeconds;
+    let remainingDeduction = seconds;
 
     // Deduct non-stackable first
     const nonStackDeduct = Math.min(remainingDeduction, currentNonStackable);
     remainingDeduction -= nonStackDeduct;
 
     // The rest comes from stackable (CAN go negative)
-    const newStackable = timeBank.stackableBalanceMinutes - remainingDeduction;
+    const newStackable = timeBank.stackableBalanceSeconds - remainingDeduction;
+    const newNonStackable = currentNonStackable - nonStackDeduct;
 
     await this.prisma.timeBank.update({
       where: { childId },
       data: {
-        nonStackableBalanceMinutes: currentNonStackable - nonStackDeduct,
-        stackableBalanceMinutes: newStackable,
-        lastUpdated: now,
+        nonStackableBalanceSeconds: newNonStackable,
+        stackableBalanceSeconds: newStackable,
+        lastUpdated: new Date(),
       },
     });
 
     return {
-      deducted: minutes,
-      stackableMinutes: newStackable,
-      nonStackableMinutes: currentNonStackable - nonStackDeduct,
-      totalMinutes: newStackable + (currentNonStackable - nonStackDeduct),
+      deducted: seconds,
+      stackableSeconds: newStackable,
+      nonStackableSeconds: newNonStackable,
+      totalSeconds: newStackable + newNonStackable,
     };
   }
 

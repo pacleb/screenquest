@@ -18,16 +18,16 @@ export interface ThemeData {
 
 export interface WeeklyStatsData {
   questsCompleted: number;
-  minutesEarned: number;
+  secondsEarned: number;
   xpEarned: number;
-  totalPlayMinutes: number;
+  totalPlaySeconds: number;
   currentStreak: number;
   dailyStats: {
     date: string;
     quests: number;
-    minutes: number;
+    seconds: number;
     xp: number;
-    playMinutes: number;
+    playSeconds: number;
   }[];
 }
 

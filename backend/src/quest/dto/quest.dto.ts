@@ -53,7 +53,7 @@ export class CreateQuestDto {
   @ApiProperty({ example: 30 })
   @IsInt()
   @Min(1)
-  rewardMinutes: number;
+  rewardSeconds: number;
 
   @ApiProperty({ example: 'stackable', enum: VALID_STACKING_TYPES })
   @IsString()
@@ -126,7 +126,7 @@ export class UpdateQuestDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  rewardMinutes?: number;
+  rewardSeconds?: number;
 
   @ApiPropertyOptional({ enum: VALID_STACKING_TYPES })
   @IsString()
@@ -172,7 +172,7 @@ export class CreateFromLibraryDto {
   @ApiProperty({ example: 30 })
   @IsInt()
   @Min(1)
-  rewardMinutes: number;
+  rewardSeconds: number;
 
   @ApiProperty({ example: 'stackable', enum: VALID_STACKING_TYPES })
   @IsString()

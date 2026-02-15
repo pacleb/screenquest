@@ -170,21 +170,21 @@ export class AnalyticsService implements OnModuleDestroy {
 
   trackQuestCompleted(
     childId: string,
-    properties: { questId: string; category?: string; rewardMinutes: number; familyId: string },
+    properties: { questId: string; category?: string; rewardSeconds: number; familyId: string },
   ): void {
     this.track(childId, 'quest_completed', { childId, ...properties });
   }
 
   trackPlaySessionStarted(
     childId: string,
-    properties: { sessionId: string; durationMinutes: number; familyId: string },
+    properties: { sessionId: string; durationSeconds: number; familyId: string },
   ): void {
     this.track(childId, 'play_session_started', { childId, ...properties });
   }
 
   trackPlaySessionCompleted(
     childId: string,
-    properties: { sessionId: string; actualMinutes: number; familyId: string },
+    properties: { sessionId: string; actualSeconds: number; familyId: string },
   ): void {
     this.track(childId, 'play_session_completed', { childId, ...properties });
   }

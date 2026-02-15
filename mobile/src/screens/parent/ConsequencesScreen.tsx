@@ -128,7 +128,7 @@ export default function ConsequencesScreen() {
   };
 
   const handleForgive = (violation: Violation) => {
-    const hours = violation.penaltyMinutes / 60;
+    const hours = violation.penaltySeconds / 60;
     Alert.alert(
       "Forgive Violation",
       `This will refund ${hours}h back to the Time Bank. Are you sure?`,
@@ -336,7 +336,7 @@ export default function ConsequencesScreen() {
                   </View>
 
                   <Text style={styles.penaltyText}>
-                    -{violation.penaltyMinutes / 60}h penalty
+                    -{violation.penaltySeconds / 60}h penalty
                   </Text>
 
                   {violation.description && (

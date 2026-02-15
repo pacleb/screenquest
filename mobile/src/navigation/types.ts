@@ -6,7 +6,7 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   Welcome: undefined;
-  Login: undefined;
+  Login: { mode?: 'parent' | 'child' } | undefined;
   Register: undefined;
   CreateFamily: undefined;
   JoinFamily: undefined;

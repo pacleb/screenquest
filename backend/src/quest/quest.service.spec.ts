@@ -46,13 +46,13 @@ describe('QuestService', () => {
         id: 'quest-1',
         name: 'Clean room',
         category: 'chores',
-        rewardMinutes: 30,
+        rewardSeconds: 30,
       });
 
       const result = await service.create('fam-1', 'parent-1', {
         name: 'Clean room',
         category: 'chores',
-        rewardMinutes: 30,
+        rewardSeconds: 30,
         stackingType: 'stackable',
         assignedChildIds: ['child-1'],
       });
@@ -70,7 +70,7 @@ describe('QuestService', () => {
         service.create('fam-1', 'parent-1', {
           name: 'New Quest',
           category: 'learning',
-          rewardMinutes: 15,
+          rewardSeconds: 15,
           stackingType: 'stackable',
           assignedChildIds: ['child-1'],
         }),
@@ -80,7 +80,7 @@ describe('QuestService', () => {
         await service.create('fam-1', 'parent-1', {
           name: 'New Quest',
           category: 'learning',
-          rewardMinutes: 15,
+          rewardSeconds: 15,
           stackingType: 'stackable',
           assignedChildIds: ['child-1'],
         });
@@ -101,7 +101,7 @@ describe('QuestService', () => {
       const result = await service.create('fam-1', 'parent-1', {
         name: 'Extra Quest',
         category: 'chores',
-        rewardMinutes: 15,
+        rewardSeconds: 15,
         stackingType: 'stackable',
         assignedChildIds: ['child-1'],
       });
@@ -121,7 +121,7 @@ describe('QuestService', () => {
         service.create('fam-1', 'child-1', {
           name: 'Quest',
           category: 'chores',
-          rewardMinutes: 10,
+          rewardSeconds: 10,
           stackingType: 'stackable',
           assignedChildIds: ['child-1'],
         }),

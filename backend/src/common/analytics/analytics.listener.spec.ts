@@ -115,7 +115,7 @@ describe('AnalyticsListener', () => {
     expect(analytics.trackQuestCompleted).toHaveBeenCalledWith('c1', {
       questId: 'q1',
       category: 'chores',
-      rewardMinutes: 30,
+      rewardSeconds: 30,
       familyId: 'f1',
     });
   });
@@ -134,7 +134,7 @@ describe('AnalyticsListener', () => {
     listener.handlePlaySessionStarted(new PlaySessionStartedEvent('c1', 'f1', 's1', 30));
     expect(analytics.trackPlaySessionStarted).toHaveBeenCalledWith('c1', {
       sessionId: 's1',
-      durationMinutes: 30,
+      durationSeconds: 30,
       familyId: 'f1',
     });
   });
@@ -143,7 +143,7 @@ describe('AnalyticsListener', () => {
     listener.handlePlaySessionCompleted(new PlaySessionCompletedEvent('c1', 'f1', 's1', 25));
     expect(analytics.trackPlaySessionCompleted).toHaveBeenCalledWith('c1', {
       sessionId: 's1',
-      actualMinutes: 25,
+      actualSeconds: 25,
       familyId: 'f1',
     });
   });

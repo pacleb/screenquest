@@ -57,7 +57,7 @@ export class CompletionService {
       throw new BadRequestException('This quest requires photo proof');
     }
 
-    const earnedMinutes = Math.round(quest.rewardMinutes * quest.bonusMultiplier);
+    const earnedSeconds = Math.round(quest.rewardSeconds * quest.bonusMultiplier);
 
     // Determine expiry for non-stackable
     let expiresAt: Date | null = null;
@@ -74,7 +74,7 @@ export class CompletionService {
         childId,
         status,
         proofImageUrl: dto.proofImageUrl || null,
-        earnedMinutes,
+        earnedSeconds,
         stackingType: quest.stackingType,
         expiresAt,
         reviewedAt: quest.autoApprove ? new Date() : null,
@@ -87,12 +87,12 @@ export class CompletionService {
     // Emit quest completed event
     this.eventEmitter.emit(
       'quest.completed',
-      new QuestCompletedEvent(childId, child.familyId || '', questId, quest.category || '', earnedMinutes),
+      new QuestCompletedEvent(childId, child.familyId || '', questId, quest.category || '', earnedSeconds),
     );
 
     // If auto-approve, credit Time Bank and process gamification
     if (quest.autoApprove) {
-      await this.timeBankService.creditTime(childId, earnedMinutes, quest.stackingType, expiresAt);
+      await this.timeBankService.creditTime(childId, earnedSeconds, quest.stackingType, expiresAt);
       const gamificationEvent = await this.gamificationService.processCompletion(childId, completion.id);
       return { ...completion, gamificationEvent };
     }
@@ -130,7 +130,7 @@ export class CompletionService {
     return this.prisma.questCompletion.findMany({
       where,
       include: {
-        quest: { select: { id: true, name: true, icon: true, category: true, rewardMinutes: true } },
+        quest: { select: { id: true, name: true, icon: true, category: true, rewardSeconds: true } },
         child: { select: { id: true, name: true, avatarUrl: true } },
       },
       orderBy: { completedAt: 'desc' },
@@ -160,7 +160,7 @@ export class CompletionService {
     return this.prisma.questCompletion.findMany({
       where: { childId },
       include: {
-        quest: { select: { id: true, name: true, icon: true, category: true, rewardMinutes: true } },
+        quest: { select: { id: true, name: true, icon: true, category: true, rewardSeconds: true } },
       },
       orderBy: { completedAt: 'desc' },
     });
@@ -193,7 +193,7 @@ export class CompletionService {
     // Credit Time Bank
     await this.timeBankService.creditTime(
       completion.childId,
-      completion.earnedMinutes,
+      completion.earnedSeconds,
       completion.stackingType,
       completion.expiresAt,
     );
@@ -203,7 +203,7 @@ export class CompletionService {
       completion.childId,
       {
         title: 'Quest Approved!',
-        body: `+${completion.earnedMinutes} minutes added to your Time Bank!`,
+        body: `+${completion.earnedSeconds} seconds added to your Time Bank!`,
         data: { type: 'quest_approved', completionId },
       },
       'quest_completions',

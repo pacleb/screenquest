@@ -42,52 +42,52 @@ describe('ViolationService', () => {
     it('1st violation = 120 min (2h) penalty', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 0 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltyMinutes: 120 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltySeconds: 7200 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       const result = await service.recordViolation('child-1', 'parent-1', {});
-      expect(result.penaltyMinutes).toBe(120);
+      expect(result.penaltySeconds).toBe(7200);
       expect(result.penaltyHours).toBe(2);
-      expect(timeBankService.deductPenalty).toHaveBeenCalledWith('child-1', 120);
+      expect(timeBankService.deductPenalty).toHaveBeenCalledWith('child-1', 7200);
     });
 
     it('2nd violation = 240 min (4h) penalty', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 1 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-2', violationNumber: 2, penaltyMinutes: 240 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-2', violationNumber: 2, penaltySeconds: 14400 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       const result = await service.recordViolation('child-1', 'parent-1', {});
-      expect(result.penaltyMinutes).toBe(240);
+      expect(result.penaltySeconds).toBe(14400);
       expect(result.penaltyHours).toBe(4);
     });
 
     it('3rd violation = 480 min (8h) penalty', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 2 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-3', violationNumber: 3, penaltyMinutes: 480 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-3', violationNumber: 3, penaltySeconds: 28800 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       const result = await service.recordViolation('child-1', 'parent-1', {});
-      expect(result.penaltyMinutes).toBe(480);
+      expect(result.penaltySeconds).toBe(28800);
       expect(result.penaltyHours).toBe(8);
     });
 
     it('4th violation = 960 min (16h) penalty', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 3 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-4', violationNumber: 4, penaltyMinutes: 960 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-4', violationNumber: 4, penaltySeconds: 57600 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       const result = await service.recordViolation('child-1', 'parent-1', {});
-      expect(result.penaltyMinutes).toBe(960);
+      expect(result.penaltySeconds).toBe(57600);
       expect(result.penaltyHours).toBe(16);
     });
 
     it('increments violation counter', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 0 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltyMinutes: 120 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltySeconds: 7200 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       await service.recordViolation('child-1', 'parent-1', {});
@@ -101,7 +101,7 @@ describe('ViolationService', () => {
     it('sends notification to child', async () => {
       setupParentChildAccess();
       prisma.violationCounter.findUnique.mockResolvedValue({ childId: 'child-1', currentCount: 0 });
-      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltyMinutes: 120 });
+      prisma.violation.create.mockResolvedValue({ id: 'v-1', violationNumber: 1, penaltySeconds: 7200 });
       prisma.violationCounter.update.mockResolvedValue({});
 
       await service.recordViolation('child-1', 'parent-1', {});
@@ -119,7 +119,7 @@ describe('ViolationService', () => {
       prisma.violation.findUnique.mockResolvedValue({
         id: 'v-1',
         childId: 'child-1',
-        penaltyMinutes: 120,
+        penaltySeconds: 7200,
         forgiven: false,
       });
       setupParentChildAccess();
@@ -129,14 +129,14 @@ describe('ViolationService', () => {
 
       await service.forgiveViolation('v-1', 'parent-1');
 
-      expect(timeBankService.creditTime).toHaveBeenCalledWith('child-1', 120, 'stackable', null);
+      expect(timeBankService.creditTime).toHaveBeenCalledWith('child-1', 7200, 'stackable', null);
     });
 
     it('decrements counter (minimum 0)', async () => {
       prisma.violation.findUnique.mockResolvedValue({
         id: 'v-1',
         childId: 'child-1',
-        penaltyMinutes: 120,
+        penaltySeconds: 7200,
         forgiven: false,
       });
       setupParentChildAccess();
@@ -156,7 +156,7 @@ describe('ViolationService', () => {
       prisma.violation.findUnique.mockResolvedValue({
         id: 'v-1',
         childId: 'child-1',
-        penaltyMinutes: 120,
+        penaltySeconds: 7200,
         forgiven: true,
       });
       setupParentChildAccess();
@@ -207,7 +207,7 @@ describe('ViolationService', () => {
       expect(status.currentCount).toBe(2);
       // Next violation would be #3: 2 * 2^2 = 8 hours
       expect(status.nextPenaltyHours).toBe(8);
-      expect(status.nextPenaltyMinutes).toBe(480);
+      expect(status.nextPenaltySeconds).toBe(28800);
     });
   });
 });

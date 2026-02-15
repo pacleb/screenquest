@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { EmojiPicker } from './emoji-picker';
-import { QuestPreview } from './quest-preview';
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { EmojiPicker } from "./emoji-picker";
+import { QuestPreview } from "./quest-preview";
 
-const REWARD_PRESETS = [5, 10, 15, 20, 30, 45, 60];
-const AGE_RANGES = ['3-5', '6-8', '9-12', '13+', 'all'];
+const REWARD_PRESETS = [300, 600, 900, 1200, 1800, 2700, 3600];
+const AGE_RANGES = ["3-5", "6-8", "9-12", "13+", "all"];
 
 export interface QuestFormData {
   name: string;
   description: string;
   icon: string;
   category: string;
-  suggestedRewardMinutes: number;
+  suggestedRewardSeconds: number;
   suggestedStackingType: string;
   ageRange: string;
   isPublished: boolean;
@@ -33,19 +33,27 @@ interface QuestFormProps {
   isEdit?: boolean;
 }
 
-export function QuestForm({ initialData, categories, onSubmit, onDelete, saving, isEdit }: QuestFormProps) {
+export function QuestForm({
+  initialData,
+  categories,
+  onSubmit,
+  onDelete,
+  saving,
+  isEdit,
+}: QuestFormProps) {
   const [form, setForm] = useState<QuestFormData>({
-    name: initialData?.name || '',
-    description: initialData?.description || '',
-    icon: initialData?.icon || '⭐',
-    category: initialData?.category || '',
-    suggestedRewardMinutes: initialData?.suggestedRewardMinutes || 15,
-    suggestedStackingType: initialData?.suggestedStackingType || 'stackable',
-    ageRange: initialData?.ageRange || 'all',
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    icon: initialData?.icon || "⭐",
+    category: initialData?.category || "",
+    suggestedRewardSeconds: initialData?.suggestedRewardSeconds || 900,
+    suggestedStackingType: initialData?.suggestedStackingType || "stackable",
+    ageRange: initialData?.ageRange || "all",
     isPublished: initialData?.isPublished || false,
   });
 
-  const update = (partial: Partial<QuestFormData>) => setForm((f) => ({ ...f, ...partial }));
+  const update = (partial: Partial<QuestFormData>) =>
+    setForm((f) => ({ ...f, ...partial }));
 
   const handleSubmit = async (publish?: boolean) => {
     const data = { ...form };
@@ -61,7 +69,10 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
         <div className="flex items-start gap-4">
           <div>
             <Label>Icon</Label>
-            <EmojiPicker value={form.icon} onChange={(icon) => update({ icon })} />
+            <EmojiPicker
+              value={form.icon}
+              onChange={(icon) => update({ icon })}
+            />
           </div>
           <div className="flex-1">
             <Label htmlFor="name">Name</Label>
@@ -89,39 +100,47 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
         {/* Category */}
         <div>
           <Label htmlFor="cat">Category</Label>
-          <Select id="cat" value={form.category} onChange={(e) => update({ category: e.target.value })}>
+          <Select
+            id="cat"
+            value={form.category}
+            onChange={(e) => update({ category: e.target.value })}
+          >
             <option value="">Select a category</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.name}>{c.name}</option>
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
             ))}
           </Select>
         </div>
 
         {/* Reward */}
         <div>
-          <Label>Reward Minutes</Label>
+          <Label>Reward Time</Label>
           <div className="flex flex-wrap gap-2 mb-2">
-            {REWARD_PRESETS.map((m) => (
+            {REWARD_PRESETS.map((s) => (
               <button
-                key={m}
+                key={s}
                 type="button"
-                onClick={() => update({ suggestedRewardMinutes: m })}
+                onClick={() => update({ suggestedRewardSeconds: s })}
                 className={`rounded-full px-3 py-1 text-sm font-medium border transition-colors ${
-                  form.suggestedRewardMinutes === m
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-brand-500'
+                  form.suggestedRewardSeconds === s
+                    ? "bg-brand-600 text-white border-brand-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-brand-500"
                 }`}
               >
-                {m}m
+                {Math.floor(s / 60)}m
               </button>
             ))}
           </div>
           <Input
             type="number"
-            min={1}
-            max={480}
-            value={form.suggestedRewardMinutes}
-            onChange={(e) => update({ suggestedRewardMinutes: parseInt(e.target.value) || 1 })}
+            min={60}
+            max={28800}
+            value={form.suggestedRewardSeconds}
+            onChange={(e) =>
+              update({ suggestedRewardSeconds: parseInt(e.target.value) || 60 })
+            }
             className="w-32"
           />
         </div>
@@ -129,11 +148,18 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
         {/* Stacking Type */}
         <div className="flex items-center gap-3">
           <Switch
-            checked={form.suggestedStackingType === 'stackable'}
-            onCheckedChange={(checked) => update({ suggestedStackingType: checked ? 'stackable' : 'non_stackable' })}
+            checked={form.suggestedStackingType === "stackable"}
+            onCheckedChange={(checked) =>
+              update({
+                suggestedStackingType: checked ? "stackable" : "non_stackable",
+              })
+            }
           />
           <Label className="mb-0">
-            {form.suggestedStackingType === 'stackable' ? 'Stackable' : 'Non-stackable'} time
+            {form.suggestedStackingType === "stackable"
+              ? "Stackable"
+              : "Non-stackable"}{" "}
+            time
           </Label>
         </div>
 
@@ -148,8 +174,8 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
                 onClick={() => update({ ageRange: ar })}
                 className={`rounded-full px-3 py-1 text-sm font-medium border transition-colors ${
                   form.ageRange === ar
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-brand-500'
+                    ? "bg-brand-600 text-white border-brand-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-brand-500"
                 }`}
               >
                 {ar}
@@ -160,11 +186,18 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-          <Button onClick={() => handleSubmit(false)} disabled={saving || !form.name || !form.category}>
-            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Save as Draft'}
+          <Button
+            onClick={() => handleSubmit(false)}
+            disabled={saving || !form.name || !form.category}
+          >
+            {saving ? "Saving..." : isEdit ? "Save Changes" : "Save as Draft"}
           </Button>
-          <Button variant="secondary" onClick={() => handleSubmit(true)} disabled={saving || !form.name || !form.category}>
-            {saving ? 'Saving...' : 'Publish'}
+          <Button
+            variant="secondary"
+            onClick={() => handleSubmit(true)}
+            disabled={saving || !form.name || !form.category}
+          >
+            {saving ? "Saving..." : "Publish"}
           </Button>
           {isEdit && onDelete && (
             <Button variant="destructive" onClick={onDelete} disabled={saving}>
@@ -181,7 +214,7 @@ export function QuestForm({ initialData, categories, onSubmit, onDelete, saving,
           description={form.description}
           icon={form.icon}
           category={form.category}
-          rewardMinutes={form.suggestedRewardMinutes}
+          rewardSeconds={form.suggestedRewardSeconds}
           stackingType={form.suggestedStackingType}
           ageRange={form.ageRange}
         />

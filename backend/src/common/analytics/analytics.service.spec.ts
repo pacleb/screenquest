@@ -64,7 +64,7 @@ describe('AnalyticsService', () => {
         service.trackQuestCompleted('child-1', {
           questId: 'quest-1',
           category: 'chores',
-          rewardMinutes: 30,
+          rewardSeconds: 30,
           familyId: 'family-1',
         }),
       ).not.toThrow();
@@ -86,7 +86,7 @@ describe('AnalyticsService', () => {
       expect(() =>
         service.trackPlaySessionStarted('child-1', {
           sessionId: 'session-1',
-          durationMinutes: 30,
+          durationSeconds: 30,
           familyId: 'family-1',
         }),
       ).not.toThrow();
@@ -96,7 +96,7 @@ describe('AnalyticsService', () => {
       expect(() =>
         service.trackPlaySessionCompleted('child-1', {
           sessionId: 'session-1',
-          actualMinutes: 25,
+          actualSeconds: 25,
           familyId: 'family-1',
         }),
       ).not.toThrow();

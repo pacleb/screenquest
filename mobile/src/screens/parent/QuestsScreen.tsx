@@ -129,7 +129,7 @@ export default function QuestsScreen() {
       <View style={styles.questInfo}>
         <Text style={styles.questName}>{quest.name}</Text>
         <View style={styles.questMeta}>
-          <Text style={styles.questReward}>{quest.rewardMinutes} min</Text>
+          <Text style={styles.questReward}>{quest.rewardSeconds} min</Text>
           <View
             style={[
               styles.badge,

@@ -89,12 +89,13 @@ export function AnimatedHeader({
   const headerGradient = gradients?.header ?? ["#6B2FA0", "#5A2690"];
 
   return (
-    <LinearGradient
-      colors={headerGradient as [string, string, ...string[]]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.wrapper}>
+      <LinearGradient
+        colors={headerGradient as [string, string, ...string[]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]}
+      />
       {isAnimated && <Animated.View style={shimmerStyle} />}
 
       {/* Top Row: Greeting + Theme button */}
@@ -154,17 +155,18 @@ export function AnimatedHeader({
           <Text style={styles.weeklyText}>This week: {weeklyXp} XP</Text>
         </View>
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.lg + 4,
+    paddingBottom: spacing.lg + 8,
     marginBottom: spacing.md,
+    overflow: "visible",
   },
   topRow: {
     flexDirection: "row",

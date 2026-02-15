@@ -152,7 +152,7 @@ export default function QuestArchivalScreen() {
                   <View style={styles.questInfo}>
                     <Text style={styles.questName}>{quest.name}</Text>
                     <Text style={styles.questMeta}>
-                      {quest.rewardMinutes}m • {quest.category}
+                      {quest.rewardSeconds}m • {quest.category}
                     </Text>
                   </View>
                 </View>

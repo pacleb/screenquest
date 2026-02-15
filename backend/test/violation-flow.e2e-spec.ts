@@ -55,7 +55,7 @@ describe('Violation Flow (E2E)', () => {
         .send({ reason: 'Used phone without permission' })
         .expect(201);
 
-      expect(violationRes.body.penaltyMinutes).toBe(120); // 1st: 2h
+      expect(violationRes.body.penaltySeconds).toBe(7200); // 1st: 2h
       expect(violationRes.body.violationNumber).toBe(1);
       const violationId = violationRes.body.id;
 
@@ -65,7 +65,7 @@ describe('Violation Flow (E2E)', () => {
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
-      expect(balanceRes.body.totalMinutes).toBeLessThan(0);
+      expect(balanceRes.body.totalSeconds).toBeLessThan(0);
 
       // 3. Forgive violation
       const forgiveRes = await agent
@@ -81,36 +81,36 @@ describe('Violation Flow (E2E)', () => {
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
-      expect(afterForgiveRes.body.totalMinutes).toBeGreaterThanOrEqual(0);
+      expect(afterForgiveRes.body.totalSeconds).toBeGreaterThanOrEqual(0);
     });
 
     it('escalating penalties: 2h → 4h → 8h', async () => {
       const agent = getAgent(app);
       const { parentToken, childId } = await setupFamily(agent);
 
-      // 1st violation: 120 min (2h)
+      // 1st violation: 7200 sec (2h)
       const v1 = await agent
         .post(`/api/violations/${childId}`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);
-      expect(v1.body.penaltyMinutes).toBe(120);
+      expect(v1.body.penaltySeconds).toBe(7200);
 
-      // 2nd violation: 240 min (4h)
+      // 2nd violation: 14400 sec (4h)
       const v2 = await agent
         .post(`/api/violations/${childId}`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);
-      expect(v2.body.penaltyMinutes).toBe(240);
+      expect(v2.body.penaltySeconds).toBe(14400);
 
-      // 3rd violation: 480 min (8h)
+      // 3rd violation: 28800 sec (8h)
       const v3 = await agent
         .post(`/api/violations/${childId}`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);
-      expect(v3.body.penaltyMinutes).toBe(480);
+      expect(v3.body.penaltySeconds).toBe(28800);
     });
   });
 });

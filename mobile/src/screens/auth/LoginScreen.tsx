@@ -11,15 +11,18 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAuthStore } from "../../store/auth";
 import { colors, spacing, borderRadius } from "../../theme";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { login, childLogin } = useAuthStore();
 
-  const [isChildMode, setIsChildMode] = useState(false);
+  const [isChildMode, setIsChildMode] = useState(
+    route.params?.mode === "child",
+  );
 
   // Parent login
   const [email, setEmail] = useState("");

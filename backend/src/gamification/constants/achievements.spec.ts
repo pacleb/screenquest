@@ -27,7 +27,7 @@ describe('ACHIEVEMENT_DEFINITIONS', () => {
       'total_completions',
       'category_completions',
       'early_completion',
-      'total_earned_minutes',
+      'total_earned_seconds',
       'streak',
     ];
 
@@ -37,7 +37,7 @@ describe('ACHIEVEMENT_DEFINITIONS', () => {
   });
 
   it('should have value field for numeric criteria', () => {
-    const numericTypes = ['total_completions', 'total_earned_minutes', 'streak'];
+    const numericTypes = ['total_completions', 'total_earned_seconds', 'streak'];
     const numericAchievements = ACHIEVEMENT_DEFINITIONS.filter((a) =>
       numericTypes.includes(a.criteria.type),
     );

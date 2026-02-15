@@ -1,9 +1,9 @@
 import api from './api';
 
 export interface TimeBankBalance {
-  stackableMinutes: number;
-  nonStackableMinutes: number;
-  totalMinutes: number;
+  stackableSeconds: number;
+  nonStackableSeconds: number;
+  totalSeconds: number;
 }
 
 export const timeBankService = {

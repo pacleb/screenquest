@@ -10,19 +10,19 @@ import {
 } from 'class-validator';
 
 export class RequestPlayDto {
-  @ApiProperty({ example: 30, description: 'Minutes of screen time requested' })
+  @ApiProperty({ example: 1800, description: 'Seconds of screen time requested' })
   @IsInt()
-  @Min(5)
-  @Max(240)
-  requestedMinutes: number;
+  @Min(300)
+  @Max(14400)
+  requestedSeconds: number;
 }
 
 export class ExtendSessionDto {
-  @ApiProperty({ example: 15, description: 'Additional minutes to add' })
+  @ApiProperty({ example: 900, description: 'Additional seconds to add' })
   @IsInt()
-  @Min(5)
-  @Max(120)
-  additionalMinutes: number;
+  @Min(300)
+  @Max(7200)
+  additionalSeconds: number;
 }
 
 export class UpdatePlaySettingsDto {
@@ -31,11 +31,11 @@ export class UpdatePlaySettingsDto {
   @IsOptional()
   playApprovalMode?: string;
 
-  @ApiPropertyOptional({ example: 120, description: 'Max minutes per day (null = unlimited)' })
+  @ApiPropertyOptional({ example: 7200, description: 'Max seconds per day (null = unlimited)' })
   @IsInt()
   @IsOptional()
   @Min(0)
-  @Max(1440)
+  @Max(86400)
   dailyScreenTimeCap?: number | null;
 
   @ApiPropertyOptional({ example: '08:00', description: 'Earliest play time (HH:mm)' })
@@ -50,11 +50,11 @@ export class UpdatePlaySettingsDto {
   @Matches(/^\d{2}:\d{2}$/)
   allowedPlayHoursEnd?: string;
 
-  @ApiPropertyOptional({ example: 180 })
+  @ApiPropertyOptional({ example: 10800 })
   @IsInt()
   @IsOptional()
   @Min(0)
-  @Max(1440)
+  @Max(86400)
   weekendDailyScreenTimeCap?: number | null;
 
   @ApiPropertyOptional({ example: '09:00' })

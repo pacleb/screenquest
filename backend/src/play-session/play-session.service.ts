@@ -29,10 +29,10 @@ export interface PlaySettings {
 
 const DEFAULT_PLAY_SETTINGS: PlaySettings = {
   playApprovalMode: 'notify_only',
-  dailyScreenTimeCap: 120,
+  dailyScreenTimeCap: 7200,
   allowedPlayHoursStart: '08:00',
   allowedPlayHoursEnd: '20:00',
-  weekendDailyScreenTimeCap: 180,
+  weekendDailyScreenTimeCap: 10800,
   weekendPlayHoursStart: '09:00',
   weekendPlayHoursEnd: '21:00',
 };
@@ -68,15 +68,15 @@ export class PlaySessionService {
 
     // Check Time Bank balance (negative balance blocks play entirely)
     const balance = await this.timeBankService.getBalance(childId, childId);
-    if (balance.totalMinutes <= 0) {
-      const deficit = Math.abs(balance.totalMinutes);
+    if (balance.totalSeconds <= 0) {
+      const deficit = Math.abs(balance.totalSeconds);
       throw new BadRequestException(
-        `Your time bank is in deficit. Earn ${deficit} more minutes to play!`,
+        `Your time bank is in deficit. Earn ${deficit} more seconds to play!`,
       );
     }
-    if (balance.totalMinutes < dto.requestedMinutes) {
+    if (balance.totalSeconds < dto.requestedSeconds) {
       throw new BadRequestException(
-        `Insufficient time balance. You have ${balance.totalMinutes} minutes available.`,
+        `Insufficient time balance. You have ${balance.totalSeconds} seconds available.`,
       );
     }
 
@@ -87,7 +87,7 @@ export class PlaySessionService {
     this.validatePlayHours(settings);
 
     // Check daily cap
-    await this.validateDailyCap(childId, dto.requestedMinutes, settings);
+    await this.validateDailyCap(childId, dto.requestedSeconds, settings);
 
     // Determine if auto-start or requires approval
     const autoStart = settings.playApprovalMode === 'notify_only';
@@ -98,19 +98,19 @@ export class PlaySessionService {
       const session = await this.prisma.playSession.create({
         data: {
           childId,
-          requestedMinutes: dto.requestedMinutes,
+          requestedSeconds: dto.requestedSeconds,
           status: 'active',
           startedAt: now,
           lastSyncedAt: now,
         },
       });
 
-      this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${dto.requestedMinutes}min)`);
+      this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${dto.requestedSeconds}s)`);
 
       // Emit play session started analytics event
       this.eventEmitter.emit(
         'play_session.started',
-        new PlaySessionStartedEvent(childId, child.familyId || '', session.id, dto.requestedMinutes),
+        new PlaySessionStartedEvent(childId, child.familyId || '', session.id, dto.requestedSeconds),
       );
 
       // Notify parents
@@ -119,7 +119,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Session Started',
-            body: `${child.name} started playing (${dto.requestedMinutes} minutes)`,
+            body: `${child.name} started playing (${Math.ceil(dto.requestedSeconds / 60)} minutes)`,
             data: { type: 'play_started', sessionId: session.id },
           },
           'play_state_changes',
@@ -131,12 +131,12 @@ export class PlaySessionService {
       const session = await this.prisma.playSession.create({
         data: {
           childId,
-          requestedMinutes: dto.requestedMinutes,
+          requestedSeconds: dto.requestedSeconds,
           status: 'requested',
         },
       });
 
-      this.logger.log(`Play session ${session.id} requested for child ${childId} (${dto.requestedMinutes}min)`);
+      this.logger.log(`Play session ${session.id} requested for child ${childId} (${dto.requestedSeconds}s)`);
 
       // Notify parents of play request
       if (child.familyId) {
@@ -144,7 +144,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Request',
-            body: `${child.name} wants to play for ${dto.requestedMinutes} minutes — Approve?`,
+            body: `${child.name} wants to play for ${Math.ceil(dto.requestedSeconds / 60)} minutes — Approve?`,
             data: { type: 'play_request', sessionId: session.id },
           },
           'play_requests',
@@ -189,7 +189,7 @@ export class PlaySessionService {
     const child = await this.prisma.user.findUnique({ where: { id: session.childId }, select: { familyId: true } });
     this.eventEmitter.emit(
       'play_session.started',
-      new PlaySessionStartedEvent(session.childId, child?.familyId || '', sessionId, session.requestedMinutes),
+      new PlaySessionStartedEvent(session.childId, child?.familyId || '', sessionId, session.requestedSeconds),
     );
 
     // Notify child that play was approved
@@ -197,7 +197,7 @@ export class PlaySessionService {
       session.childId,
       {
         title: 'Play Approved!',
-        body: `Your play request for ${session.requestedMinutes} minutes was approved!`,
+        body: `Your play request for ${Math.ceil(session.requestedSeconds / 60)} minutes was approved!`,
         data: { type: 'play_approved', sessionId },
       },
       'play_requests',
@@ -334,7 +334,7 @@ export class PlaySessionService {
     }
 
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const usedMinutes = Math.ceil((session.requestedMinutes * 60 - remainingSeconds) / 60);
+    const usedSeconds = session.requestedSeconds - remainingSeconds;
 
     const now = new Date();
     // If paused, account for the current pause duration
@@ -354,26 +354,26 @@ export class PlaySessionService {
     });
 
     // Deduct only the time actually used (non-stackable first, as designed)
-    if (usedMinutes > 0) {
+    if (usedSeconds > 0) {
       try {
-        await this.timeBankService.deductTime(session.childId, usedMinutes);
+        await this.timeBankService.deductTime(session.childId, usedSeconds);
       } catch {
         // If balance decreased during session (e.g., non-stackable expired),
         // deduct whatever is available
         const balance = await this.timeBankService.getBalance(session.childId, session.childId);
-        const deductible = Math.min(usedMinutes, Math.max(0, balance.totalMinutes));
+        const deductible = Math.min(usedSeconds, Math.max(0, balance.totalSeconds));
         if (deductible > 0) {
           await this.timeBankService.deductTime(session.childId, deductible);
         }
       }
-      this.logger.log(`Deducted ${usedMinutes} min from child ${session.childId}`);
+      this.logger.log(`Deducted ${usedSeconds}s from child ${session.childId}`);
     }
 
     // Emit play session completed analytics event
     const childForEvent = await this.prisma.user.findUnique({ where: { id: session.childId }, select: { familyId: true } });
     this.eventEmitter.emit(
       'play_session.completed',
-      new PlaySessionCompletedEvent(session.childId, childForEvent?.familyId || '', sessionId, usedMinutes),
+      new PlaySessionCompletedEvent(session.childId, childForEvent?.familyId || '', sessionId, usedSeconds),
     );
 
     // Notify parents
@@ -383,7 +383,7 @@ export class PlaySessionService {
         childUser.familyId,
         {
           title: 'Play Stopped',
-          body: `${childUser.name} stopped playing (used ${usedMinutes} min)`,
+          body: `${childUser.name} stopped playing (used ${Math.ceil(usedSeconds / 60)} min)`,
           data: { type: 'play_stopped', sessionId },
         },
         'play_state_changes',
@@ -404,7 +404,7 @@ export class PlaySessionService {
     }
 
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const usedMinutes = Math.ceil((session.requestedMinutes * 60 - remainingSeconds) / 60);
+    const usedSeconds = session.requestedSeconds - remainingSeconds;
 
     const now = new Date();
     let totalPaused = session.totalPausedSeconds;
@@ -422,19 +422,19 @@ export class PlaySessionService {
       },
     });
 
-    if (usedMinutes > 0) {
+    if (usedSeconds > 0) {
       try {
-        await this.timeBankService.deductTime(session.childId, usedMinutes);
+        await this.timeBankService.deductTime(session.childId, usedSeconds);
       } catch {
         const balance = await this.timeBankService.getBalance(session.childId, session.childId);
-        const deductible = Math.min(usedMinutes, Math.max(0, balance.totalMinutes));
+        const deductible = Math.min(usedSeconds, Math.max(0, balance.totalSeconds));
         if (deductible > 0) {
           await this.timeBankService.deductTime(session.childId, deductible);
         }
       }
     }
 
-    this.logger.log(`Play session ${sessionId} force-ended by parent ${userId}, used ${usedMinutes}min`);
+    this.logger.log(`Play session ${sessionId} force-ended by parent ${userId}, used ${usedSeconds}s`);
 
     // Notify child
     this.notificationService.sendToUser(
@@ -463,9 +463,9 @@ export class PlaySessionService {
     // Check child has enough balance (accounting for time already allocated to this session)
     const balance = await this.timeBankService.getBalance(session.childId, session.childId);
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const uncommittedMinutes = Math.ceil(remainingSeconds / 60);
-    const availableMinutes = balance.totalMinutes - uncommittedMinutes;
-    if (availableMinutes < dto.additionalMinutes) {
+    const uncommittedSeconds = remainingSeconds;
+    const availableSeconds = balance.totalSeconds - uncommittedSeconds;
+    if (availableSeconds < dto.additionalSeconds) {
       throw new BadRequestException('Insufficient time balance for extension');
     }
 
@@ -473,11 +473,11 @@ export class PlaySessionService {
     const updated = await this.prisma.playSession.update({
       where: { id: sessionId },
       data: {
-        requestedMinutes: session.requestedMinutes + dto.additionalMinutes,
+        requestedSeconds: session.requestedSeconds + dto.additionalSeconds,
       },
     });
 
-    this.logger.log(`Play session ${sessionId} extended by ${dto.additionalMinutes}min`);
+    this.logger.log(`Play session ${sessionId} extended by ${dto.additionalSeconds}s`);
     return this.enrichSession(updated);
   }
 
@@ -598,10 +598,10 @@ export class PlaySessionService {
 
         // Deduct the full requested time (session ran to completion)
         try {
-          await this.timeBankService.deductTime(session.childId, session.requestedMinutes);
+          await this.timeBankService.deductTime(session.childId, session.requestedSeconds);
         } catch {
           const balance = await this.timeBankService.getBalance(session.childId, session.childId);
-          const deductible = Math.min(session.requestedMinutes, Math.max(0, balance.totalMinutes));
+          const deductible = Math.min(session.requestedSeconds, Math.max(0, balance.totalSeconds));
           if (deductible > 0) {
             await this.timeBankService.deductTime(session.childId, deductible);
           }
@@ -673,17 +673,17 @@ export class PlaySessionService {
       },
     });
 
-    let totalMinutes = 0;
+    let totalSeconds = 0;
     for (const s of sessions) {
       if (['completed', 'stopped'].includes(s.status) && s.startedAt && s.endedAt) {
         const elapsed = (s.endedAt.getTime() - s.startedAt.getTime()) / 1000 - s.totalPausedSeconds;
-        totalMinutes += Math.ceil(elapsed / 60);
+        totalSeconds += Math.ceil(elapsed);
       } else if (['active', 'paused'].includes(s.status)) {
-        totalMinutes += s.requestedMinutes;
+        totalSeconds += s.requestedSeconds;
       }
     }
 
-    return totalMinutes;
+    return totalSeconds;
   }
 
   // --- Helpers ---
@@ -698,9 +698,9 @@ export class PlaySessionService {
     startedAt: Date | null;
     pausedAt: Date | null;
     totalPausedSeconds: number;
-    requestedMinutes: number;
+    requestedSeconds: number;
   }): number {
-    if (!session.startedAt) return session.requestedMinutes * 60;
+    if (!session.startedAt) return session.requestedSeconds;
 
     const now = new Date();
     let elapsed: number;
@@ -711,7 +711,7 @@ export class PlaySessionService {
       elapsed = (now.getTime() - session.startedAt.getTime()) / 1000 - session.totalPausedSeconds;
     }
 
-    return Math.max(0, session.requestedMinutes * 60 - elapsed);
+    return Math.max(0, session.requestedSeconds - elapsed);
   }
 
   private enrichSession(session: any) {
@@ -743,7 +743,7 @@ export class PlaySessionService {
     }
   }
 
-  private async validateDailyCap(childId: string, requestedMinutes: number, settings: PlaySettings) {
+  private async validateDailyCap(childId: string, requestedSeconds: number, settings: PlaySettings) {
     const now = new Date();
     const isWeekend = now.getDay() === 0 || now.getDay() === 6;
     const cap = isWeekend ? settings.weekendDailyScreenTimeCap : settings.dailyScreenTimeCap;
@@ -752,10 +752,10 @@ export class PlaySessionService {
 
     const usedToday = await this.getDailyUsage(childId);
 
-    if (usedToday + requestedMinutes > cap) {
+    if (usedToday + requestedSeconds > cap) {
       const remaining = Math.max(0, cap - usedToday);
       throw new BadRequestException(
-        `Daily screen time limit: ${remaining} minutes remaining (${cap} min cap)`,
+        `Daily screen time limit: ${remaining} seconds remaining (${cap}s cap)`,
       );
     }
   }

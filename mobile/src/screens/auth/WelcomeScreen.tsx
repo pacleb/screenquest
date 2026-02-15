@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,28 +7,31 @@ import {
   FlatList,
   Dimensions,
   ViewToken,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { colors, spacing, borderRadius, fonts } from '../../theme';
-import { Button } from '../../components';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { colors, spacing, borderRadius, fonts } from "../../theme";
+import { Button } from "../../components";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const ONBOARDING_SLIDES = [
   {
-    emoji: '🏰',
-    title: 'Welcome to ScreenQuest!',
-    description: 'Help your kids earn screen time through real-world quests and adventures!',
+    emoji: "🏰",
+    title: "Welcome to ScreenQuest!",
+    description:
+      "Help your kids earn screen time through real-world quests and adventures!",
   },
   {
-    emoji: '🎯',
-    title: 'Parents Set Quests',
-    description: 'Create custom quests like chores, homework, or exercise. Kids complete them to earn time!',
+    emoji: "🎯",
+    title: "Parents Set Quests",
+    description:
+      "Create custom quests like chores, homework, or exercise. Kids complete them to earn time!",
   },
   {
-    emoji: '🚀',
-    title: 'Everyone Wins!',
-    description: 'Kids learn responsibility. Parents stay in control. Get started in just 2 minutes!',
+    emoji: "🚀",
+    title: "Everyone Wins!",
+    description:
+      "Kids learn responsibility. Parents stay in control. Get started in just 2 minutes!",
   },
 ];
 
@@ -37,11 +40,13 @@ export default function WelcomeScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-      setCurrentIndex(viewableItems[0].index);
-    }
-  }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+        setCurrentIndex(viewableItems[0].index);
+      }
+    },
+  ).current;
 
   const isLastSlide = currentIndex === ONBOARDING_SLIDES.length - 1;
 
@@ -80,10 +85,10 @@ export default function WelcomeScreen() {
         {/* Buttons */}
         <View style={styles.buttons}>
           <Button
-            title={isLastSlide ? 'Get Started' : 'Next'}
+            title={isLastSlide ? "Get Started" : "Next"}
             onPress={() => {
               if (isLastSlide) {
-                navigation.navigate('Register');
+                navigation.navigate("Register");
               } else {
                 flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
               }
@@ -94,14 +99,14 @@ export default function WelcomeScreen() {
 
           <Button
             title="I already have an account"
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => navigation.navigate("Login")}
             variant="ghost"
             size="md"
           />
 
           <Button
             title="I'm a kid"
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => navigation.navigate("Login", { mode: "child" })}
             variant="ghost"
             size="sm"
             textStyle={{ color: colors.purple }}
@@ -115,11 +120,11 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { flex: 1, justifyContent: 'space-between' },
+  content: { flex: 1, justifyContent: "space-between" },
   slide: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
   },
   emoji: {
@@ -130,20 +135,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.extraBold,
     fontSize: 28,
     color: colors.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   slideDesc: {
     fontFamily: fonts.parent.regular,
     fontSize: 17,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 26,
     paddingHorizontal: spacing.md,
   },
   dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },

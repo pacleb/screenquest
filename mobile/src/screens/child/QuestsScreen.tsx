@@ -126,7 +126,7 @@ export default function ChildQuests() {
             <Text style={styles.gridIcon}>{quest.icon}</Text>
             <Text style={styles.gridName} numberOfLines={2}>{quest.name}</Text>
             <View style={styles.gridReward}>
-              <Text style={styles.gridRewardText}>{quest.rewardMinutes} min</Text>
+              <Text style={styles.gridRewardText}>{quest.rewardSeconds} min</Text>
             </View>
             <View style={[
               styles.gridStack,

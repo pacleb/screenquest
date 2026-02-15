@@ -72,10 +72,10 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
     key: 'time_master',
     name: 'Time Master',
-    description: 'Earn 500 total minutes',
+    description: 'Earn 30000 total seconds',
     icon: '⏰',
     category: 'milestones',
-    criteria: { type: 'total_earned_minutes', value: 500 },
+    criteria: { type: 'total_earned_seconds', value: 30000 },
   },
   {
     key: 'streak_starter',

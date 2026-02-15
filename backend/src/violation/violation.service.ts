@@ -35,9 +35,9 @@ export class ViolationService {
     const counter = await this.ensureCounter(childId);
     const violationNumber = counter.currentCount + 1;
 
-    // Calculate penalty: 2 * 2^(n-1) hours = 2^n hours → converted to minutes
+    // Calculate penalty: 2 * 2^(n-1) hours = 2^n hours → converted to seconds
     const penaltyHours = 2 * Math.pow(2, violationNumber - 1);
-    const penaltyMinutes = penaltyHours * 60;
+    const penaltySeconds = penaltyHours * 3600;
 
     // Create violation record
     const violation = await this.prisma.violation.create({
@@ -45,7 +45,7 @@ export class ViolationService {
         childId,
         recordedByUserId: parentId,
         violationNumber,
-        penaltyMinutes,
+        penaltySeconds,
         description: dto.description || null,
       },
     });
@@ -60,10 +60,10 @@ export class ViolationService {
     });
 
     // Deduct penalty from Time Bank (CAN go negative)
-    await this.timeBankService.deductPenalty(childId, penaltyMinutes);
+    await this.timeBankService.deductPenalty(childId, penaltySeconds);
 
     this.logger.log(
-      `Violation #${violationNumber} recorded for child ${childId}: -${penaltyMinutes}min (${penaltyHours}h)`,
+      `Violation #${violationNumber} recorded for child ${childId}: -${penaltySeconds}s (${penaltyHours}h)`,
     );
 
     // Notify child
@@ -157,7 +157,7 @@ export class ViolationService {
     // Refund penalty to Time Bank (stackable)
     await this.timeBankService.creditTime(
       violation.childId,
-      violation.penaltyMinutes,
+      violation.penaltySeconds,
       'stackable',
       null,
     );
@@ -173,11 +173,11 @@ export class ViolationService {
     });
 
     this.logger.log(
-      `Violation ${violationId} forgiven, refunded ${violation.penaltyMinutes}min to child ${violation.childId}`,
+      `Violation ${violationId} forgiven, refunded ${violation.penaltySeconds}s to child ${violation.childId}`,
     );
 
     // Notify child
-    const hours = violation.penaltyMinutes / 60;
+    const hours = violation.penaltySeconds / 3600;
     this.notificationService.sendToUser(
       violation.childId,
       {
@@ -204,7 +204,7 @@ export class ViolationService {
     return {
       currentCount: counter.currentCount,
       nextPenaltyHours,
-      nextPenaltyMinutes: nextPenaltyHours * 60,
+      nextPenaltySeconds: nextPenaltyHours * 3600,
       lastResetAt: counter.lastResetAt,
     };
   }

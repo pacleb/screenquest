@@ -32,7 +32,6 @@ import {
   EmptyState,
   CelebrationModal,
   SkeletonDashboard,
-  WeeklyStatsChart,
 } from "../../components";
 import { useThemeStore } from "../../store/theme";
 import { useHaptics } from "../../hooks/useAccessibility";
@@ -48,9 +47,9 @@ export default function ChildHome() {
   const haptics = useHaptics();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState<TimeBankBalance>({
-    stackableMinutes: 0,
-    nonStackableMinutes: 0,
-    totalMinutes: 0,
+    stackableSeconds: 0,
+    nonStackableSeconds: 0,
+    totalSeconds: 0,
   });
   const [quests, setQuests] = useState<ChildQuest[]>([]);
   const [violationStatus, setViolationStatus] =
@@ -95,8 +94,8 @@ export default function ChildHome() {
     fetchData();
   }, [fetchData]);
 
-  const isNegativeBalance = balance.totalMinutes < 0;
-  const canPlay = !isNegativeBalance && balance.totalMinutes > 0;
+  const isNegativeBalance = balance.totalSeconds < 0;
+  const canPlay = !isNegativeBalance && balance.totalSeconds > 0;
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
 
@@ -151,16 +150,6 @@ export default function ChildHome() {
               onTap={() => haptics.notification("success")}
             />
 
-            {/* Weekly Stats Chart */}
-            {weeklyStats && weeklyStats.dailyStats.length > 0 && (
-              <WeeklyStatsChart
-                dailyStats={weeklyStats.dailyStats}
-                accentColor={themeColors.primary}
-                textColor={themeColors.textPrimary}
-                cardColor={themeColors.card}
-              />
-            )}
-
             {/* Violation Indicator */}
             {violationStatus && violationStatus.currentCount > 0 && (
               <View style={styles.violationCard}>
@@ -183,9 +172,9 @@ export default function ChildHome() {
 
             {/* Time Bank Display */}
             <TimeBankDisplay
-              stackableMinutes={balance.stackableMinutes}
-              nonStackableMinutes={balance.nonStackableMinutes}
-              totalMinutes={balance.totalMinutes}
+              stackableSeconds={balance.stackableSeconds}
+              nonStackableSeconds={balance.nonStackableSeconds}
+              totalSeconds={balance.totalSeconds}
             />
 
             {/* Play Button */}
@@ -240,7 +229,7 @@ export default function ChildHome() {
                       key={quest.id}
                       icon={quest.icon}
                       name={quest.name}
-                      rewardMinutes={quest.rewardMinutes}
+                      rewardSeconds={quest.rewardSeconds}
                       stackingType={
                         quest.stackingType as "stackable" | "non_stackable"
                       }

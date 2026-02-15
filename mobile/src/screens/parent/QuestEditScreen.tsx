@@ -23,6 +23,7 @@ import {
 } from "../../services/quest";
 import { familyService, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius } from "../../theme";
+import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
 
 const CATEGORIES = [
   { value: "chores", label: "Chores", icon: "🧹" },
@@ -53,7 +54,7 @@ const RECURRENCE_OPTIONS = [
   { value: "weekly", label: "Weekly" },
 ];
 
-const REWARD_PRESETS = [10, 15, 20, 30, 45, 60];
+const REWARD_PRESETS = [600, 900, 1200, 1800, 2700, 3600];
 
 const EMOJI_OPTIONS = [
   "⭐",
@@ -96,7 +97,7 @@ export default function QuestEditScreen() {
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("⭐");
   const [category, setCategory] = useState("chores");
-  const [rewardMinutes, setRewardMinutes] = useState(30);
+  const [rewardSeconds, setRewardSeconds] = useState(1800);
   const [stackingType, setStackingType] = useState("stackable");
   const [recurrence, setRecurrence] = useState("one_time");
   const [requiresProof, setRequiresProof] = useState(false);
@@ -140,7 +141,7 @@ export default function QuestEditScreen() {
         setDescription(quest.description || "");
         setIcon(quest.icon);
         setCategory(quest.category);
-        setRewardMinutes(quest.rewardMinutes);
+        setRewardSeconds(quest.rewardSeconds);
         setStackingType(quest.stackingType);
         setRecurrence(quest.recurrence);
         setRequiresProof(quest.requiresProof);
@@ -187,8 +188,11 @@ export default function QuestEditScreen() {
       Alert.alert("Validation", "Please assign at least one child");
       return;
     }
-    if (rewardMinutes < 1) {
-      Alert.alert("Validation", "Reward must be at least 1 minute");
+    if (rewardSeconds < 60) {
+      Alert.alert(
+        "Validation",
+        "Reward must be at least 1 minute (60 seconds)",
+      );
       return;
     }
 
@@ -199,7 +203,7 @@ export default function QuestEditScreen() {
         description: description.trim() || undefined,
         icon,
         category,
-        rewardMinutes,
+        rewardSeconds,
         stackingType,
         recurrence,
         requiresProof,
@@ -250,7 +254,7 @@ export default function QuestEditScreen() {
       setDescription(lq.description || "");
       setIcon(lq.icon);
       setCategory(lq.category);
-      setRewardMinutes(lq.suggestedRewardMinutes);
+      setRewardSeconds(lq.suggestedRewardSeconds);
       setStackingType(lq.suggestedStackingType);
       return;
     }
@@ -258,7 +262,7 @@ export default function QuestEditScreen() {
     setSaving(true);
     try {
       await questService.createFromLibrary(familyId, lq.id, {
-        rewardMinutes: lq.suggestedRewardMinutes,
+        rewardSeconds: lq.suggestedRewardSeconds,
         stackingType: lq.suggestedStackingType,
         assignedChildIds: selectedChildIds,
       });
@@ -449,7 +453,7 @@ export default function QuestEditScreen() {
                   )}
                   <View style={styles.libraryMeta}>
                     <Text style={styles.libraryReward}>
-                      {lq.suggestedRewardMinutes} min
+                      {formatTimeLabel(lq.suggestedRewardSeconds)}
                     </Text>
                     {lq.ageRange && (
                       <Text style={styles.libraryAge}>
@@ -545,25 +549,25 @@ export default function QuestEditScreen() {
             ))}
           </View>
 
-          {/* Reward Minutes */}
+          {/* Reward Seconds */}
           <Text style={styles.sectionLabel}>Reward Time</Text>
           <View style={styles.rewardRow}>
-            {REWARD_PRESETS.map((mins) => (
+            {REWARD_PRESETS.map((secs) => (
               <TouchableOpacity
-                key={mins}
+                key={secs}
                 style={[
                   styles.rewardChip,
-                  rewardMinutes === mins && styles.rewardChipActive,
+                  rewardSeconds === secs && styles.rewardChipActive,
                 ]}
-                onPress={() => setRewardMinutes(mins)}
+                onPress={() => setRewardSeconds(secs)}
               >
                 <Text
                   style={[
                     styles.rewardChipText,
-                    rewardMinutes === mins && styles.rewardChipTextActive,
+                    rewardSeconds === secs && styles.rewardChipTextActive,
                   ]}
                 >
-                  {mins}m
+                  {formatTimeCompact(secs)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -572,8 +576,10 @@ export default function QuestEditScreen() {
             <Text style={styles.customRewardLabel}>Custom:</Text>
             <TextInput
               style={styles.customRewardInput}
-              value={String(rewardMinutes)}
-              onChangeText={(t) => setRewardMinutes(parseInt(t, 10) || 0)}
+              value={String(Math.floor(rewardSeconds / 60))}
+              onChangeText={(t) =>
+                setRewardSeconds((parseInt(t, 10) || 0) * 60)
+              }
               keyboardType="number-pad"
               maxLength={3}
             />
