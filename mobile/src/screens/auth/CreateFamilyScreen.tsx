@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -7,51 +7,47 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuthStore } from '../../store/auth';
-import { familyService } from '../../services/family';
-import { colors, spacing, borderRadius } from '../../theme';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useAuthStore } from "../../store/auth";
+import { familyService } from "../../services/family";
+import { colors, spacing, borderRadius } from "../../theme";
 
 export default function CreateFamilyScreen() {
   const navigation = useNavigation<any>();
   const { user, setUser } = useAuthStore();
 
-  const [familyName, setFamilyName] = useState('');
+  const [familyName, setFamilyName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'create' | 'join'>('create');
-  const [familyCode, setFamilyCode] = useState('');
+  const [mode, setMode] = useState<"create" | "join">("create");
+  const [familyCode, setFamilyCode] = useState("");
 
   const handleCreate = async () => {
     if (!familyName.trim()) {
-      Alert.alert('Error', 'Please enter a family name');
+      Alert.alert("Error", "Please enter a family name");
       return;
     }
 
     setLoading(true);
     try {
       const family = await familyService.create(familyName.trim());
-      if (user) {
-        setUser({ ...user, familyId: family.id });
-      }
       Alert.alert(
-        'Family Created!',
-        `Your family code is: ${family.familyCode}\n\nShare this code with other parents/guardians to invite them.`,
+        "Family Created!",
+        `Your family code is: ${family.familyCode}\n\nShare this code with other parents/guardians to invite them.\n\nYou can add children from the Family tab.`,
         [
           {
-            text: 'Add a Child',
-            onPress: () => navigation.reset({ index: 0, routes: [{ name: 'AddChild' }] }),
-          },
-          {
-            text: 'Go to Dashboard',
-            onPress: () => navigation.reset({ index: 0, routes: [{ name: 'App' }] }),
+            text: "OK",
+            onPress: () => {
+              // Setting familyId triggers RootNavigator to switch to AppNavigator
+              if (user) setUser({ ...user, familyId: family.id });
+            },
           },
         ],
       );
     } catch (error: any) {
       Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to create family',
+        "Error",
+        error.response?.data?.message || "Failed to create family",
       );
     } finally {
       setLoading(false);
@@ -60,23 +56,26 @@ export default function CreateFamilyScreen() {
 
   const handleJoin = async () => {
     if (!familyCode.trim()) {
-      Alert.alert('Error', 'Please enter a family code');
+      Alert.alert("Error", "Please enter a family code");
       return;
     }
 
     setLoading(true);
     try {
       const family = await familyService.join(familyCode.trim());
-      if (user) {
-        setUser({ ...user, familyId: family.id });
-      }
-      Alert.alert('Joined!', `You joined ${family.name}!`, [
-        { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'App' }] }) },
+      Alert.alert("Joined!", `You joined ${family.name}!`, [
+        {
+          text: "OK",
+          onPress: () => {
+            // Setting familyId triggers RootNavigator to switch to AppNavigator
+            if (user) setUser({ ...user, familyId: family.id });
+          },
+        },
       ]);
     } catch (error: any) {
       Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Invalid family code',
+        "Error",
+        error.response?.data?.message || "Invalid family code",
       );
     } finally {
       setLoading(false);
@@ -91,26 +90,26 @@ export default function CreateFamilyScreen() {
 
         <View style={styles.modeToggle}>
           <TouchableOpacity
-            style={[styles.modeTab, mode === 'create' && styles.modeTabActive]}
-            onPress={() => setMode('create')}
+            style={[styles.modeTab, mode === "create" && styles.modeTabActive]}
+            onPress={() => setMode("create")}
           >
             <Text
               style={[
                 styles.modeTabText,
-                mode === 'create' && styles.modeTabTextActive,
+                mode === "create" && styles.modeTabTextActive,
               ]}
             >
               Create New
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeTab, mode === 'join' && styles.modeTabActive]}
-            onPress={() => setMode('join')}
+            style={[styles.modeTab, mode === "join" && styles.modeTabActive]}
+            onPress={() => setMode("join")}
           >
             <Text
               style={[
                 styles.modeTabText,
-                mode === 'join' && styles.modeTabTextActive,
+                mode === "join" && styles.modeTabTextActive,
               ]}
             >
               Join Family
@@ -118,7 +117,7 @@ export default function CreateFamilyScreen() {
           </TouchableOpacity>
         </View>
 
-        {mode === 'create' ? (
+        {mode === "create" ? (
           <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Family Name</Text>
@@ -137,7 +136,7 @@ export default function CreateFamilyScreen() {
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Creating...' : 'Create Family'}
+                {loading ? "Creating..." : "Create Family"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -161,7 +160,7 @@ export default function CreateFamilyScreen() {
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Joining...' : 'Join Family'}
+                {loading ? "Joining..." : "Join Family"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -179,22 +178,22 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: spacing.lg,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   emoji: {
     fontSize: 64,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   modeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: 4,
@@ -205,7 +204,7 @@ const styles = StyleSheet.create({
   modeTab: {
     flex: 1,
     paddingVertical: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: borderRadius.md,
   },
   modeTabActive: {
@@ -213,11 +212,11 @@ const styles = StyleSheet.create({
   },
   modeTabText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textSecondary,
   },
   modeTabTextActive: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   form: {
     gap: spacing.md,
@@ -227,7 +226,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
   },
   input: {
@@ -243,15 +242,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.xl,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

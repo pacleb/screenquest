@@ -199,6 +199,19 @@ export default function FamilyScreen() {
     );
   }
 
+  if (!familyId || !family) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyChildren}>
+          <Text style={styles.emptyText}>No Family Set Up</Text>
+          <Text style={styles.emptyHint}>
+            Create or join a family to see your family code and manage members.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
