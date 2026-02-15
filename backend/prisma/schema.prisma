@@ -38,7 +38,7 @@ model User {
   avatarUrl      String?  @map("avatar_url") @db.VarChar(500)
   role           String   @db.VarChar(20)
   familyId       String?  @map("family_id") @db.Uuid
-  pin            String?  @db.VarChar(6)
+  pin            String?  @db.VarChar(255)
   age            Int?
   authProvider   String   @default("email") @map("auth_provider") @db.VarChar(20)
   authProviderId String?  @map("auth_provider_id") @db.VarChar(255)
