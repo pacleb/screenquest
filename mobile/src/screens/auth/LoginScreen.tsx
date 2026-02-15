@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -10,10 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuthStore } from '../../store/auth';
-import { colors, spacing, borderRadius } from '../../theme';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useAuthStore } from "../../store/auth";
+import { colors, spacing, borderRadius } from "../../theme";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -22,30 +22,30 @@ export default function LoginScreen() {
   const [isChildMode, setIsChildMode] = useState(false);
 
   // Parent login
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Child login
-  const [familyCode, setFamilyCode] = useState('');
-  const [childName, setChildName] = useState('');
-  const [pin, setPin] = useState('');
+  const [familyCode, setFamilyCode] = useState("");
+  const [childName, setChildName] = useState("");
+  const [pin, setPin] = useState("");
 
   const [loading, setLoading] = useState(false);
 
   const handleParentLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
       await login(email.trim(), password);
-      navigation.reset({ index: 0, routes: [{ name: 'App' }] });
+      // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
       Alert.alert(
-        'Login Failed',
-        error.response?.data?.message || 'Invalid email or password',
+        "Login Failed",
+        error.response?.data?.message || "Invalid email or password",
       );
     } finally {
       setLoading(false);
@@ -54,18 +54,18 @@ export default function LoginScreen() {
 
   const handleChildLogin = async () => {
     if (!familyCode.trim() || !childName.trim() || !pin.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
       await childLogin(familyCode.trim(), childName.trim(), pin);
-      navigation.reset({ index: 0, routes: [{ name: 'App' }] });
+      // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
       Alert.alert(
-        'Login Failed',
-        error.response?.data?.message || 'Invalid family code, name, or PIN',
+        "Login Failed",
+        error.response?.data?.message || "Invalid family code, name, or PIN",
       );
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.content}>
@@ -146,7 +146,7 @@ export default function LoginScreen() {
                 disabled={loading}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Signing In...' : 'Sign In'}
+                  {loading ? "Signing In..." : "Sign In"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -193,7 +193,7 @@ export default function LoginScreen() {
                 disabled={loading}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Signing In...' : 'Sign In'}
+                  {loading ? "Signing In..." : "Sign In"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -202,9 +202,7 @@ export default function LoginScreen() {
           {!isChildMode && (
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Register')}
-              >
+              <TouchableOpacity onPress={() => navigation.navigate("Register")}>
                 <Text style={styles.footerLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
@@ -234,12 +232,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.textPrimary,
     marginBottom: spacing.lg,
   },
   modeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: 4,
@@ -250,7 +248,7 @@ const styles = StyleSheet.create({
   modeTab: {
     flex: 1,
     paddingVertical: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: borderRadius.md,
   },
   modeTabActive: {
@@ -258,11 +256,11 @@ const styles = StyleSheet.create({
   },
   modeTabText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textSecondary,
   },
   modeTabTextActive: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   form: {
     gap: spacing.md,
@@ -272,7 +270,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
   },
   input: {
@@ -288,20 +286,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.xl,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: spacing.xl,
   },
   footerText: {
@@ -311,6 +309,6 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

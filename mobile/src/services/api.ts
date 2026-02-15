@@ -1,9 +1,23 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import * as Keychain from 'react-native-keychain';
 import * as Sentry from '@sentry/react-native';
 import { showToast } from './toastBridge';
 
-const API_URL = process.env.API_URL || 'http://192.168.21.15:3000/api';
+// Android emulator uses 10.0.2.2 to reach host machine;
+// iOS simulator can use localhost directly.
+// For physical devices, set your Mac's LAN IP here.
+const LAN_IP = '192.168.1.19'; // Update if your network changes
+
+const DEV_API_HOST = Platform.select({
+  android: LAN_IP,
+  ios: LAN_IP,
+  default: 'localhost',
+});
+
+const API_URL = __DEV__
+  ? `http://${DEV_API_HOST}:3000/api`
+  : 'https://api.screenquest.app/api'; // production URL placeholder
 
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;

@@ -2,6 +2,29 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing, borderRadius, fonts, typography } from "../theme";
 
+function formatTime(minutes: number): { value: string; unit: string } {
+  const abs = Math.abs(minutes);
+  if (abs >= 60) {
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    return {
+      value: `${minutes < 0 ? "-" : ""}${h}:${m.toString().padStart(2, "0")}`,
+      unit: "hours",
+    };
+  }
+  return { value: String(minutes), unit: minutes === 1 ? "minute" : "minutes" };
+}
+
+function formatShort(minutes: number): string {
+  const abs = Math.abs(minutes);
+  if (abs >= 60) {
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${minutes}m`;
+}
+
 interface TimeBankDisplayProps {
   stackableMinutes: number;
   nonStackableMinutes: number;
@@ -28,23 +51,24 @@ export function TimeBankDisplay({
       <View
         style={styles.compactContainer}
         accessibilityRole="text"
-        accessibilityLabel={`Time bank: ${totalMinutes} minutes`}
+        accessibilityLabel={`Time bank: ${formatShort(totalMinutes)}`}
       >
         <Text
           style={[styles.compactValue, isNegative && { color: colors.error }]}
         >
-          {totalMinutes}
+          {formatShort(totalMinutes)}
         </Text>
-        <Text style={styles.compactUnit}>min</Text>
       </View>
     );
   }
+
+  const display = formatTime(totalMinutes);
 
   return (
     <View
       style={[styles.container, isNegative && styles.containerNegative]}
       accessibilityRole="summary"
-      accessibilityLabel={`Time bank: ${totalMinutes} minutes. ${stackableMinutes} saved, ${nonStackableMinutes} expiring today`}
+      accessibilityLabel={`Time bank: ${formatShort(totalMinutes)}. ${formatShort(stackableMinutes)} saved, ${formatShort(nonStackableMinutes)} expiring today`}
     >
       <Text style={styles.label}>Time Bank</Text>
 
@@ -52,9 +76,9 @@ export function TimeBankDisplay({
       <Text
         style={[styles.balanceValue, isNegative && { color: colors.error }]}
       >
-        {totalMinutes}
+        {display.value}
       </Text>
-      <Text style={styles.balanceUnit}>minutes</Text>
+      <Text style={styles.balanceUnit}>{display.unit}</Text>
 
       {/* Visual bar */}
       <View style={styles.barContainer}>
@@ -79,7 +103,9 @@ export function TimeBankDisplay({
               <View
                 style={[styles.legendDot, { backgroundColor: colors.primary }]}
               />
-              <Text style={styles.legendText}>{stackableMinutes}m saved</Text>
+              <Text style={styles.legendText}>
+                {formatShort(stackableMinutes)} saved
+              </Text>
             </View>
           )}
           {nonStackableMinutes > 0 && (
@@ -88,7 +114,7 @@ export function TimeBankDisplay({
                 style={[styles.legendDot, { backgroundColor: colors.accent }]}
               />
               <Text style={styles.legendText}>
-                {nonStackableMinutes}m today
+                {formatShort(nonStackableMinutes)} today
               </Text>
             </View>
           )}
@@ -99,7 +125,7 @@ export function TimeBankDisplay({
       {isNegative && (
         <View style={styles.deficitRow}>
           <Text style={styles.deficitText}>
-            Earn {deficit} more minutes to play!
+            Earn {formatShort(deficit)} more to play!
           </Text>
         </View>
       )}
@@ -108,7 +134,7 @@ export function TimeBankDisplay({
       {!isNegative && nonStackableMinutes > 0 && (
         <View style={styles.expiringBadge}>
           <Text style={styles.expiringText}>
-            {nonStackableMinutes} min expires tonight
+            {formatShort(nonStackableMinutes)} expires tonight
           </Text>
         </View>
       )}

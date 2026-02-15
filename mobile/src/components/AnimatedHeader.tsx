@@ -161,9 +161,10 @@ export function AnimatedHeader({
 const styles = StyleSheet.create({
   container: {
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg + 4,
     marginBottom: spacing.md,
-    overflow: "hidden",
   },
   topRow: {
     flexDirection: "row",
@@ -189,6 +190,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    marginBottom: spacing.xs,
   },
   avatarCircle: {
     width: 64,
