@@ -71,7 +71,10 @@ export default function ParentDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!familyId) return;
+    if (!familyId) {
+      setLoading(false);
+      return;
+    }
     try {
       const members = await familyService.getMembers(familyId);
       const children = members.filter((m) => m.role === "child");

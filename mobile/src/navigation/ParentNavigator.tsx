@@ -1,6 +1,8 @@
 import React from "react";
+import { Platform } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors, fonts } from "../theme";
 import type { ParentTabParamList, ParentStackParamList } from "./types";
@@ -19,6 +21,9 @@ const Tab = createBottomTabNavigator<ParentTabParamList>();
 const Stack = createNativeStackNavigator<ParentStackParamList>();
 
 function ParentTabs() {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 8);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -28,9 +33,10 @@ function ParentTabs() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 56 + bottomPadding,
+          paddingBottom: bottomPadding,
           paddingTop: 4,
+          paddingHorizontal: 4,
         },
         tabBarLabelStyle: {
           fontFamily: fonts.parent.medium,
@@ -42,7 +48,7 @@ function ParentTabs() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: "Dashboard",
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
             <Icon name="home-outline" size={size} color={color} />
           ),

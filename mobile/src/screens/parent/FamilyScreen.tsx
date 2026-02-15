@@ -15,11 +15,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useAuthStore } from "../../store/auth";
-import {
-  familyService,
-  Family,
-  FamilyMember,
-} from "../../services/family";
+import { familyService, Family, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius } from "../../theme";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -57,7 +53,10 @@ export default function FamilyScreen() {
   const [inviting, setInviting] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!familyId) return;
+    if (!familyId) {
+      setLoading(false);
+      return;
+    }
     try {
       const [familyData, membersData] = await Promise.all([
         familyService.get(familyId),

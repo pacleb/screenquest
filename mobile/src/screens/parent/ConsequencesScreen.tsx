@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,16 +10,16 @@ import {
   TextInput,
   RefreshControl,
   ActivityIndicator,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuthStore } from '../../store/auth';
-import { familyService, FamilyMember } from '../../services/family';
+} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { useAuthStore } from "../../store/auth";
+import { familyService, FamilyMember } from "../../services/family";
 import {
   violationService,
   Violation,
   ViolationStatus,
-} from '../../services/violation';
-import { colors, spacing, borderRadius, fonts, typography } from '../../theme';
+} from "../../services/violation";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 
 export default function ConsequencesScreen() {
   const user = useAuthStore((s) => s.user);
@@ -33,16 +33,28 @@ export default function ConsequencesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [recording, setRecording] = useState(false);
   const [showDescInput, setShowDescInput] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
 
   // Fetch children
   useEffect(() => {
-    if (!familyId) return;
-    familyService.getMembers(familyId).then((members) => {
-      const kids = members.filter((m) => m.role === 'child');
-      setChildren(kids);
-      if (kids.length > 0) setSelectedChildId(kids[0].id);
-    });
+    if (!familyId) {
+      setLoading(false);
+      return;
+    }
+    familyService
+      .getMembers(familyId)
+      .then((members) => {
+        const kids = members.filter((m) => m.role === "child");
+        setChildren(kids);
+        if (kids.length > 0) {
+          setSelectedChildId(kids[0].id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, [familyId]);
 
   const fetchData = useCallback(async () => {
@@ -76,14 +88,17 @@ export default function ConsequencesScreen() {
         description || undefined,
       );
       Alert.alert(
-        'Violation Recorded',
+        "Violation Recorded",
         `Violation #${result.violationNumber}: ${result.penaltyHours}h deducted`,
       );
       setShowDescInput(false);
-      setDescription('');
+      setDescription("");
       fetchData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to record violation');
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to record violation",
+      );
     } finally {
       setRecording(false);
     }
@@ -92,19 +107,19 @@ export default function ConsequencesScreen() {
   const handleResetCounter = () => {
     if (!selectedChildId) return;
     Alert.alert(
-      'Reset Violation Count',
-      'This will reset the violation counter to 0. Penalty levels will start over. Are you sure?',
+      "Reset Violation Count",
+      "This will reset the violation counter to 0. Penalty levels will start over. Are you sure?",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Reset',
-          style: 'destructive',
+          text: "Reset",
+          style: "destructive",
           onPress: async () => {
             try {
               await violationService.resetCounter(selectedChildId);
               fetchData();
             } catch {
-              Alert.alert('Error', 'Failed to reset counter');
+              Alert.alert("Error", "Failed to reset counter");
             }
           },
         },
@@ -115,18 +130,21 @@ export default function ConsequencesScreen() {
   const handleForgive = (violation: Violation) => {
     const hours = violation.penaltyMinutes / 60;
     Alert.alert(
-      'Forgive Violation',
+      "Forgive Violation",
       `This will refund ${hours}h back to the Time Bank. Are you sure?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Forgive',
+          text: "Forgive",
           onPress: async () => {
             try {
               await violationService.forgiveViolation(violation.id);
               fetchData();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to forgive');
+              Alert.alert(
+                "Error",
+                error.response?.data?.message || "Failed to forgive",
+              );
             }
           },
         },
@@ -136,11 +154,11 @@ export default function ConsequencesScreen() {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   };
 
@@ -198,12 +216,16 @@ export default function ConsequencesScreen() {
               <View style={styles.statusCard}>
                 <View style={styles.statusRow}>
                   <View style={styles.statusItem}>
-                    <Text style={styles.statusValue}>{status.currentCount}</Text>
+                    <Text style={styles.statusValue}>
+                      {status.currentCount}
+                    </Text>
                     <Text style={styles.statusLabel}>Violations</Text>
                   </View>
                   <View style={styles.statusDivider} />
                   <View style={styles.statusItem}>
-                    <Text style={styles.statusValue}>{status.nextPenaltyHours}h</Text>
+                    <Text style={styles.statusValue}>
+                      {status.nextPenaltyHours}h
+                    </Text>
                     <Text style={styles.statusLabel}>Next Penalty</Text>
                   </View>
                 </View>
@@ -240,7 +262,7 @@ export default function ConsequencesScreen() {
                     <TouchableOpacity
                       onPress={() => {
                         setShowDescInput(false);
-                        setDescription('');
+                        setDescription("");
                       }}
                     >
                       <Text style={styles.cancelText}>Cancel</Text>
@@ -352,8 +374,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   childSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
@@ -374,7 +396,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  childChipTextActive: { color: '#FFF' },
+  childChipTextActive: { color: "#FFF" },
   statusCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -384,10 +406,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  statusItem: { flex: 1, alignItems: 'center' },
+  statusItem: { flex: 1, alignItems: "center" },
   statusValue: {
     fontFamily: fonts.parent.bold,
     fontSize: 36,
@@ -406,27 +428,27 @@ const styles = StyleSheet.create({
   },
   cleanBadge: {
     marginTop: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.xs,
-    backgroundColor: colors.secondary + '15',
+    backgroundColor: colors.secondary + "15",
     borderRadius: borderRadius.md,
   },
   cleanText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.secondary,
   },
   actionSection: { marginBottom: spacing.lg },
   recordBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     backgroundColor: colors.error,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
   },
-  recordBtnText: { fontSize: 15, fontWeight: '700', color: '#FFF' },
+  recordBtnText: { fontSize: 15, fontWeight: "700", color: "#FFF" },
   recordForm: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -443,18 +465,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 60,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   recordActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: spacing.md,
     marginTop: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textSecondary,
   },
   confirmRecordBtn: {
@@ -463,24 +485,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     minWidth: 80,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  confirmRecordText: { fontSize: 14, fontWeight: '700', color: '#FFF' },
+  confirmRecordText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
   resetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.xs,
     marginTop: spacing.sm,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary + '10',
+    backgroundColor: colors.primary + "10",
     borderWidth: 1,
-    borderColor: colors.primary + '30',
+    borderColor: colors.primary + "30",
   },
   resetBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.primary,
   },
   sectionTitle: {
@@ -488,10 +510,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
-  empty: { alignItems: 'center', paddingTop: spacing.xl },
+  empty: { alignItems: "center", paddingTop: spacing.xl },
   emptyText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
     marginTop: spacing.md,
   },
@@ -510,20 +532,20 @@ const styles = StyleSheet.create({
   },
   violationForgiven: { opacity: 0.6 },
   violationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
   violationBadge: {
-    backgroundColor: colors.error + '15',
+    backgroundColor: colors.error + "15",
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
   violationNumber: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.error,
   },
   violationDate: {
@@ -532,19 +554,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   forgivenBadge: {
-    backgroundColor: colors.secondary + '15',
+    backgroundColor: colors.secondary + "15",
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
   forgivenText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.secondary,
   },
   penaltyText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.error,
     marginBottom: spacing.xs,
   },
@@ -554,13 +576,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   forgiveBtn: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
   forgiveBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.primary,
   },
 });
