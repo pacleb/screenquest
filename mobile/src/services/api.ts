@@ -3,7 +3,7 @@ import * as Keychain from 'react-native-keychain';
 import * as Sentry from '@sentry/react-native';
 import { showToast } from './toastBridge';
 
-const API_URL = process.env.API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.API_URL || 'http://192.168.21.15:3000/api';
 
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
