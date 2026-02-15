@@ -2,7 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/Ionicons";
-import { fonts, useTheme } from "../theme";
+import { colors as staticColors, fonts, useTheme } from "../theme";
 import type { ChildTabParamList, ChildStackParamList } from "./types";
 
 import HomeScreen from "../screens/child/HomeScreen";
@@ -25,10 +25,10 @@ function ChildTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          backgroundColor: staticColors.primaryDark,
+          borderTopColor: staticColors.primaryDark,
           height: 64,
           paddingBottom: 10,
           paddingTop: 4,

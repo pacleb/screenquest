@@ -94,9 +94,7 @@ export class PlaySessionService {
     const now = new Date();
 
     if (autoStart) {
-      // Deduct time from bank and start immediately
-      await this.timeBankService.deductTime(childId, dto.requestedMinutes);
-
+      // Time will be deducted when session ends (based on actual usage)
       const session = await this.prisma.playSession.create({
         data: {
           childId,
@@ -167,9 +165,7 @@ export class PlaySessionService {
       throw new BadRequestException('Session is not in requested state');
     }
 
-    // Deduct time from bank
-    await this.timeBankService.deductTime(session.childId, session.requestedMinutes);
-
+    // Time will be deducted when session ends (based on actual usage)
     const now = new Date();
     const updated = await this.prisma.playSession.update({
       where: { id: sessionId },
@@ -327,7 +323,7 @@ export class PlaySessionService {
   }
 
   /**
-   * Child stops session early — refund remaining time
+   * Child stops session early — deduct only the time actually used
    */
   async stopSession(sessionId: string, userId: string) {
     const session = await this.prisma.playSession.findUnique({ where: { id: sessionId } });
@@ -338,7 +334,7 @@ export class PlaySessionService {
     }
 
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const refundMinutes = Math.floor(remainingSeconds / 60);
+    const usedMinutes = Math.ceil((session.requestedMinutes * 60 - remainingSeconds) / 60);
 
     const now = new Date();
     // If paused, account for the current pause duration
@@ -357,14 +353,23 @@ export class PlaySessionService {
       },
     });
 
-    // Refund remaining time to stackable bucket
-    if (refundMinutes > 0) {
-      await this.timeBankService.creditTime(session.childId, refundMinutes, 'stackable', null);
-      this.logger.log(`Refunded ${refundMinutes} min to child ${session.childId}`);
+    // Deduct only the time actually used (non-stackable first, as designed)
+    if (usedMinutes > 0) {
+      try {
+        await this.timeBankService.deductTime(session.childId, usedMinutes);
+      } catch {
+        // If balance decreased during session (e.g., non-stackable expired),
+        // deduct whatever is available
+        const balance = await this.timeBankService.getBalance(session.childId, session.childId);
+        const deductible = Math.min(usedMinutes, Math.max(0, balance.totalMinutes));
+        if (deductible > 0) {
+          await this.timeBankService.deductTime(session.childId, deductible);
+        }
+      }
+      this.logger.log(`Deducted ${usedMinutes} min from child ${session.childId}`);
     }
 
     // Emit play session completed analytics event
-    const usedMinutes = session.requestedMinutes - refundMinutes;
     const childForEvent = await this.prisma.user.findUnique({ where: { id: session.childId }, select: { familyId: true } });
     this.eventEmitter.emit(
       'play_session.completed',
@@ -378,7 +383,7 @@ export class PlaySessionService {
         childUser.familyId,
         {
           title: 'Play Stopped',
-          body: `${childUser.name} stopped playing (${refundMinutes} min remaining, refunded)`,
+          body: `${childUser.name} stopped playing (used ${usedMinutes} min)`,
           data: { type: 'play_stopped', sessionId },
         },
         'play_state_changes',
@@ -389,7 +394,7 @@ export class PlaySessionService {
   }
 
   /**
-   * Parent force-ends a session — refund remaining
+   * Parent force-ends a session — deduct only the time actually used
    */
   async parentEndSession(sessionId: string, userId: string) {
     const session = await this.getSessionWithParentAccess(sessionId, userId);
@@ -399,7 +404,7 @@ export class PlaySessionService {
     }
 
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const refundMinutes = Math.floor(remainingSeconds / 60);
+    const usedMinutes = Math.ceil((session.requestedMinutes * 60 - remainingSeconds) / 60);
 
     const now = new Date();
     let totalPaused = session.totalPausedSeconds;
@@ -417,11 +422,19 @@ export class PlaySessionService {
       },
     });
 
-    if (refundMinutes > 0) {
-      await this.timeBankService.creditTime(session.childId, refundMinutes, 'stackable', null);
+    if (usedMinutes > 0) {
+      try {
+        await this.timeBankService.deductTime(session.childId, usedMinutes);
+      } catch {
+        const balance = await this.timeBankService.getBalance(session.childId, session.childId);
+        const deductible = Math.min(usedMinutes, Math.max(0, balance.totalMinutes));
+        if (deductible > 0) {
+          await this.timeBankService.deductTime(session.childId, deductible);
+        }
+      }
     }
 
-    this.logger.log(`Play session ${sessionId} force-ended by parent ${userId}, refunded ${refundMinutes}min`);
+    this.logger.log(`Play session ${sessionId} force-ended by parent ${userId}, used ${usedMinutes}min`);
 
     // Notify child
     this.notificationService.sendToUser(
@@ -447,15 +460,16 @@ export class PlaySessionService {
       throw new BadRequestException('Session is not active or paused');
     }
 
-    // Check child has enough balance
+    // Check child has enough balance (accounting for time already allocated to this session)
     const balance = await this.timeBankService.getBalance(session.childId, session.childId);
-    if (balance.totalMinutes < dto.additionalMinutes) {
+    const remainingSeconds = this.calculateRemainingSeconds(session);
+    const uncommittedMinutes = Math.ceil(remainingSeconds / 60);
+    const availableMinutes = balance.totalMinutes - uncommittedMinutes;
+    if (availableMinutes < dto.additionalMinutes) {
       throw new BadRequestException('Insufficient time balance for extension');
     }
 
-    // Deduct additional time
-    await this.timeBankService.deductTime(session.childId, dto.additionalMinutes);
-
+    // Time will be deducted when session ends (based on actual usage)
     const updated = await this.prisma.playSession.update({
       where: { id: sessionId },
       data: {
@@ -581,6 +595,18 @@ export class PlaySessionService {
             endedAt: new Date(),
           },
         });
+
+        // Deduct the full requested time (session ran to completion)
+        try {
+          await this.timeBankService.deductTime(session.childId, session.requestedMinutes);
+        } catch {
+          const balance = await this.timeBankService.getBalance(session.childId, session.childId);
+          const deductible = Math.min(session.requestedMinutes, Math.max(0, balance.totalMinutes));
+          if (deductible > 0) {
+            await this.timeBankService.deductTime(session.childId, deductible);
+          }
+        }
+
         this.logger.log(`Play session ${session.id} completed (time expired)`);
 
         // Notify child: time's up

@@ -139,7 +139,7 @@ export function CelebrationModal({ event, onDismiss }: CelebrationModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(26,10,51,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   xpText: {
     fontFamily: fonts.child.extraBold,
     fontSize: 40,
-    color: colors.purple,
+    color: colors.primary,
     marginBottom: 4,
   },
   streakBonus: {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: "#F3E8FF",
+    backgroundColor: colors.childBg,
     borderRadius: 16,
     width: "100%",
   },
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   levelUpTitle: {
     ...typography.childH2,
-    color: colors.purple,
+    color: colors.primary,
     marginTop: 4,
   },
   levelUpText: {
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: "#FFF8E1",
+    backgroundColor: "#FFF5E0",
     borderRadius: 12,
     width: "100%",
   },

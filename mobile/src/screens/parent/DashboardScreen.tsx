@@ -135,7 +135,7 @@ export default function ParentDashboard() {
     colors.primary,
     colors.secondary,
     colors.accent,
-    "#9B59B6",
+    "#6B2FA0",
     "#E74C3C",
     "#1ABC9C",
   ];

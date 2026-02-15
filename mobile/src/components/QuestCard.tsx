@@ -21,11 +21,11 @@ const CATEGORY_COLORS: Record<
   { bg: string; border: string; label: string }
 > = {
   chores: { bg: "#E8F5E9", border: "#4CAF50", label: "🟢 Chores" },
-  learning: { bg: "#E3F2FD", border: "#2196F3", label: "🔵 Learning" },
+  learning: { bg: "#EDE8F5", border: "#6B2FA0", label: "🟣 Learning" },
   exercise: { bg: "#FFF3E0", border: "#FF9800", label: "🟠 Exercise" },
-  creative: { bg: "#F3E5F5", border: "#9C27B0", label: "🟣 Creative" },
+  creative: { bg: "#F0E6FF", border: "#8B5FBF", label: "💜 Creative" },
   kindness: { bg: "#FCE4EC", border: "#E91E63", label: "🩷 Kindness" },
-  custom: { bg: "#F5F5F5", border: "#9E9E9E", label: "⚪ Custom" },
+  custom: { bg: "#F5F0FA", border: "#6B5B7B", label: "⚪ Custom" },
 };
 
 const STATUS_DISPLAY: Record<

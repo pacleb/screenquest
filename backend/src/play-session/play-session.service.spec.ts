@@ -72,7 +72,8 @@ describe('PlaySessionService', () => {
       const result = await service.requestPlay('child-1', { requestedMinutes: 30 });
 
       expect(result.status).toBe('active');
-      expect(timeBankService.deductTime).toHaveBeenCalledWith('child-1', 30);
+      // Time is NOT deducted upfront; it's deducted when the session ends
+      expect(timeBankService.deductTime).not.toHaveBeenCalled();
     });
 
     it('creates requested session when require_approval mode', async () => {
@@ -144,7 +145,7 @@ describe('PlaySessionService', () => {
   });
 
   describe('stopSession', () => {
-    it('refunds remaining time on early stop', async () => {
+    it('deducts used time on early stop', async () => {
       const startedAt = new Date(Date.now() - 10 * 60 * 1000); // 10 min ago
       prisma.playSession.findUnique.mockResolvedValue({
         id: 'sess-1',
@@ -172,16 +173,16 @@ describe('PlaySessionService', () => {
 
       await service.stopSession('sess-1', 'child-1');
 
-      // Should refund roughly 20 min (30 requested - 10 elapsed)
-      expect(timeBankService.creditTime).toHaveBeenCalledWith(
+      // Should deduct roughly 10 min (actual elapsed time), not refund remaining
+      expect(timeBankService.deductTime).toHaveBeenCalledWith(
         'child-1',
         expect.any(Number),
-        'stackable',
-        null,
       );
-      const refundedMinutes = timeBankService.creditTime.mock.calls[0][1];
-      expect(refundedMinutes).toBeGreaterThanOrEqual(19);
-      expect(refundedMinutes).toBeLessThanOrEqual(20);
+      const deductedMinutes = timeBankService.deductTime.mock.calls[0][1];
+      expect(deductedMinutes).toBeGreaterThanOrEqual(10);
+      expect(deductedMinutes).toBeLessThanOrEqual(11);
+      // Should NOT credit/refund any time
+      expect(timeBankService.creditTime).not.toHaveBeenCalled();
     });
 
     it('throws if session is not active or paused', async () => {
@@ -272,7 +273,8 @@ describe('PlaySessionService', () => {
       const result = await service.approveSession('sess-1', 'parent-1');
 
       expect(result.status).toBe('active');
-      expect(timeBankService.deductTime).toHaveBeenCalledWith('child-1', 30);
+      // Time is NOT deducted upfront; it's deducted when the session ends
+      expect(timeBankService.deductTime).not.toHaveBeenCalled();
     });
   });
 

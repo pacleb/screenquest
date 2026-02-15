@@ -31,7 +31,7 @@ export function ConfettiOverlay({ active, onComplete, count = 100 }: ConfettiOve
         fadeOut
         fallSpeed={3000}
         explosionSpeed={400}
-        colors={['#4A90D9', '#7ED321', '#F5A623', '#9B59B6', '#E74C3C', '#FFD700']}
+        colors={['#6B2FA0', '#4CD964', '#F5A623', '#8B5FBF', '#E74C3C', '#FFD700']}
         onAnimationEnd={onComplete}
       />
     </View>

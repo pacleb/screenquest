@@ -21,7 +21,8 @@ export const fonts = {
 // Predefined text styles
 export const typography: Record<string, TextStyle> = {
   // Child headings
-  childH1: { fontFamily: fonts.child.extraBold, fontSize: 32, lineHeight: 40 },
+  childH1: { fontFamily: fonts.child.extraBold, fontSize: 36, lineHeight: 44 },
+  display: { fontFamily: fonts.child.extraBold, fontSize: 56, lineHeight: 64 },
   childH2: { fontFamily: fonts.child.bold, fontSize: 24, lineHeight: 32 },
   childH3: { fontFamily: fonts.child.bold, fontSize: 20, lineHeight: 28 },
   childBody: { fontFamily: fonts.child.regular, fontSize: 16, lineHeight: 24 },

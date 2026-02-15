@@ -86,7 +86,7 @@ export function AnimatedHeader({
     };
   });
 
-  const headerGradient = gradients?.header ?? ["#4A90D9", "#357ABD"];
+  const headerGradient = gradients?.header ?? ["#6B2FA0", "#5A2690"];
 
   return (
     <LinearGradient

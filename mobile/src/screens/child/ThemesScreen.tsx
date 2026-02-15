@@ -182,8 +182,8 @@ export default function ThemeSelectionScreen() {
 function ActiveThemePreview({ theme }: { theme: ThemeData }) {
   const themeColors = theme.colors ?? {};
   const gradientColors = (theme.gradients as any)?.header ?? [
-    themeColors.primary ?? "#4A90D9",
-    themeColors.secondary ?? "#7ED321",
+    themeColors.primary ?? "#6B2FA0",
+    themeColors.secondary ?? "#4CD964",
   ];
 
   return (
@@ -227,8 +227,8 @@ function ThemeCard({
   }));
 
   const themeColors = theme.colors ?? {};
-  const primary = (themeColors.primary as string) ?? "#4A90D9";
-  const secondary = (themeColors.secondary as string) ?? "#7ED321";
+  const primary = (themeColors.primary as string) ?? "#6B2FA0";
+  const secondary = (themeColors.secondary as string) ?? "#4CD964";
 
   return (
     <TouchableOpacity

@@ -5,52 +5,56 @@ import { useThemeStore, ThemeColors } from "../store/theme";
 
 // ─── Default Colors (Classic / Light Theme) ─────────────────
 export const defaultColors: ThemeColors = {
-  primary: "#4A90D9",
-  secondary: "#7ED321",
+  primary: "#6B2FA0",
+  secondary: "#4CD964",
   accent: "#F5A623",
-  background: "#F7F9FC",
+  background: "#F5F0FA",
   card: "#FFFFFF",
-  textPrimary: "#2C3E50",
-  textSecondary: "#7F8C8D",
+  textPrimary: "#2A1B3D",
+  textSecondary: "#6B5B7B",
   error: "#E74C3C",
-  warning: "#F39C12",
-  border: "#E8ECF0",
+  warning: "#F5A623",
+  border: "#E0D6EC",
   xp: "#FFD700",
   streak: "#FF6B35",
 };
 
-// ─── Dark Colors ────────────────────────────────────────────
+// ─── Dark Colors ("Magical Night Sky") ──────────────────────
 export const darkColors: ThemeColors = {
-  primary: "#5DA3E8",
-  secondary: "#8EE233",
-  accent: "#FFB84D",
-  background: "#121218",
-  card: "#1E1E2A",
-  textPrimary: "#E8ECF0",
-  textSecondary: "#9CA3AF",
+  primary: "#8B5FBF",
+  secondary: "#7EE89A",
+  accent: "#FFD166",
+  background: "#15101E",
+  card: "#1E1830",
+  textPrimary: "#EDE8F5",
+  textSecondary: "#9B8FB0",
   error: "#F87171",
   warning: "#FBBF24",
-  border: "#2D2D3D",
+  border: "#2E2540",
   xp: "#FFD700",
   streak: "#FF8C5A",
 };
 
 export const defaultGradients = {
-  primary: ["#4A90D9", "#357ABD"],
-  accent: ["#F5A623", "#E8961C"],
+  primary: ["#6B2FA0", "#4A1D73"],
+  brand: ["#6B2FA0", "#8B5FBF"],
+  accent: ["#F5A623", "#D4891A"],
+  magical: ["#4A1D73", "#1A0A33"],
+  success: ["#4CD964", "#2DA844"],
+  card: ["#FFFFFF", "#F5F0FA"],
+  header: ["#6B2FA0", "#5A2690"],
   streak: ["#FF6B35", "#E8521C"],
-  success: ["#7ED321", "#5FB318"],
-  card: ["#FFFFFF", "#F7F9FC"],
-  header: ["#4A90D9", "#357ABD"],
 };
 
 export const darkGradients = {
-  primary: ["#5DA3E8", "#4A90D9"],
-  accent: ["#FFB84D", "#F5A623"],
+  primary: ["#4A1D73", "#2A1050"],
+  brand: ["#8B5FBF", "#6B2FA0"],
+  accent: ["#FFD166", "#F5A623"],
+  magical: ["#15101E", "#0A0510"],
+  success: ["#7EE89A", "#4CD964"],
+  card: ["#1E1830", "#15101E"],
+  header: ["#2A1050", "#1E0A3D"],
   streak: ["#FF8C5A", "#FF6B35"],
-  success: ["#8EE233", "#7ED321"],
-  card: ["#1E1E2A", "#252536"],
-  header: ["#1E1E2A", "#121218"],
 };
 
 // ─── Theme Context ──────────────────────────────────────────

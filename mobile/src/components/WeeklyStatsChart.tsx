@@ -22,8 +22,8 @@ const BAR_WIDTH = 28;
 
 export function WeeklyStatsChart({
   dailyStats,
-  accentColor = "#4A90D9",
-  textColor = "#2C3E50",
+  accentColor = "#6B2FA0",
+  textColor = "#2A1B3D",
   cardColor = "#FFFFFF",
 }: WeeklyStatsChartProps) {
   if (!dailyStats || dailyStats.length === 0) return null;
