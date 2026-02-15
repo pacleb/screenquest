@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/Ionicons";
 import { colors, spacing, fonts } from "../theme";
 import { LottieAnimation } from "./LottieAnimation";
 import { Animations } from "../../assets/animations";
 
 interface EmptyStateProps {
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: string;
   emoji?: string;
   title: string;
   message?: string;
@@ -40,7 +40,7 @@ export function EmptyState({
       ) : emoji ? (
         <Text style={styles.emoji}>{emoji}</Text>
       ) : icon ? (
-        <Ionicons name={icon} size={56} color={colors.textSecondary + "60"} />
+        <Icon name={icon} size={56} color={colors.textSecondary + "60"} />
       ) : null}
       <Text
         style={[

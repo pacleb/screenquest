@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useSubscriptionStore } from '../store/subscription';
 
 export function usePremium() {
-  const router = useRouter();
+  const navigation = useNavigation<any>();
   const isActive = useSubscriptionStore((s) => s.isActive);
   const isTrialing = useSubscriptionStore((s) => s.isTrialing);
   const trialDaysRemaining = useSubscriptionStore((s) => s.trialDaysRemaining);
@@ -15,7 +15,7 @@ export function usePremium() {
       callback?.();
       return true;
     }
-    router.push('/(app)/parent/paywall');
+    navigation.navigate('Paywall');
     return false;
   };
 

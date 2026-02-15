@@ -19,8 +19,8 @@
     "test:all": "pnpm --filter backend test:all",
     "test:cov": "pnpm --filter backend test:cov",
     "lint": "pnpm --filter backend exec tsc --noEmit",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "android": "pnpm --filter mobile android",
+    "ios": "pnpm --filter mobile ios"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -39,7 +39,6 @@
     "overrides": {}
   },
   "dependencies": {
-    "expo": "~54.0.33",
     "react": "19.1.0",
     "react-native": "0.81.5"
   }

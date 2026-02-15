@@ -1,6 +1,6 @@
 import { TextStyle } from 'react-native';
 
-// Font families — loaded via expo-font in root layout
+// Font families — linked natively via react-native-asset
 export const fonts = {
   // Child UI
   child: {

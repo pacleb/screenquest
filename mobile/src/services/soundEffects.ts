@@ -1,5 +1,4 @@
-import { Audio } from "expo-av";
-import { Platform } from "react-native";
+import Sound from "react-native-sound";
 
 /**
  * Lightweight sound effects system for ScreenQuest.
@@ -12,21 +11,23 @@ import { Platform } from "react-native";
  * it silently does nothing.
  */
 
-// Sound asset map — maps keys to require() paths
-// We use a factory pattern so the sounds are lazy-loaded
-const SOUND_ASSETS: Record<string, () => any> = {
-  questComplete: () => require("../../assets/sounds/quest-complete.wav"),
-  levelUp: () => require("../../assets/sounds/level-up.wav"),
-  achievementUnlock: () => require("../../assets/sounds/achievement.wav"),
-  streakMilestone: () => require("../../assets/sounds/streak.wav"),
-  timerWarning: () => require("../../assets/sounds/timer-warning.wav"),
-  timerComplete: () => require("../../assets/sounds/timer-complete.wav"),
-  buttonTap: () => require("../../assets/sounds/tap.wav"),
+// Enable playback in silence mode (iOS)
+Sound.setCategory("Playback", false);
+
+// Sound asset map — maps keys to filenames (bundled in app)
+const SOUND_FILES: Record<string, string> = {
+  questComplete: "quest-complete.wav",
+  levelUp: "level-up.wav",
+  achievementUnlock: "achievement.wav",
+  streakMilestone: "streak.wav",
+  timerWarning: "timer-warning.wav",
+  timerComplete: "timer-complete.wav",
+  buttonTap: "tap.wav",
 };
 
 class SoundEffectsManager {
   private enabled = true;
-  private loadedSounds: Map<string, Audio.Sound> = new Map();
+  private loadedSounds: Map<string, Sound> = new Map();
 
   /**
    * Toggle sound effects on/off.
@@ -48,23 +49,24 @@ class SoundEffectsManager {
     if (!this.enabled) return;
 
     try {
-      const assetLoader = SOUND_ASSETS[key];
-      if (!assetLoader) return;
+      const filename = SOUND_FILES[key];
+      if (!filename) return;
 
       // Reuse cached sound if available
-      let sound = this.loadedSounds.get(key);
-      if (sound) {
-        await sound.setPositionAsync(0);
-        await sound.playAsync();
+      const cached = this.loadedSounds.get(key);
+      if (cached) {
+        cached.stop(() => {
+          cached.play();
+        });
         return;
       }
 
       // Load and play
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        assetLoader(),
-        { shouldPlay: true },
-      );
-      this.loadedSounds.set(key, newSound);
+      const sound = new Sound(filename, Sound.MAIN_BUNDLE, (error) => {
+        if (error) return; // Silently fail
+        sound.play();
+        this.loadedSounds.set(key, sound);
+      });
     } catch {
       // Silently fail — sound effects are non-critical
     }
@@ -76,11 +78,14 @@ class SoundEffectsManager {
   async preload(keys: string[]): Promise<void> {
     for (const key of keys) {
       try {
-        const assetLoader = SOUND_ASSETS[key];
-        if (!assetLoader || this.loadedSounds.has(key)) continue;
+        const filename = SOUND_FILES[key];
+        if (!filename || this.loadedSounds.has(key)) continue;
 
-        const { sound } = await Audio.Sound.createAsync(assetLoader());
-        this.loadedSounds.set(key, sound);
+        const sound = new Sound(filename, Sound.MAIN_BUNDLE, (error) => {
+          if (!error) {
+            this.loadedSounds.set(key, sound);
+          }
+        });
       } catch {
         // Skip silently
       }
@@ -93,7 +98,7 @@ class SoundEffectsManager {
   async unloadAll(): Promise<void> {
     for (const [, sound] of this.loadedSounds) {
       try {
-        await sound.unloadAsync();
+        sound.release();
       } catch {
         // Ignore
       }
@@ -110,13 +115,5 @@ export const SoundEffects = new SoundEffectsManager();
  * Call this once at app startup.
  */
 export async function initAudio(): Promise<void> {
-  try {
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: false, // Respect device silent switch
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-    });
-  } catch {
-    // Non-critical
-  }
+  // react-native-sound handles audio mode via Sound.setCategory above
 }

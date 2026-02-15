@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/Ionicons";
 import { colors, spacing, borderRadius, fonts } from "../theme";
 
 interface QuestCardProps {
@@ -157,7 +157,7 @@ export function QuestCard({
         <View
           style={[styles.statusBadge, { backgroundColor: status.color + "18" }]}
         >
-          <Ionicons name={status.icon as any} size={14} color={status.color} />
+          <Icon name={status.icon as any} size={14} color={status.color} />
           <Text style={[styles.statusText, { color: status.color }]}>
             {status.label}
           </Text>
@@ -165,7 +165,7 @@ export function QuestCard({
       )}
 
       {available && statusLabel === "available" && (
-        <Ionicons
+        <Icon
           name="chevron-forward"
           size={20}
           color={colors.textSecondary + "60"}

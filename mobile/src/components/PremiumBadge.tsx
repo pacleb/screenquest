@@ -1,30 +1,33 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fonts } from '../theme';
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { colors, spacing, borderRadius, fonts } from "../theme";
 
 interface PremiumBadgeProps {
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
   onPress?: () => void;
 }
 
-export function PremiumBadge({ size = 'sm', onPress }: PremiumBadgeProps) {
-  const router = useRouter();
+export function PremiumBadge({ size = "sm", onPress }: PremiumBadgeProps) {
+  const navigation = useNavigation<any>();
 
   const handlePress = () => {
     if (onPress) {
       onPress();
     } else {
-      router.push('/(app)/parent/paywall');
+      navigation.navigate("Paywall");
     }
   };
 
-  const isSmall = size === 'sm';
+  const isSmall = size === "sm";
 
   return (
-    <TouchableOpacity style={[styles.container, isSmall && styles.containerSm]} onPress={handlePress}>
-      <Ionicons name="lock-closed" size={isSmall ? 10 : 12} color={colors.accent} />
+    <TouchableOpacity
+      style={[styles.container, isSmall && styles.containerSm]}
+      onPress={handlePress}
+    >
+      <Icon name="lock-closed" size={isSmall ? 10 : 12} color={colors.accent} />
       <Text style={[styles.label, isSmall && styles.labelSm]}>Premium</Text>
     </TouchableOpacity>
   );
@@ -32,10 +35,10 @@ export function PremiumBadge({ size = 'sm', onPress }: PremiumBadgeProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
-    backgroundColor: colors.accent + '15',
+    backgroundColor: colors.accent + "15",
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.full,

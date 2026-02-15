@@ -1,6 +1,6 @@
 import api from './api';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+import notifee, { AndroidImportance } from '@notifee/react-native';
+import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 
 export interface NotificationPreferences {
@@ -15,22 +15,14 @@ export interface NotificationPreferences {
 
 export const notificationService = {
   async registerPushToken(userId: string): Promise<void> {
-    if (!Device.isDevice) return;
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    if (!enabled) return;
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') return;
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
-    });
-    const token = tokenData.data;
+    const token = await messaging().getToken();
     const platform = Platform.OS as string;
 
     await api.post(`/users/${userId}/push-token`, { token, platform });
@@ -38,11 +30,9 @@ export const notificationService = {
 
   async unregisterPushToken(userId: string): Promise<void> {
     try {
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
-      });
+      const token = await messaging().getToken();
       await api.delete(`/users/${userId}/push-token`, {
-        data: { token: tokenData.data },
+        data: { token },
       });
     } catch {
       // best effort
@@ -66,14 +56,26 @@ export const notificationService = {
 /**
  * Configure notification handler for foreground notifications
  */
-export function setupNotificationHandler() {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+export async function setupNotificationHandler() {
+  // Create a default channel for Android
+  if (Platform.OS === 'android') {
+    await notifee.createChannel({
+      id: 'default',
+      name: 'Default',
+      importance: AndroidImportance.HIGH,
+    });
+  }
+
+  // Handle foreground messages
+  messaging().onMessage(async (remoteMessage) => {
+    await notifee.displayNotification({
+      title: remoteMessage.notification?.title ?? 'ScreenQuest',
+      body: remoteMessage.notification?.body ?? '',
+      android: {
+        channelId: 'default',
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+      },
+    });
   });
 }

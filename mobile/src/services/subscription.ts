@@ -25,8 +25,8 @@ export interface SubscriptionStatus {
 export const subscriptionService = {
   initRevenueCat: async () => {
     const apiKey = Platform.select({
-      ios: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY || '',
-      android: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY || '',
+      ios: process.env.REVENUECAT_APPLE_KEY || '',
+      android: process.env.REVENUECAT_GOOGLE_KEY || '',
     });
 
     if (!apiKey) return;

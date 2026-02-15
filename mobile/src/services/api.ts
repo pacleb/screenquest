@@ -1,12 +1,30 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import * as Keychain from 'react-native-keychain';
 import * as Sentry from '@sentry/react-native';
 import { showToast } from './toastBridge';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.API_URL || 'http://localhost:3000/api';
 
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
+
+// Keychain helpers for token storage
+async function getToken(key: string): Promise<string | null> {
+  try {
+    const result = await Keychain.getGenericPassword({ service: key });
+    return result ? result.password : null;
+  } catch {
+    return null;
+  }
+}
+
+async function setToken(key: string, value: string): Promise<void> {
+  await Keychain.setGenericPassword(key, value, { service: key });
+}
+
+async function deleteToken(key: string): Promise<void> {
+  await Keychain.resetGenericPassword({ service: key });
+}
 
 const api = axios.create({
   baseURL: API_URL,
@@ -28,7 +46,7 @@ function delay(ms: number): Promise<void> {
 
 // Request interceptor — attach access token
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('accessToken');
+  const token = await getToken('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -66,7 +84,7 @@ api.interceptors.response.use(
       config._retry = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync('refreshToken');
+        const refreshToken = await getToken('refreshToken');
         if (!refreshToken) {
           throw new Error('No refresh token');
         }
@@ -75,14 +93,14 @@ api.interceptors.response.use(
           refreshToken,
         });
 
-        await SecureStore.setItemAsync('accessToken', data.accessToken);
-        await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+        await setToken('accessToken', data.accessToken);
+        await setToken('refreshToken', data.refreshToken);
 
         config.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(config);
       } catch (refreshError) {
-        await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('refreshToken');
+        await deleteToken('accessToken');
+        await deleteToken('refreshToken');
         return Promise.reject(refreshError);
       }
     }

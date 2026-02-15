@@ -1,6 +1,24 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import * as Keychain from 'react-native-keychain';
 import { authService, UserProfile } from '../services/auth';
+
+// Keychain helpers
+async function getToken(key: string): Promise<string | null> {
+  try {
+    const result = await Keychain.getGenericPassword({ service: key });
+    return result ? result.password : null;
+  } catch {
+    return null;
+  }
+}
+
+async function setToken(key: string, value: string): Promise<void> {
+  await Keychain.setGenericPassword(key, value, { service: key });
+}
+
+async function deleteToken(key: string): Promise<void> {
+  await Keychain.resetGenericPassword({ service: key });
+}
 
 interface AuthState {
   user: UserProfile | null;
@@ -22,7 +40,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await getToken('accessToken');
       if (token) {
         const user = await authService.getProfile();
         set({ user, isAuthenticated: true, isLoading: false });
@@ -30,44 +48,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isLoading: false });
       }
     } catch {
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
+      await deleteToken('accessToken');
+      await deleteToken('refreshToken');
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
   register: async (email, password, name) => {
     const response = await authService.register({ email, password, name });
-    await SecureStore.setItemAsync('accessToken', response.accessToken);
-    await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+    await setToken('accessToken', response.accessToken);
+    await setToken('refreshToken', response.refreshToken);
     set({ user: response.user, isAuthenticated: true });
   },
 
   login: async (email, password) => {
     const response = await authService.login({ email, password });
-    await SecureStore.setItemAsync('accessToken', response.accessToken);
-    await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+    await setToken('accessToken', response.accessToken);
+    await setToken('refreshToken', response.refreshToken);
     set({ user: response.user, isAuthenticated: true });
   },
 
   childLogin: async (familyCode, name, pin) => {
     const response = await authService.childLogin({ familyCode, name, pin });
-    await SecureStore.setItemAsync('accessToken', response.accessToken);
-    await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+    await setToken('accessToken', response.accessToken);
+    await setToken('refreshToken', response.refreshToken);
     set({ user: response.user, isAuthenticated: true });
   },
 
   logout: async () => {
     try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      const refreshToken = await getToken('refreshToken');
       if (refreshToken) {
         await authService.logout(refreshToken);
       }
     } catch {
       // Ignore errors during logout
     }
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('refreshToken');
+    await deleteToken('accessToken');
+    await deleteToken('refreshToken');
     set({ user: null, isAuthenticated: false });
   },
 

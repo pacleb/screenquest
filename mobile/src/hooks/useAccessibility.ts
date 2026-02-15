@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 
 /**
  * Hook that checks if the user prefers reduced motion.
@@ -26,7 +27,7 @@ export function useReducedMotion(): boolean {
 
 /**
  * Hook that returns the appropriate haptic feedback function.
- * Wraps expo-haptics with error handling and accessibility awareness.
+ * Wraps react-native-haptic-feedback with error handling and accessibility awareness.
  */
 export function useHaptics() {
   const reduceMotion = useReducedMotion();
@@ -34,13 +35,12 @@ export function useHaptics() {
   const impact = async (style?: "light" | "medium" | "heavy") => {
     if (reduceMotion) return;
     try {
-      const Haptics = await import("expo-haptics");
-      const feedbackStyle = {
-        light: Haptics.ImpactFeedbackStyle.Light,
-        medium: Haptics.ImpactFeedbackStyle.Medium,
-        heavy: Haptics.ImpactFeedbackStyle.Heavy,
+      const triggerType = {
+        light: "impactLight" as const,
+        medium: "impactMedium" as const,
+        heavy: "impactHeavy" as const,
       };
-      await Haptics.impactAsync(feedbackStyle[style ?? "medium"]);
+      ReactNativeHapticFeedback.trigger(triggerType[style ?? "medium"]);
     } catch {
       // Haptics not available
     }
@@ -51,13 +51,12 @@ export function useHaptics() {
   ) => {
     if (reduceMotion) return;
     try {
-      const Haptics = await import("expo-haptics");
-      const feedbackType = {
-        success: Haptics.NotificationFeedbackType.Success,
-        warning: Haptics.NotificationFeedbackType.Warning,
-        error: Haptics.NotificationFeedbackType.Error,
+      const triggerType = {
+        success: "notificationSuccess" as const,
+        warning: "notificationWarning" as const,
+        error: "notificationError" as const,
       };
-      await Haptics.notificationAsync(feedbackType[type ?? "success"]);
+      ReactNativeHapticFeedback.trigger(triggerType[type ?? "success"]);
     } catch {
       // Haptics not available
     }
