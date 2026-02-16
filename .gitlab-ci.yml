@@ -191,13 +191,13 @@ sentry:backend:
     - npx @sentry/cli releases finalize "$CI_COMMIT_SHORT_SHA"
   variables:
     SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
-    SENTRY_ORG: $SENTRY_ORG
+    SENTRY_ORG: pacleb
     SENTRY_PROJECT: $SENTRY_PROJECT_BACKEND
     SENTRY_LOG_LEVEL: debug
   allow_failure: true
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SENTRY_ORG
-    - if: $CI_COMMIT_TAG && $SENTRY_ORG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SENTRY_AUTH_TOKEN
+    - if: $CI_COMMIT_TAG && $SENTRY_AUTH_TOKEN
 
 # ──────────────────────────────────────────────
 # Deploy Stage
