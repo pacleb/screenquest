@@ -227,28 +227,3 @@ deploy:production:
     - if: $CI_COMMIT_TAG
       when: manual
 
-eas-build:
-  stage: deploy
-  image: node:${NODE_VERSION}
-  before_script:
-    - npm install -g eas-cli
-  script:
-    - cd mobile && eas build --platform ${PLATFORM:-all} --profile production --non-interactive
-  variables:
-    EXPO_TOKEN: $EXPO_TOKEN
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-
-eas-submit:
-  stage: deploy
-  image: node:${NODE_VERSION}
-  before_script:
-    - npm install -g eas-cli
-  script:
-    - cd mobile && eas submit --platform ${PLATFORM:-all} --profile production --non-interactive
-  variables:
-    EXPO_TOKEN: $EXPO_TOKEN
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: manual
