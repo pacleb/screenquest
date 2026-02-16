@@ -142,7 +142,7 @@ model Quest {
   recurrence      String   @default("one_time") @db.VarChar(20)
   recurrenceDays  Json?    @map("recurrence_days") @db.JsonB
   requiresProof   Boolean  @default(false) @map("requires_proof")
-  autoApprove     Boolean  @default(false) @map("auto_approve")
+  autoApprove     Boolean  @default(true) @map("auto_approve")
   bonusMultiplier Float    @default(1.0) @map("bonus_multiplier")
   isArchived      Boolean  @default(false) @map("is_archived")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()

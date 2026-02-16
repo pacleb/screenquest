@@ -544,7 +544,10 @@ export default function ParentDashboard() {
                       <Text style={styles.feedIcon}>{item.icon}</Text>
                     </View>
                     <View style={styles.feedContent}>
-                      <Text style={styles.feedMessage}>{item.message}</Text>
+                      <Text style={styles.feedMessage}>
+                        <Text style={styles.feedChildName}>{item.childName}</Text>
+                        {' '}{item.message}
+                      </Text>
                       <Text style={styles.feedTime}>
                         {formatTimeAgo(item.timestamp)}
                       </Text>
@@ -804,6 +807,12 @@ const styles = StyleSheet.create({
   },
   feedIcon: { fontSize: 16 },
   feedContent: { flex: 1 },
+  feedChildName: {
+    fontFamily: fonts.parent.semiBold,
+    fontSize: 13,
+    color: colors.textPrimary,
+    lineHeight: 18,
+  },
   feedMessage: {
     fontFamily: fonts.parent.regular,
     fontSize: 13,

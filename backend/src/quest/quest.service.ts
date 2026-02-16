@@ -42,7 +42,7 @@ export class QuestService {
         recurrence: dto.recurrence || 'one_time',
         recurrenceDays: dto.recurrenceDays ?? Prisma.JsonNull,
         requiresProof: dto.requiresProof || false,
-        autoApprove: dto.autoApprove || false,
+        autoApprove: dto.autoApprove ?? true,
         bonusMultiplier: dto.bonusMultiplier || 1.0,
         assignments: {
           create: dto.assignedChildIds.map((childId) => ({ childId })),
@@ -94,7 +94,7 @@ export class QuestService {
         recurrence: dto.recurrence || 'one_time',
         recurrenceDays: dto.recurrenceDays ?? Prisma.JsonNull,
         requiresProof: dto.requiresProof || false,
-        autoApprove: dto.autoApprove || false,
+        autoApprove: dto.autoApprove ?? true,
         assignments: {
           create: dto.assignedChildIds.map((childId) => ({ childId })),
         },

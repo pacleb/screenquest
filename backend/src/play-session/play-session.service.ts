@@ -123,7 +123,7 @@ export class PlaySessionService {
             data: { type: 'play_started', sessionId: session.id },
           },
           'play_state_changes',
-        );
+        ).catch((err) => this.logger.error(`Failed to notify parents of play start: ${err}`));
       }
 
       return this.enrichSession(session);
@@ -148,7 +148,7 @@ export class PlaySessionService {
             data: { type: 'play_request', sessionId: session.id },
           },
           'play_requests',
-        );
+        ).catch((err) => this.logger.error(`Failed to notify parents of play request: ${err}`));
       }
 
       return this.enrichSession(session);
@@ -201,7 +201,7 @@ export class PlaySessionService {
         data: { type: 'play_approved', sessionId },
       },
       'play_requests',
-    );
+    ).catch((err) => this.logger.error(`Failed to notify child of approval: ${err}`));
 
     return this.enrichSession(updated);
   }
@@ -242,7 +242,7 @@ export class PlaySessionService {
         data: { type: 'play_denied', sessionId },
       },
       'play_requests',
-    );
+    ).catch((err) => this.logger.error(`Failed to notify child of denial: ${err}`));
 
     return this.enrichSession(updated);
   }
@@ -275,7 +275,7 @@ export class PlaySessionService {
           data: { type: 'play_paused', sessionId },
         },
         'play_state_changes',
-      );
+      ).catch((err) => this.logger.error(`Failed to notify parents of pause: ${err}`));
     }
 
     return this.enrichSession(updated);
@@ -316,7 +316,7 @@ export class PlaySessionService {
           data: { type: 'play_resumed', sessionId },
         },
         'play_state_changes',
-      );
+      ).catch((err) => this.logger.error(`Failed to notify parents of resume: ${err}`));
     }
 
     return this.enrichSession(updated);
@@ -387,7 +387,7 @@ export class PlaySessionService {
           data: { type: 'play_stopped', sessionId },
         },
         'play_state_changes',
-      );
+      ).catch((err) => this.logger.error(`Failed to notify parents of stop: ${err}`));
     }
 
     return this.enrichSession(updated);
@@ -445,7 +445,7 @@ export class PlaySessionService {
         data: { type: 'play_ended_by_parent', sessionId },
       },
       'play_state_changes',
-    );
+    ).catch((err) => this.logger.error(`Failed to notify child of parent-end: ${err}`));
 
     return this.enrichSession(updated);
   }
@@ -618,7 +618,7 @@ export class PlaySessionService {
             data: { type: 'play_completed', sessionId: session.id },
           },
           'play_state_changes',
-        );
+        ).catch((err) => this.logger.error(`Failed to notify child of completion: ${err}`));
 
         // Notify parents
         if (session.child?.familyId) {
@@ -630,7 +630,7 @@ export class PlaySessionService {
               data: { type: 'play_completed', sessionId: session.id },
             },
             'play_state_changes',
-          );
+          ).catch((err) => this.logger.error(`Failed to notify parents of completion: ${err}`));
         }
       } else if (remaining <= 60 && remaining > 30) {
         // 1-minute warning
@@ -642,7 +642,7 @@ export class PlaySessionService {
             data: { type: 'play_warning_1min', sessionId: session.id },
           },
           'play_state_changes',
-        );
+        ).catch((err) => this.logger.error(`Failed to send 1-min warning: ${err}`));
       } else if (remaining <= 300 && remaining > 270) {
         // 5-minute warning
         this.notificationService.sendToUser(
@@ -653,7 +653,7 @@ export class PlaySessionService {
             data: { type: 'play_warning_5min', sessionId: session.id },
           },
           'play_state_changes',
-        );
+        ).catch((err) => this.logger.error(`Failed to send 5-min warning: ${err}`));
       }
     }
   }

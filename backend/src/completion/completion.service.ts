@@ -176,6 +176,13 @@ export class CompletionService {
       throw new BadRequestException('Completion has already been reviewed');
     }
 
+    // For non-stackable quests, reset expiresAt to end of TODAY (approval day)
+    // so the earned time doesn't silently expire if the parent reviews late.
+    const effectiveExpiresAt =
+      completion.stackingType === 'non_stackable'
+        ? this.getEndOfDay()
+        : completion.expiresAt;
+
     const updated = await this.prisma.questCompletion.update({
       where: { id: completionId },
       data: {
@@ -183,6 +190,7 @@ export class CompletionService {
         approvedByUserId: userId,
         parentNote: dto.parentNote || null,
         reviewedAt: new Date(),
+        expiresAt: effectiveExpiresAt,
       },
       include: {
         quest: { select: { id: true, name: true, icon: true } },
@@ -195,7 +203,7 @@ export class CompletionService {
       completion.childId,
       completion.earnedSeconds,
       completion.stackingType,
-      completion.expiresAt,
+      effectiveExpiresAt,
     );
 
     // Notify child of approval

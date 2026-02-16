@@ -102,7 +102,7 @@ export default function QuestEditScreen() {
   const [stackingType, setStackingType] = useState("stackable");
   const [recurrence, setRecurrence] = useState("one_time");
   const [requiresProof, setRequiresProof] = useState(false);
-  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(true);
   const [selectedChildIds, setSelectedChildIds] = useState<string[]>([]);
 
   // UI state

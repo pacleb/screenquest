@@ -87,6 +87,7 @@ function App() {
           });
           break;
         case "play_request":
+        case "play_started":
         case "play_approved":
         case "play_denied":
           // Navigate parent to Approvals tab for play requests too

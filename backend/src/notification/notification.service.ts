@@ -73,7 +73,10 @@ export class NotificationService implements OnModuleInit {
   async sendToUser(userId: string, payload: PushPayload, category?: string) {
     if (category) {
       const shouldSend = await this.checkPreference(userId, category);
-      if (!shouldSend) return;
+      if (!shouldSend) {
+        this.logger.debug(`Notification skipped for user ${userId} — category "${category}" opted out`);
+        return;
+      }
     }
 
     const tokens = await this.prisma.pushToken.findMany({
@@ -81,8 +84,12 @@ export class NotificationService implements OnModuleInit {
       select: { token: true },
     });
 
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+      this.logger.warn(`No push tokens registered for user ${userId} — notification "${payload.title}" not delivered`);
+      return;
+    }
 
+    this.logger.log(`Sending push "${payload.title}" to user ${userId} (${tokens.length} token(s))`);
     await this.sendFCM(
       tokens.map((t: { token: string }) => t.token),
       payload,
@@ -101,6 +108,12 @@ export class NotificationService implements OnModuleInit {
       select: { id: true },
     });
 
+    if (parents.length === 0) {
+      this.logger.warn(`No parents/guardians found in family ${familyId} — notification "${payload.title}" not delivered`);
+      return;
+    }
+
+    this.logger.log(`Sending "${payload.title}" to ${parents.length} parent(s) in family ${familyId}`);
     for (const parent of parents) {
       await this.sendToUser(parent.id, payload, category);
     }

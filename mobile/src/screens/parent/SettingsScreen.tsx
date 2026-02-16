@@ -344,7 +344,9 @@ export default function SettingsScreen() {
                       label="Start"
                       options={TIME_OPTIONS}
                       selectedValue={settings.allowedPlayHoursStart}
-                      onSelect={(v) => updateSetting("allowedPlayHoursStart", v)}
+                      onSelect={(v) =>
+                        updateSetting("allowedPlayHoursStart", v)
+                      }
                       placeholder="08:00"
                     />
                   </View>
@@ -367,7 +369,9 @@ export default function SettingsScreen() {
                       label="Daily Cap"
                       options={DAILY_CAP_OPTIONS}
                       selectedValue={settings.weekendDailyScreenTimeCap}
-                      onSelect={(v) => updateSetting("weekendDailyScreenTimeCap", v)}
+                      onSelect={(v) =>
+                        updateSetting("weekendDailyScreenTimeCap", v)
+                      }
                       placeholder="No limit"
                     />
                   </View>
@@ -378,7 +382,9 @@ export default function SettingsScreen() {
                       label="Start"
                       options={TIME_OPTIONS}
                       selectedValue={settings.weekendPlayHoursStart}
-                      onSelect={(v) => updateSetting("weekendPlayHoursStart", v)}
+                      onSelect={(v) =>
+                        updateSetting("weekendPlayHoursStart", v)
+                      }
                       placeholder="09:00"
                     />
                   </View>

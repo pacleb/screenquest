@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -32,9 +32,26 @@ export function DropdownPicker<T = string | number | null>({
   placeholder = "Select...",
 }: DropdownPickerProps<T>) {
   const [visible, setVisible] = useState(false);
+  const listRef = useRef<FlatList>(null);
 
   const selectedOption = options.find((o) => o.value === selectedValue);
   const displayText = selectedOption?.label ?? placeholder;
+
+  const selectedIndex = useMemo(
+    () => options.findIndex((o) => o.value === selectedValue),
+    [options, selectedValue],
+  );
+
+  const ITEM_HEIGHT = 44; // paddingVertical 12 * 2 + ~20 text height
+
+  const handleLayout = useCallback(() => {
+    if (selectedIndex > 0 && listRef.current) {
+      listRef.current.scrollToOffset({
+        offset: Math.max(0, selectedIndex * ITEM_HEIGHT - ITEM_HEIGHT * 2),
+        animated: false,
+      });
+    }
+  }, [selectedIndex]);
 
   return (
     <View>
@@ -66,8 +83,15 @@ export function DropdownPicker<T = string | number | null>({
           <View style={styles.sheet}>
             {label ? <Text style={styles.sheetTitle}>{label}</Text> : null}
             <FlatList
+              ref={listRef}
               data={options}
               keyExtractor={(_, i) => String(i)}
+              getItemLayout={(_, index) => ({
+                length: ITEM_HEIGHT,
+                offset: ITEM_HEIGHT * index,
+                index,
+              })}
+              onLayout={handleLayout}
               renderItem={({ item }) => {
                 const isSelected = item.value === selectedValue;
                 return (
@@ -87,11 +111,7 @@ export function DropdownPicker<T = string | number | null>({
                       {item.label}
                     </Text>
                     {isSelected && (
-                      <Icon
-                        name="checkmark"
-                        size={18}
-                        color={colors.primary}
-                      />
+                      <Icon name="checkmark" size={18} color={colors.primary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -168,7 +188,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    height: 44,
     paddingHorizontal: spacing.lg,
   },
   optionActive: {

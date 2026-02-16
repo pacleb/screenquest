@@ -329,13 +329,13 @@ export class ThemeService {
       this.prisma.playSession.findMany({
         where: {
           child: { familyId },
-          status: 'completed',
+          status: { in: ['active', 'paused', 'stopped', 'completed'] },
         },
         include: {
           child: { select: { id: true, name: true, avatarUrl: true } },
         },
-        orderBy: { endedAt: 'desc' },
-        take: limit,
+        orderBy: { createdAt: 'desc' },
+        take: limit * 2,
       }),
     ]);
 
@@ -390,19 +390,41 @@ export class ThemeService {
     }
 
     for (const p of playSessions) {
-      if (!p.endedAt || !p.startedAt) continue;
-      const mins = Math.round(
-        (p.endedAt.getTime() - p.startedAt.getTime()) / 60000,
-      );
-      feed.push({
-        type: 'play_session',
-        childId: p.child.id,
-        childName: p.child.name,
-        childAvatar: p.child.avatarUrl,
-        message: `played for ${mins} minutes`,
-        icon: '🎮',
-        timestamp: p.endedAt,
-      });
+      if (p.status === 'completed' || p.status === 'stopped') {
+        if (!p.endedAt || !p.startedAt) continue;
+        const mins = Math.round(
+          (p.endedAt.getTime() - p.startedAt.getTime()) / 60000,
+        );
+        feed.push({
+          type: 'play_session',
+          childId: p.child.id,
+          childName: p.child.name,
+          childAvatar: p.child.avatarUrl,
+          message: `played for ${mins} minutes`,
+          icon: '🎮',
+          timestamp: p.endedAt,
+        });
+      } else if (p.status === 'active') {
+        feed.push({
+          type: 'play_session',
+          childId: p.child.id,
+          childName: p.child.name,
+          childAvatar: p.child.avatarUrl,
+          message: 'started playing',
+          icon: '▶️',
+          timestamp: p.startedAt ?? p.createdAt,
+        });
+      } else if (p.status === 'paused') {
+        feed.push({
+          type: 'play_session',
+          childId: p.child.id,
+          childName: p.child.name,
+          childAvatar: p.child.avatarUrl,
+          message: 'paused play time',
+          icon: '⏸️',
+          timestamp: p.pausedAt ?? p.createdAt,
+        });
+      }
     }
 
     // Sort by timestamp desc and paginate
