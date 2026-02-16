@@ -76,8 +76,24 @@ model User {
   parentConsents       ParentalConsent[]     @relation("ParentConsent")
   deletionRequests     AccountDeletionRequest[] @relation("UserDeletionRequest")
   policyAcceptances    PolicyAcceptance[]    @relation("UserPolicyAcceptances")
+  inAppNotifications   InAppNotification[]
 
   @@map("users")
+}
+
+model InAppNotification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @db.VarChar(200)
+  body      String   @db.Text
+  type      String   @default("general") @db.VarChar(50)
+  data      Json     @db.JsonB
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("in_app_notifications")
 }
 
 model FamilyInvite {
