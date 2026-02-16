@@ -37,12 +37,12 @@ describe('Auth (E2E)', () => {
 
       await agent
         .post('/api/auth/register')
-        .send({ email: 'dup@test.com', password: 'pass1', name: 'First' })
+        .send({ email: 'dup@test.com', password: 'password123', name: 'First' })
         .expect(201);
 
       const res = await agent
         .post('/api/auth/register')
-        .send({ email: 'dup@test.com', password: 'pass2', name: 'Second' })
+        .send({ email: 'dup@test.com', password: 'password456', name: 'Second' })
         .expect(409);
 
       expect(res.body.statusCode).toBe(409);
@@ -70,7 +70,7 @@ describe('Auth (E2E)', () => {
       const res = await agent
         .post('/api/auth/login')
         .send({ email: 'login@test.com', password: 'password123' })
-        .expect(201);
+        .expect(200);
 
       expect(res.body.accessToken).toBeDefined();
       expect(res.body.user.email).toBe('login@test.com');
@@ -79,14 +79,14 @@ describe('Auth (E2E)', () => {
     it('returns 401 for wrong password', async () => {
       await registerAndLogin(app, {
         email: 'wrong@test.com',
-        password: 'correct',
+        password: 'correctpass',
         name: 'Wrong Pass',
       });
 
       const agent = getAgent(app);
       await agent
         .post('/api/auth/login')
-        .send({ email: 'wrong@test.com', password: 'incorrect' })
+        .send({ email: 'wrong@test.com', password: 'incorrect1' })
         .expect(401);
     });
 
@@ -111,7 +111,7 @@ describe('Auth (E2E)', () => {
       const res = await agent
         .post('/api/auth/refresh')
         .send({ refreshToken })
-        .expect(201);
+        .expect(200);
 
       expect(res.body.accessToken).toBeDefined();
       expect(res.body.refreshToken).toBeDefined();
@@ -130,7 +130,7 @@ describe('Auth (E2E)', () => {
       await agent
         .post('/api/auth/refresh')
         .send({ refreshToken })
-        .expect(201);
+        .expect(200);
 
       // Reuse the same token — should fail (rotation)
       await agent
@@ -179,7 +179,7 @@ describe('Auth (E2E)', () => {
         .post('/api/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ refreshToken })
-        .expect(201);
+        .expect(200);
 
       // Refresh token should no longer work
       await agent

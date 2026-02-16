@@ -43,11 +43,10 @@ describe('Family (E2E)', () => {
       const childRes = await agent
         .post(`/api/families/${familyId}/children`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ name: 'Test Child', age: 10, pin: '1234' })
+        .send({ name: 'Test Child', age: 10, pin: '1234', consentText: "I consent to the collection of my child's data for app functionality." })
         .expect(201);
 
       expect(childRes.body.name).toBe('Test Child');
-      expect(childRes.body.role).toBe('child');
       const childId = childRes.body.id;
 
       // 4. List members

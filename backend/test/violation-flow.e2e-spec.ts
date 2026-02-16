@@ -33,7 +33,7 @@ describe('Violation Flow (E2E)', () => {
     const childRes = await agent
       .post(`/api/families/${familyRes.body.id}/children`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ name: 'Bad Kid', age: 12, pin: '9999' })
+      .send({ name: 'Bad Kid', age: 12, pin: '9999', consentText: "I consent to the collection of my child's data for app functionality." })
       .expect(201);
 
     return {
@@ -50,9 +50,9 @@ describe('Violation Flow (E2E)', () => {
 
       // 1. Record violation
       const violationRes = await agent
-        .post(`/api/violations/${childId}`)
+        .post(`/api/children/${childId}/violations`)
         .set('Authorization', `Bearer ${parentToken}`)
-        .send({ reason: 'Used phone without permission' })
+        .send({ description: 'Used phone without permission' })
         .expect(201);
 
       expect(violationRes.body.penaltySeconds).toBe(7200); // 1st: 2h
@@ -61,7 +61,7 @@ describe('Violation Flow (E2E)', () => {
 
       // 2. Check time bank went negative
       const balanceRes = await agent
-        .get(`/api/time-bank/${childId}/balance`)
+        .get(`/api/children/${childId}/time-bank`)
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
@@ -69,15 +69,15 @@ describe('Violation Flow (E2E)', () => {
 
       // 3. Forgive violation
       const forgiveRes = await agent
-        .post(`/api/violations/${violationId}/forgive`)
+        .put(`/api/violations/${violationId}/forgive`)
         .set('Authorization', `Bearer ${parentToken}`)
-        .expect(201);
+        .expect(200);
 
       expect(forgiveRes.body.forgiven).toBe(true);
 
       // 4. Balance should be restored (back to 0 or close)
       const afterForgiveRes = await agent
-        .get(`/api/time-bank/${childId}/balance`)
+        .get(`/api/children/${childId}/time-bank`)
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
@@ -90,7 +90,7 @@ describe('Violation Flow (E2E)', () => {
 
       // 1st violation: 7200 sec (2h)
       const v1 = await agent
-        .post(`/api/violations/${childId}`)
+        .post(`/api/children/${childId}/violations`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);
@@ -98,7 +98,7 @@ describe('Violation Flow (E2E)', () => {
 
       // 2nd violation: 14400 sec (4h)
       const v2 = await agent
-        .post(`/api/violations/${childId}`)
+        .post(`/api/children/${childId}/violations`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);
@@ -106,7 +106,7 @@ describe('Violation Flow (E2E)', () => {
 
       // 3rd violation: 28800 sec (8h)
       const v3 = await agent
-        .post(`/api/violations/${childId}`)
+        .post(`/api/children/${childId}/violations`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
         .expect(201);

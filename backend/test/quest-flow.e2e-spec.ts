@@ -33,7 +33,7 @@ describe('Quest Flow (E2E)', () => {
     const childRes = await agent
       .post(`/api/families/${familyRes.body.id}/children`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ name: 'Quest Kid', age: 8, pin: '1234' })
+      .send({ name: 'Quest Kid', age: 8, pin: '1234', consentText: "I consent to the collection of my child's data for app functionality." })
       .expect(201);
 
     return {
@@ -59,6 +59,7 @@ describe('Quest Flow (E2E)', () => {
           rewardSeconds: 1800,
           stackingType: 'stackable',
           recurrence: 'daily',
+          autoApprove: false,
           assignedChildIds: [childId],
         })
         .expect(201);
@@ -70,13 +71,13 @@ describe('Quest Flow (E2E)', () => {
       const childLoginRes = await agent
         .post('/api/auth/child-login')
         .send({ familyCode, name: 'Quest Kid', pin: '1234' })
-        .expect(201);
+        .expect(200);
 
       const childToken = childLoginRes.body.accessToken;
 
       // 3. Child completes quest
       const completeRes = await agent
-        .post(`/api/completions/${questId}/complete`)
+        .post(`/api/children/${childId}/quests/${questId}/complete`)
         .set('Authorization', `Bearer ${childToken}`)
         .expect(201);
 
@@ -85,16 +86,16 @@ describe('Quest Flow (E2E)', () => {
 
       // 4. Parent approves
       const approveRes = await agent
-        .post(`/api/completions/${completionId}/approve`)
+        .put(`/api/completions/${completionId}/approve`)
         .set('Authorization', `Bearer ${parentToken}`)
         .send({})
-        .expect(201);
+        .expect(200);
 
       expect(approveRes.body.status).toBe('approved');
 
       // 5. Verify time was credited
       const balanceRes = await agent
-        .get(`/api/time-bank/${childId}/balance`)
+        .get(`/api/children/${childId}/time-bank`)
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 

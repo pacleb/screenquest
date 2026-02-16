@@ -33,7 +33,7 @@ describe('Play Flow (E2E)', () => {
     const childRes = await agent
       .post(`/api/families/${familyRes.body.id}/children`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ name: 'Play Kid', age: 10, pin: '5678' })
+      .send({ name: 'Play Kid', age: 10, pin: '5678', consentText: "I consent to the collection of my child's data for app functionality." })
       .expect(201);
 
     const childId = childRes.body.id;
@@ -58,13 +58,13 @@ describe('Play Flow (E2E)', () => {
     const childLoginRes = await agent
       .post('/api/auth/child-login')
       .send({ familyCode, name: 'Play Kid', pin: '5678' })
-      .expect(201);
+      .expect(200);
 
     const childToken = childLoginRes.body.accessToken;
 
     // Child completes quest to get time
     await agent
-      .post(`/api/completions/${questRes.body.id}/complete`)
+      .post(`/api/children/${childId}/quests/${questRes.body.id}/complete`)
       .set('Authorization', `Bearer ${childToken}`)
       .expect(201);
 
@@ -83,7 +83,7 @@ describe('Play Flow (E2E)', () => {
 
       // 1. Request play (notify_only = auto-start)
       const playRes = await agent
-        .post('/api/play-sessions/request')
+        .post(`/api/children/${childId}/play`)
         .set('Authorization', `Bearer ${childToken}`)
         .send({ requestedSeconds: 1800 })
         .expect(201);
@@ -95,13 +95,13 @@ describe('Play Flow (E2E)', () => {
       const stopRes = await agent
         .post(`/api/play-sessions/${sessionId}/stop`)
         .set('Authorization', `Bearer ${childToken}`)
-        .expect(201);
+        .expect(200);
 
       expect(stopRes.body.status).toBe('stopped');
 
       // 3. Balance should have been partially refunded
       const balanceRes = await agent
-        .get(`/api/time-bank/${childId}/balance`)
+        .get(`/api/children/${childId}/time-bank`)
         .set('Authorization', `Bearer ${parentToken}`)
         .expect(200);
 
@@ -126,17 +126,17 @@ describe('Play Flow (E2E)', () => {
       const childRes = await agent
         .post(`/api/families/${familyRes.body.id}/children`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ name: 'Broke Kid', age: 8, pin: '0000' })
+        .send({ name: 'Broke Kid', age: 8, pin: '0000', consentText: "I consent to the collection of my child's data for app functionality." })
         .expect(201);
 
       const childLoginRes = await agent
         .post('/api/auth/child-login')
         .send({ familyCode: familyRes.body.familyCode, name: 'Broke Kid', pin: '0000' })
-        .expect(201);
+        .expect(200);
 
       // Try to play with no balance
       await agent
-        .post('/api/play-sessions/request')
+        .post(`/api/children/${childRes.body.id}/play`)
         .set('Authorization', `Bearer ${childLoginRes.body.accessToken}`)
         .send({ requestedSeconds: 900 })
         .expect(400);

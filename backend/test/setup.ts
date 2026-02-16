@@ -58,6 +58,7 @@ export async function cleanDatabase(app: INestApplication) {
       "time_banks",
       "refresh_tokens",
       "push_tokens",
+      "in_app_notifications",
       "notification_preferences",
       "child_progress",
       "child_achievements",
