@@ -76,7 +76,7 @@ export default function AddChildScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="add-child-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
@@ -98,6 +98,7 @@ export default function AddChildScreen() {
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
+                testID="add-child-name-input"
               />
             </View>
 
@@ -108,6 +109,7 @@ export default function AddChildScreen() {
               accessibilityRole="checkbox"
               accessibilityState={{ checked: consentChecked }}
               accessibilityLabel="COPPA parental consent"
+              testID="add-child-consent-checkbox"
             >
               <Text style={styles.consentCheckbox}>
                 {consentChecked ? "☑" : "☐"}
@@ -122,6 +124,7 @@ export default function AddChildScreen() {
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleAddChild}
               disabled={loading}
+              testID="add-child-submit-btn"
             >
               <Text style={styles.buttonText}>
                 {loading ? "Adding..." : "Add Child"}
@@ -133,6 +136,7 @@ export default function AddChildScreen() {
               onPress={() =>
                 navigation.reset({ index: 0, routes: [{ name: "App" }] })
               }
+              testID="add-child-skip-btn"
             >
               <Text style={styles.skipButtonText}>Skip for now</Text>
             </TouchableOpacity>

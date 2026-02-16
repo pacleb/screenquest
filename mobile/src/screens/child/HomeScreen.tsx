@@ -112,6 +112,7 @@ export default function ChildHome() {
 
   return (
     <SafeAreaView
+      testID="child-home-screen"
       style={[styles.container, { backgroundColor: themeColors.background }]}
     >
       <ScrollView
@@ -190,6 +191,7 @@ export default function ChildHome() {
 
             {/* Play Button */}
             <TouchableOpacity
+              testID="child-play-btn"
               style={[
                 styles.playButton,
                 {

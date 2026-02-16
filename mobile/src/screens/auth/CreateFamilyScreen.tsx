@@ -83,7 +83,7 @@ export default function CreateFamilyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="create-family-screen">
       <View style={styles.content}>
         <Text style={styles.emoji}>👨‍👩‍👧‍👦</Text>
         <Text style={styles.title}>Set Up Your Family</Text>
@@ -92,6 +92,7 @@ export default function CreateFamilyScreen() {
           <TouchableOpacity
             style={[styles.modeTab, mode === "create" && styles.modeTabActive]}
             onPress={() => setMode("create")}
+            testID="family-create-tab"
           >
             <Text
               style={[
@@ -105,6 +106,7 @@ export default function CreateFamilyScreen() {
           <TouchableOpacity
             style={[styles.modeTab, mode === "join" && styles.modeTabActive]}
             onPress={() => setMode("join")}
+            testID="family-join-tab"
           >
             <Text
               style={[
@@ -127,6 +129,7 @@ export default function CreateFamilyScreen() {
                 value={familyName}
                 onChangeText={setFamilyName}
                 autoCapitalize="words"
+                testID="family-name-input"
               />
             </View>
 
@@ -134,6 +137,7 @@ export default function CreateFamilyScreen() {
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleCreate}
               disabled={loading}
+              testID="family-create-btn"
             >
               <Text style={styles.buttonText}>
                 {loading ? "Creating..." : "Create Family"}
@@ -151,6 +155,7 @@ export default function CreateFamilyScreen() {
                 onChangeText={setFamilyCode}
                 autoCapitalize="characters"
                 maxLength={8}
+                testID="family-code-input"
               />
             </View>
 
@@ -158,6 +163,7 @@ export default function CreateFamilyScreen() {
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleJoin}
               disabled={loading}
+              testID="family-join-btn"
             >
               <Text style={styles.buttonText}>
                 {loading ? "Joining..." : "Join Family"}

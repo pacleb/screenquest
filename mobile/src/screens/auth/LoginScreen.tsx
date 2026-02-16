@@ -75,7 +75,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="login-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
@@ -92,6 +92,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.modeTab, !isChildMode && styles.modeTabActive]}
               onPress={() => setIsChildMode(false)}
+              testID="login-parent-tab"
             >
               <Text
                 style={[
@@ -105,6 +106,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.modeTab, isChildMode && styles.modeTabActive]}
               onPress={() => setIsChildMode(true)}
+              testID="login-child-tab"
             >
               <Text
                 style={[
@@ -128,6 +130,7 @@ export default function LoginScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  testID="login-email-input"
                 />
               </View>
 
@@ -139,6 +142,7 @@ export default function LoginScreen() {
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
+                  testID="login-password-input"
                 />
               </View>
 
@@ -153,6 +157,7 @@ export default function LoginScreen() {
                 style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleParentLogin}
                 disabled={loading}
+                testID="login-submit-btn"
               >
                 <Text style={styles.buttonText}>
                   {loading ? "Signing In..." : "Sign In"}
@@ -169,6 +174,7 @@ export default function LoginScreen() {
                   value={familyCode}
                   onChangeText={setFamilyCode}
                   autoCapitalize="characters"
+                  testID="login-family-code-input"
                 />
               </View>
 
@@ -180,6 +186,7 @@ export default function LoginScreen() {
                   value={childName}
                   onChangeText={setChildName}
                   autoCapitalize="words"
+                  testID="login-child-name-input"
                 />
               </View>
 
@@ -187,6 +194,7 @@ export default function LoginScreen() {
                 style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleChildLogin}
                 disabled={loading}
+                testID="login-submit-btn"
               >
                 <Text style={styles.buttonText}>
                   {loading ? "Signing In..." : "Sign In"}
@@ -198,7 +206,7 @@ export default function LoginScreen() {
           {!isChildMode && (
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <TouchableOpacity onPress={() => navigation.navigate("Register")} testID="login-signup-link">
                 <Text style={styles.footerLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

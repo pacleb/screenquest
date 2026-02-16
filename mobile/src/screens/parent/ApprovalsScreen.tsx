@@ -108,7 +108,7 @@ export default function ApprovalsScreen() {
   const pendingCount = completions.filter((c) => c.status === "pending").length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="parent-approvals-screen">
       <View style={styles.headerRow}>
         <Text style={styles.title}>Approvals</Text>
         {filter === "pending" && pendingCount > 0 && (
@@ -292,6 +292,7 @@ export default function ApprovalsScreen() {
                 <TouchableOpacity
                   style={styles.denyBtn}
                   onPress={() => setDenyingId(completion.id)}
+                  testID="approval-deny-btn"
                 >
                   <Icon
                     name="close-circle-outline"
@@ -304,6 +305,7 @@ export default function ApprovalsScreen() {
                   style={styles.approveBtn}
                   onPress={() => handleApprove(completion)}
                   disabled={processing === completion.id}
+                  testID="approval-approve-btn"
                 >
                   {processing === completion.id ? (
                     <ActivityIndicator size="small" color="#FFF" />

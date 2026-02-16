@@ -50,7 +50,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="register-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
@@ -74,6 +74,7 @@ export default function RegisterScreen() {
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
+                testID="register-name-input"
               />
             </View>
 
@@ -86,6 +87,7 @@ export default function RegisterScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                testID="register-email-input"
               />
             </View>
 
@@ -97,6 +99,7 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                testID="register-password-input"
               />
             </View>
 
@@ -104,6 +107,7 @@ export default function RegisterScreen() {
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={loading}
+              testID="register-submit-btn"
             >
               <Text style={styles.buttonText}>
                 {loading ? "Creating Account..." : "Create Account"}
@@ -113,7 +117,7 @@ export default function RegisterScreen() {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")} testID="register-login-link">
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>

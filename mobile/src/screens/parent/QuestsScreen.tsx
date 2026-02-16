@@ -165,7 +165,7 @@ export default function QuestsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="parent-quests-screen">
       <View style={styles.headerRow}>
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>
@@ -211,7 +211,7 @@ export default function QuestsScreen() {
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View style={styles.empty} testID="quests-empty-state">
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyText}>No quests yet</Text>
             <Text style={styles.emptyHint}>
@@ -234,6 +234,7 @@ export default function QuestsScreen() {
         onPress={() => navigation.navigate("QuestEdit", {})}
         accessibilityLabel="Create new quest"
         accessibilityRole="button"
+        testID="quests-create-btn"
       >
         <Icon name="add" size={28} color="#FFF" />
       </TouchableOpacity>

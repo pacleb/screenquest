@@ -173,7 +173,7 @@ export default function ConsequencesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="parent-consequences-screen">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -226,7 +226,7 @@ export default function ConsequencesScreen() {
               <View style={styles.statusCard}>
                 <View style={styles.statusRow}>
                   <View style={styles.statusItem}>
-                    <Text style={styles.statusValue}>
+                    <Text style={styles.statusValue} testID="consequences-violation-count">
                       {status.currentCount}
                     </Text>
                     <Text style={styles.statusLabel}>Violations</Text>
@@ -254,6 +254,7 @@ export default function ConsequencesScreen() {
                 <TouchableOpacity
                   style={styles.recordBtn}
                   onPress={() => setShowDescInput(true)}
+                  testID="consequences-record-btn"
                 >
                   <Icon name="warning-outline" size={20} color="#FFF" />
                   <Text style={styles.recordBtnText}>Record Violation</Text>

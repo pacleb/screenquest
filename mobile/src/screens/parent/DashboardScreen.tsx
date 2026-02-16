@@ -151,7 +151,7 @@ export default function ParentDashboard() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="parent-dashboard-screen">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -166,7 +166,7 @@ export default function ParentDashboard() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={styles.greeting}>
+        <Text style={styles.greeting} testID="dashboard-greeting">
           {getGreeting()}, {user?.name}
         </Text>
 
@@ -436,7 +436,7 @@ export default function ParentDashboard() {
             )}
 
             {/* Quick Stats */}
-            <View style={styles.statsRow}>
+            <View style={styles.statsRow} testID="dashboard-stats-row">
               <Card style={styles.statCard}>
                 <Text style={styles.statValue}>{childrenData.length}</Text>
                 <Text style={styles.statLabel}>Children</Text>

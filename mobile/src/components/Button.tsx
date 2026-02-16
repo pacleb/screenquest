@@ -22,6 +22,7 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   childFont?: boolean;
+  testID?: string;
 }
 
 const variantStyles: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
@@ -49,6 +50,7 @@ export function Button({
   style,
   textStyle,
   childFont,
+  testID,
 }: ButtonProps) {
   const v = variantStyles[variant];
   const s = sizeStyles[size];
@@ -69,6 +71,7 @@ export function Button({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator size="small" color={v.text} />

@@ -273,7 +273,7 @@ export default function ChildPlay() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="child-play-screen" style={styles.container}>
         <ActivityIndicator
           size="large"
           color={colors.primary}
@@ -286,7 +286,7 @@ export default function ChildPlay() {
   // --- Completed State ---
   if (screenState === "completed") {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="child-play-screen" style={styles.container}>
         <ConfettiOverlay
           active={showConfetti}
           onComplete={() => setShowConfetti(false)}
@@ -299,7 +299,7 @@ export default function ChildPlay() {
             height={140}
             style={{ marginBottom: spacing.sm }}
           />
-          <Text style={styles.completedTitle}>Great job!</Text>
+          <Text testID="play-completed-title" style={styles.completedTitle}>Great job!</Text>
           <Text style={styles.completedSubtitle}>
             You managed your screen time well!
           </Text>
@@ -317,7 +317,7 @@ export default function ChildPlay() {
   // --- Waiting for Approval ---
   if (screenState === "waiting") {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="child-play-screen" style={styles.container}>
         <View style={styles.centered}>
           <Text style={styles.waitingEmoji}>⏳</Text>
           <ActivityIndicator
@@ -325,7 +325,7 @@ export default function ChildPlay() {
             color={colors.accent}
             style={{ marginVertical: spacing.md }}
           />
-          <Text style={styles.waitingTitle}>Request Sent!</Text>
+          <Text testID="play-waiting-title" style={styles.waitingTitle}>Request Sent!</Text>
           <Text style={styles.waitingSubtitle}>
             Waiting for your parent to approve{" "}
             {formatTimeLabel(balance.totalSeconds)}...
@@ -341,7 +341,7 @@ export default function ChildPlay() {
   // --- Active / Paused Timer ---
   if (screenState === "active" || screenState === "paused") {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="child-play-screen" style={styles.container}>
         <View style={styles.timerContainer}>
           {screenState === "paused" && (
             <View style={styles.pausedBanner}>
@@ -360,6 +360,7 @@ export default function ChildPlay() {
           <View style={styles.controlRow}>
             {screenState === "active" ? (
               <TouchableOpacity
+                testID="play-pause-btn"
                 style={styles.pauseBtn}
                 onPress={handlePause}
                 disabled={actionLoading}
@@ -371,6 +372,7 @@ export default function ChildPlay() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
+                testID="play-resume-btn"
                 style={styles.resumeBtn}
                 onPress={handleResume}
                 disabled={actionLoading}
@@ -383,6 +385,7 @@ export default function ChildPlay() {
             )}
 
             <TouchableOpacity
+              testID="play-stop-btn"
               style={styles.stopBtn}
               onPress={handleStop}
               disabled={actionLoading}
@@ -401,14 +404,14 @@ export default function ChildPlay() {
 
   // --- Time Selector (default) ---
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView testID="child-play-screen" style={styles.container}>
       <View style={styles.selectContainer}>
         <Text style={styles.selectTitle}>Play Time</Text>
 
         {/* Balance display */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Available</Text>
-          <Text style={styles.balanceValue}>
+          <Text testID="play-balance-value" style={styles.balanceValue}>
             {formatTimeLabel(balance.totalSeconds)}
           </Text>
           {balance.nonStackableSeconds > 0 && (
@@ -420,6 +423,7 @@ export default function ChildPlay() {
 
         {/* Start button */}
         <Button
+          testID="play-start-btn"
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}

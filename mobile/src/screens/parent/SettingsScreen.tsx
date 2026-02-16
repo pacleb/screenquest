@@ -24,6 +24,7 @@ import { privacyService, DeletionStatus } from "../../services/privacy";
 import { SoundEffects } from "../../services/soundEffects";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Badge, DropdownPicker, DropdownOption } from "../../components";
+import { ParentalGate } from "../../components/ParentalGate";
 
 /* ── Daily-cap dropdown options (values in seconds) ── */
 const DAILY_CAP_OPTIONS: DropdownOption<number | null>[] = [
@@ -73,6 +74,19 @@ export default function SettingsScreen() {
   );
   const [deletionLoading, setDeletionLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(SoundEffects.isEnabled());
+  const [gateVisible, setGateVisible] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  const openExternalLink = useCallback((url: string) => {
+    setPendingUrl(url);
+    setGateVisible(true);
+  }, []);
+
+  const handleGatePass = useCallback(() => {
+    setGateVisible(false);
+    if (pendingUrl) Linking.openURL(pendingUrl);
+    setPendingUrl(null);
+  }, [pendingUrl]);
 
   // Fetch children + leaderboard setting
   useEffect(() => {
@@ -135,7 +149,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="parent-settings-screen">
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Settings</Text>
 
@@ -209,11 +223,11 @@ export default function SettingsScreen() {
               style={styles.subButton}
               onPress={() => {
                 if (Platform.OS === "ios") {
-                  Linking.openURL(
+                  openExternalLink(
                     "https://apps.apple.com/account/subscriptions",
                   );
                 } else {
-                  Linking.openURL(
+                  openExternalLink(
                     "https://play.google.com/store/account/subscriptions",
                   );
                 }
@@ -494,7 +508,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => Linking.openURL("https://screenquest.app/privacy")}
+            onPress={() => openExternalLink("https://screenquest.app/privacy")}
           >
             <Icon
               name="document-text-outline"
@@ -510,7 +524,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => Linking.openURL("https://screenquest.app/terms")}
+            onPress={() => openExternalLink("https://screenquest.app/terms")}
           >
             <Icon
               name="shield-checkmark-outline"
@@ -618,12 +632,21 @@ export default function SettingsScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout} testID="settings-logout-btn">
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <ParentalGate
+        visible={gateVisible}
+        onPass={handleGatePass}
+        onDismiss={() => {
+          setGateVisible(false);
+          setPendingUrl(null);
+        }}
+      />
     </SafeAreaView>
   );
 }

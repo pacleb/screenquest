@@ -20,7 +20,11 @@
     "test:cov": "pnpm --filter backend test:cov",
     "lint": "pnpm --filter backend exec tsc --noEmit",
     "android": "pnpm --filter mobile android",
-    "ios": "pnpm --filter mobile ios"
+    "ios": "pnpm --filter mobile ios",
+    "mobile:e2e:ios:build": "pnpm --filter mobile e2e:ios:build",
+    "mobile:e2e:ios": "pnpm --filter mobile e2e:ios",
+    "mobile:e2e:android:build": "pnpm --filter mobile e2e:android:build",
+    "mobile:e2e:android": "pnpm --filter mobile e2e:android"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -32,6 +36,7 @@
       "@prisma/client",
       "@prisma/engines",
       "bcrypt",
+      "detox",
       "prisma",
       "sharp",
       "@sentry/cli"

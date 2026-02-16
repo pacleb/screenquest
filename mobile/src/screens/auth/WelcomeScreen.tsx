@@ -57,7 +57,7 @@ export default function WelcomeScreen() {
   const isLastSlide = currentIndex === ONBOARDING_SLIDES.length - 1;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="welcome-screen">
       <View style={styles.content}>
         {/* Carousel */}
         <FlatList
@@ -109,6 +109,7 @@ export default function WelcomeScreen() {
             }}
             size="lg"
             style={styles.primaryBtn}
+            testID="welcome-next-btn"
           />
 
           <Button
@@ -116,6 +117,7 @@ export default function WelcomeScreen() {
             onPress={() => navigation.navigate("Login")}
             variant="ghost"
             size="md"
+            testID="welcome-login-btn"
           />
 
           <Button
@@ -125,6 +127,7 @@ export default function WelcomeScreen() {
             size="sm"
             textStyle={{ color: colors.purple }}
             childFont
+            testID="welcome-child-btn"
           />
         </View>
       </View>

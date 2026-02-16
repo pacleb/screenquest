@@ -183,7 +183,7 @@ export default function QuestDetailScreen() {
   // Success state
   if (completed) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="quest-detail-screen" style={styles.container}>
         <ConfettiOverlay
           active={showConfetti}
           onComplete={() => setShowConfetti(false)}
@@ -200,7 +200,7 @@ export default function QuestDetailScreen() {
           ) : (
             <Text style={styles.successEmoji}>⏳</Text>
           )}
-          <Text style={styles.successTitle}>
+          <Text testID="quest-success-title" style={styles.successTitle}>
             {resultStatus === "approved" ? "Awesome!" : "Submitted!"}
           </Text>
           <Text style={styles.successMessage}>
@@ -222,7 +222,7 @@ export default function QuestDetailScreen() {
   const isStackable = quest.stackingType === "stackable";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView testID="quest-detail-screen" style={styles.container}>
       {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity
@@ -249,7 +249,7 @@ export default function QuestDetailScreen() {
           >
             <Text style={styles.questIcon}>{quest.icon}</Text>
           </View>
-          <Text style={styles.questName}>{quest.name}</Text>
+          <Text testID="quest-detail-name" style={styles.questName}>{quest.name}</Text>
           {quest.description && (
             <Text style={styles.questDesc}>{quest.description}</Text>
           )}
@@ -366,6 +366,7 @@ export default function QuestDetailScreen() {
       {quest.availableToComplete && (
         <View style={styles.bottomBar}>
           <Button
+            testID="quest-complete-btn"
             title="I Did It!"
             onPress={handleComplete}
             loading={submitting}
