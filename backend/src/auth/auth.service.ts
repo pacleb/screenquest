@@ -168,6 +168,32 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  async resendVerification(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.email) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (user.emailVerified) {
+      return { message: 'Email is already verified' };
+    }
+
+    const verificationToken = nanoid(32);
+    await this.redis.set(
+      `email-verify:${verificationToken}`,
+      user.id,
+      'EX',
+      86400, // 24 hours
+    );
+
+    await this.mail.sendVerificationEmail(user.email, user.name, verificationToken);
+
+    return { message: 'Verification email sent' };
+  }
+
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },

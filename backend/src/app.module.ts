@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -67,6 +68,12 @@ import { MetricsModule } from './common/metrics/metrics.module';
     SubscriptionModule,
     GamificationModule,
     PrivacyModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: EmailVerifiedGuard,
+    },
   ],
 })
 export class AppModule {}

@@ -50,6 +50,9 @@ export const authService = {
   verifyEmail: (token: string) =>
     api.post('/auth/verify-email', { token }).then((r) => r.data),
 
+  resendVerification: () =>
+    api.post('/auth/resend-verification').then((r) => r.data),
+
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }).then((r) => r.data),
 

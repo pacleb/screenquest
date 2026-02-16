@@ -32,7 +32,7 @@ export class MailService {
   }
 
   async sendVerificationEmail(email: string, name: string, token: string) {
-    const verifyUrl = `${this.appUrl}/api/auth/verify-email?token=${token}`;
+    const verifyUrl = `${this.appUrl}/api/auth/verify-email-redirect?token=${token}`;
     const html = verifyEmailTemplate({ name, verifyUrl });
 
     return this.send({

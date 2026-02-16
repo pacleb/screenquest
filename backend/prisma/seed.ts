@@ -47,16 +47,32 @@ async function main() {
   const existingCount = await prisma.questLibrary.count();
   if (existingCount > 0) {
     console.log(`Quest library already has ${existingCount} entries, skipping seed`);
-    return;
+  } else {
+    await prisma.questLibrary.createMany({
+      data: questLibraryData.map((q) => ({
+        ...q,
+        isPublished: true,
+      })),
+    });
+    console.log(`Seeded ${questLibraryData.length} quest library entries`);
   }
 
-  await prisma.questLibrary.createMany({
-    data: questLibraryData.map((q) => ({
-      ...q,
-      isPublished: true,
-    })),
-  });
-  console.log(`Seeded ${questLibraryData.length} quest library entries`);
+  // Seed quest categories
+  const existingCategories = await prisma.questCategory.count();
+  if (existingCategories === 0) {
+    const categories = [
+      { name: 'Chores', icon: '🧹', sortOrder: 1 },
+      { name: 'Studying', icon: '📝', sortOrder: 2 },
+      { name: 'Reading', icon: '📚', sortOrder: 3 },
+      { name: 'Exercise', icon: '🏃', sortOrder: 4 },
+      { name: 'Creative', icon: '🎨', sortOrder: 5 },
+      { name: 'Helping Others', icon: '🤝', sortOrder: 6 },
+    ];
+    await prisma.questCategory.createMany({ data: categories });
+    console.log(`Seeded ${categories.length} quest categories`);
+  } else {
+    console.log(`Quest categories already have ${existingCategories} entries, skipping`);
+  }
 }
 
 main()

@@ -6,7 +6,7 @@
  * When Firebase is configured, FCM push will also work alongside this.
  */
 import { AppState, Platform } from 'react-native';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, AuthorizationStatus } from '@notifee/react-native';
 import api from './api';
 
 export interface InAppNotification {
@@ -26,6 +26,29 @@ const SEEN_NOTIFICATION_IDS = new Set<string>();
 let pollerInterval: ReturnType<typeof setInterval> | null = null;
 let currentUserId: string | null = null;
 let channelCreated = false;
+let permissionGranted = false;
+
+/**
+ * Request notification permission from the OS (required on iOS for local notifications).
+ */
+async function requestPermission(): Promise<boolean> {
+  try {
+    const settings = await notifee.requestPermission();
+    const granted =
+      settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+      settings.authorizationStatus === AuthorizationStatus.PROVISIONAL;
+
+    if (__DEV__) {
+      console.log(
+        `[NotifPoller] Permission ${granted ? 'GRANTED' : 'DENIED'} (status=${settings.authorizationStatus})`,
+      );
+    }
+    return granted;
+  } catch (err) {
+    if (__DEV__) console.warn('[NotifPoller] Permission request failed:', err);
+    return false;
+  }
+}
 
 async function ensureChannel() {
   if (channelCreated) return;
@@ -41,7 +64,12 @@ async function ensureChannel() {
 }
 
 async function showLocalNotification(notification: InAppNotification) {
+  if (!permissionGranted) return;
   await ensureChannel();
+
+  if (__DEV__) {
+    console.log(`[NotifPoller] Showing local notification: "${notification.title}"`);
+  }
 
   await notifee.displayNotification({
     title: notification.title,
@@ -58,19 +86,30 @@ async function showLocalNotification(notification: InAppNotification) {
     },
     ios: {
       sound: 'default',
+      // Critical: show banner + badge + sound even when app is in the foreground
+      foregroundPresentationOptions: {
+        alert: true,
+        badge: true,
+        sound: true,
+      },
     },
   });
 }
 
 async function pollForNotifications() {
   if (!currentUserId) return;
-  // Don't poll when app is in background (saves battery)
-  if (AppState.currentState !== 'active') return;
 
   try {
     const { data: notifications } = await api.get<InAppNotification[]>(
       `/users/${currentUserId}/notifications/unread`,
     );
+
+    if (__DEV__ && notifications.length > 0) {
+      const newCount = notifications.filter((n) => !SEEN_NOTIFICATION_IDS.has(n.id)).length;
+      if (newCount > 0) {
+        console.log(`[NotifPoller] ${newCount} NEW notification(s) to display`);
+      }
+    }
 
     for (const notification of notifications) {
       if (!SEEN_NOTIFICATION_IDS.has(notification.id)) {
@@ -78,8 +117,10 @@ async function pollForNotifications() {
         await showLocalNotification(notification);
       }
     }
-  } catch {
-    // Silent — network errors are expected when offline
+  } catch (err) {
+    if (__DEV__) {
+      console.warn('[NotifPoller] Poll failed:', (err as any)?.message || err);
+    }
   }
 }
 
@@ -87,25 +128,37 @@ async function pollForNotifications() {
  * Start polling for notifications for the given user.
  * Call this after the user logs in.
  */
-export function startNotificationPoller(userId: string) {
+export async function startNotificationPoller(userId: string) {
   stopNotificationPoller();
   currentUserId = userId;
   SEEN_NOTIFICATION_IDS.clear();
 
-  // Do an initial fetch to seed the seen set (don't display existing ones)
-  api
-    .get<InAppNotification[]>(`/users/${userId}/notifications/unread`)
-    .then(({ data }) => {
-      for (const n of data) {
-        SEEN_NOTIFICATION_IDS.add(n.id);
-      }
-    })
-    .catch(() => {});
+  // Request notification permission (critical on iOS)
+  permissionGranted = await requestPermission();
 
-  // Start polling after a short delay (let initial fetch finish first)
-  setTimeout(() => {
-    pollerInterval = setInterval(pollForNotifications, POLL_INTERVAL_MS);
-  }, 3000);
+  if (__DEV__) {
+    console.log(`[NotifPoller] Starting for user ${userId} (permission=${permissionGranted})`);
+  }
+
+  // Do an initial fetch to seed the seen set (don't display existing ones)
+  try {
+    const { data } = await api.get<InAppNotification[]>(
+      `/users/${userId}/notifications/unread`,
+    );
+    for (const n of data) {
+      SEEN_NOTIFICATION_IDS.add(n.id);
+    }
+    if (__DEV__) {
+      console.log(`[NotifPoller] Seeded ${data.length} existing notification(s)`);
+    }
+  } catch (err) {
+    if (__DEV__) {
+      console.warn('[NotifPoller] Initial seed failed:', (err as any)?.message || err);
+    }
+  }
+
+  // Start polling
+  pollerInterval = setInterval(pollForNotifications, POLL_INTERVAL_MS);
 }
 
 /**
