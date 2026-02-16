@@ -58,9 +58,6 @@ RUN cd backend && npx prisma generate
 # Create uploads dir (for local dev fallback)
 RUN mkdir -p backend/uploads/proofs && chown -R appuser:appuser backend/uploads
 
-# Give appuser write access to prisma dirs (needed for prisma migrate deploy)
-RUN chown -R appuser:appuser /app/node_modules/.prisma
-
 WORKDIR /app/backend
 
 USER appuser
