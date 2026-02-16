@@ -1,6 +1,7 @@
 # ---- Build stage ----
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
@@ -27,15 +28,16 @@ RUN cp -r $(find /app/node_modules/.pnpm -path "*/.prisma/client" -type d | head
 RUN cd backend && pnpm build
 
 # ---- Production stage ----
-FROM node:22-alpine AS production
+FROM node:22-slim AS production
 
 LABEL org.opencontainers.image.source="https://gitlab.com/screenquest/screenquest"
 LABEL org.opencontainers.image.description="ScreenQuest Backend API"
 
+RUN apt-get update && apt-get install -y openssl wget && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Create non-root user
-RUN addgroup -g 1001 -S appuser && adduser -S appuser -u 1001
+RUN addgroup --gid 1001 appuser && adduser --uid 1001 --gid 1001 --disabled-password --gecos '' appuser
 
 WORKDIR /app
 
@@ -56,8 +58,8 @@ COPY --from=builder /app/prisma-client node_modules/.prisma/client
 # Create uploads dir (for local dev fallback)
 RUN mkdir -p backend/uploads/proofs && chown -R appuser:appuser backend/uploads
 
-# Give appuser write access to prisma engines (needed for prisma migrate deploy)
-RUN chown -R appuser:appuser /app/node_modules/.prisma /app/node_modules/.pnpm/@prisma+engines*/
+# Give appuser write access to prisma dirs (needed for prisma migrate deploy)
+RUN chown -R appuser:appuser /app/node_modules/.prisma
 
 WORKDIR /app/backend
 
