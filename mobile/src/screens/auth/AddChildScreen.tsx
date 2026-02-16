@@ -113,8 +113,8 @@ export default function AddChildScreen() {
                 {consentChecked ? "☑" : "☐"}
               </Text>
               <Text style={styles.consentText}>
-                I consent to ScreenQuest collecting my child's data as
-                described in the Privacy Policy (COPPA).
+                I consent to ScreenQuest collecting my child's data as described
+                in the Privacy Policy (COPPA).
               </Text>
             </TouchableOpacity>
 
