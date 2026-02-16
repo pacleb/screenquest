@@ -56,8 +56,8 @@ COPY --from=builder /app/prisma-client node_modules/.prisma/client
 # Create uploads dir (for local dev fallback)
 RUN mkdir -p backend/uploads/proofs && chown -R appuser:appuser backend/uploads
 
-# Give appuser ownership of node_modules (needed for prisma migrate deploy)
-RUN chown -R appuser:appuser /app/node_modules
+# Give appuser write access to prisma engines (needed for prisma migrate deploy)
+RUN chown -R appuser:appuser /app/node_modules/.prisma /app/node_modules/.pnpm/@prisma+engines*/
 
 WORKDIR /app/backend
 
