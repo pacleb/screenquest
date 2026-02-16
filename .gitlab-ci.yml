@@ -182,14 +182,10 @@ sentry:backend:
   stage: build
   extends: .node-setup
   script:
-    - echo "TOKEN_LENGTH=${#SENTRY_AUTH_TOKEN}"
-    - echo "TOKEN_PREFIX=$(echo $SENTRY_AUTH_TOKEN | cut -c1-6)"
-    - echo "TOKEN_IS_FILE=$(test -f "$SENTRY_AUTH_TOKEN" && echo YES || echo NO)"
-    - npx @sentry/cli info
     - pnpm --filter backend exec prisma generate
     - pnpm --filter backend build
     - npx @sentry/cli releases new "$CI_COMMIT_SHORT_SHA"
-    - npx @sentry/cli releases files "$CI_COMMIT_SHORT_SHA" upload-sourcemaps backend/dist/
+    - npx @sentry/cli sourcemaps upload --release="$CI_COMMIT_SHORT_SHA" backend/dist/
     - npx @sentry/cli releases finalize "$CI_COMMIT_SHORT_SHA"
   variables:
     SENTRY_ORG: pacleb
