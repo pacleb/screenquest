@@ -78,7 +78,8 @@ export default function FamilyDetailPage() {
     );
   }
 
-  const guardians = family.members.filter((m) => m.role === "guardian");
+  const isGuardian = (role: string) => role === "guardian" || role === "parent";
+  const guardians = family.members.filter((m) => isGuardian(m.role));
   const children = family.members.filter((m) => m.role === "child");
 
   return (
@@ -140,7 +141,9 @@ export default function FamilyDetailPage() {
           )}
           {family.subscriptionPeriod && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Billing Period</p>
+              <p className="text-sm font-medium text-gray-500">
+                Billing Period
+              </p>
               <p className="mt-1 text-gray-900 capitalize">
                 {family.subscriptionPeriod}
               </p>
@@ -176,21 +179,17 @@ export default function FamilyDetailPage() {
                   <td className="py-3 font-medium text-gray-900">
                     {member.name}
                   </td>
-                  <td className="py-3 text-gray-600">
-                    {member.email || "—"}
-                  </td>
+                  <td className="py-3 text-gray-600">{member.email || "—"}</td>
                   <td className="py-3">
                     <Badge
                       variant={
-                        member.role === "guardian" ? "default" : "secondary"
+                        isGuardian(member.role) ? "default" : "secondary"
                       }
                     >
-                      {member.role === "guardian" ? "Guardian" : "Child"}
+                      {isGuardian(member.role) ? "Guardian" : "Child"}
                     </Badge>
                   </td>
-                  <td className="py-3 text-gray-600">
-                    {member.age ?? "—"}
-                  </td>
+                  <td className="py-3 text-gray-600">{member.age ?? "—"}</td>
                   <td className="py-3">
                     <Badge variant="secondary">{member.authProvider}</Badge>
                   </td>
