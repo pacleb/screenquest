@@ -178,6 +178,23 @@ docker-build-dry:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
+sentry:backend:
+  stage: build
+  extends: .node-setup
+  script:
+    - pnpm --filter backend exec prisma generate
+    - pnpm --filter backend build
+    - npx @sentry/cli releases new "$CI_COMMIT_SHORT_SHA"
+    - npx @sentry/cli releases files "$CI_COMMIT_SHORT_SHA" upload-sourcemaps backend/dist/
+    - npx @sentry/cli releases finalize "$CI_COMMIT_SHORT_SHA"
+  variables:
+    SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
+    SENTRY_ORG: $SENTRY_ORG
+    SENTRY_PROJECT: $SENTRY_PROJECT_BACKEND
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
 # ──────────────────────────────────────────────
 # Deploy Stage
 # ──────────────────────────────────────────────
