@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
-    repo: https://gitlab.com/your-username/screenquest  # Update this
+    repo: https://gitlab.com/pacleb/screenquest
     branch: main
     healthCheckPath: /api/health
     envVars:
