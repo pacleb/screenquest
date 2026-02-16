@@ -52,8 +52,8 @@ RUN pnpm install --frozen-lockfile --prod --filter @screenquest/backend...
 COPY --from=builder /app/backend/dist backend/dist
 COPY backend/prisma backend/prisma
 
-# Copy generated Prisma client from builder into .prisma/client (where @prisma/client expects it)
-COPY --from=builder /app/prisma-client node_modules/.prisma/client
+# Generate Prisma client in production stage (ensures correct engine binaries for this OS)
+RUN cd backend && npx prisma generate
 
 # Create uploads dir (for local dev fallback)
 RUN mkdir -p backend/uploads/proofs && chown -R appuser:appuser backend/uploads
