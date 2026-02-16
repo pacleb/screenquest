@@ -40,3 +40,7 @@ mobile/android/
 
 # Misc
 *.tsbuildinfo
+
+# Large logo source files
+docs/logos/Gemini_Generated_Image_*
+docs/logos/screenquest2.png
