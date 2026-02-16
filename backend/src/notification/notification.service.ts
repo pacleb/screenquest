@@ -68,7 +68,8 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
-   * Send notification to a specific user
+   * Send notification to a specific user.
+   * Always persists as an in-app notification; also sends FCM push if tokens exist.
    */
   async sendToUser(userId: string, payload: PushPayload, category?: string) {
     if (category) {
@@ -79,13 +80,25 @@ export class NotificationService implements OnModuleInit {
       }
     }
 
+    // Always persist in-app notification
+    await this.prisma.inAppNotification.create({
+      data: {
+        userId,
+        title: payload.title,
+        body: payload.body,
+        type: payload.data?.type || 'general',
+        data: payload.data || {},
+      },
+    });
+
+    // Also try FCM push
     const tokens = await this.prisma.pushToken.findMany({
       where: { userId },
       select: { token: true },
     });
 
     if (tokens.length === 0) {
-      this.logger.warn(`No push tokens registered for user ${userId} — notification "${payload.title}" not delivered`);
+      this.logger.debug(`No push tokens for user ${userId} — in-app notification stored, no FCM sent`);
       return;
     }
 
@@ -165,6 +178,60 @@ export class NotificationService implements OnModuleInit {
       where: { userId },
       create: { userId, ...updates },
       update: { ...updates, updatedAt: new Date() },
+    });
+  }
+
+  // --- In-App Notification methods ---
+
+  /**
+   * Get recent unread notifications for a user (for polling)
+   */
+  async getUnread(userId: string, limit = 20) {
+    return this.prisma.inAppNotification.findMany({
+      where: { userId, read: false },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  /**
+   * Get all notifications for a user (paginated)
+   */
+  async getAll(userId: string, limit = 50, cursor?: string) {
+    return this.prisma.inAppNotification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+  }
+
+  /**
+   * Mark specific notifications as read
+   */
+  async markAsRead(userId: string, notificationIds: string[]) {
+    await this.prisma.inAppNotification.updateMany({
+      where: { id: { in: notificationIds }, userId },
+      data: { read: true },
+    });
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllAsRead(userId: string) {
+    await this.prisma.inAppNotification.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    });
+  }
+
+  /**
+   * Get unread count for a user
+   */
+  async getUnreadCount(userId: string): Promise<number> {
+    return this.prisma.inAppNotification.count({
+      where: { userId, read: false },
     });
   }
 

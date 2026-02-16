@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   Request,
   UseGuards,
   ForbiddenException,
@@ -62,5 +63,58 @@ export class NotificationController {
       throw new ForbiddenException('Access denied');
     }
     return this.notificationService.updatePreferences(userId, dto);
+  }
+
+  // --- In-App Notification endpoints ---
+
+  @Get('users/:userId/notifications')
+  async getNotifications(
+    @Param('userId') userId: string,
+    @Query('cursor') cursor: string | undefined,
+    @Request() req: any,
+  ) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.notificationService.getAll(userId, 50, cursor);
+  }
+
+  @Get('users/:userId/notifications/unread')
+  async getUnread(@Param('userId') userId: string, @Request() req: any) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.notificationService.getUnread(userId);
+  }
+
+  @Get('users/:userId/notifications/unread-count')
+  async getUnreadCount(@Param('userId') userId: string, @Request() req: any) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    const count = await this.notificationService.getUnreadCount(userId);
+    return { count };
+  }
+
+  @Post('users/:userId/notifications/mark-read')
+  async markAsRead(
+    @Param('userId') userId: string,
+    @Body() dto: { notificationIds: string[] },
+    @Request() req: any,
+  ) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    await this.notificationService.markAsRead(userId, dto.notificationIds);
+    return { success: true };
+  }
+
+  @Post('users/:userId/notifications/mark-all-read')
+  async markAllAsRead(@Param('userId') userId: string, @Request() req: any) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    await this.notificationService.markAllAsRead(userId);
+    return { success: true };
   }
 }

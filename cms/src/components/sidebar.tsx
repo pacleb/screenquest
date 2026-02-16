@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BookOpen, FolderTree, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FolderTree, Home, Users, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from './auth-provider';
 
@@ -10,6 +10,8 @@ const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/quests', label: 'Quests', icon: BookOpen },
   { href: '/categories', label: 'Categories', icon: FolderTree },
+  { href: '/families', label: 'Families', icon: Home },
+  { href: '/users', label: 'Users', icon: Users },
 ];
 
 export function Sidebar() {

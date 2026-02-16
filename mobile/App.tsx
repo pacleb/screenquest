@@ -19,6 +19,10 @@ import {
 } from "./src/services/notification";
 import type { NotificationData } from "./src/services/notification";
 import { subscriptionService } from "./src/services/subscription";
+import {
+  startNotificationPoller,
+  stopNotificationPoller,
+} from "./src/services/notificationPoller";
 import { colors, ThemeProvider } from "./src/theme";
 import { ErrorBoundary, OfflineBanner, ToastProvider } from "./src/components";
 import { RootNavigator } from "./src/navigation/RootNavigator";
@@ -59,7 +63,8 @@ if (SENTRY_DSN) {
 }
 
 function App() {
-  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+  const navigationRef =
+    useRef<NavigationContainerRef<RootStackParamList>>(null);
   const initialize = useAuthStore((s) => s.initialize);
   const user = useAuthStore((s) => s.user);
   const [fontsReady, setFontsReady] = useState(true); // Fonts are linked natively now
@@ -126,6 +131,7 @@ function App() {
     if (user?.id) {
       notificationService.registerPushToken(user.id);
       unsubscribeTokenRefresh = setupTokenRefreshListener(user.id);
+      startNotificationPoller(user.id);
       if (user.role === "child") {
         fetchThemes();
       }
@@ -137,6 +143,7 @@ function App() {
 
     return () => {
       unsubscribeTokenRefresh?.();
+      stopNotificationPoller();
     };
   }, [user?.id, user?.familyId]);
 

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Upload, Plus, FolderTree } from 'lucide-react';
+import { BookOpen, Upload, Plus, FolderTree, Home, Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-interface Stats {
+interface QuestStats {
   totalQuests: number;
   publishedQuests: number;
   draftQuests: number;
@@ -16,14 +16,24 @@ interface Stats {
   topUsed: { id: string; name: string; icon: string; category: string; usageCount: number }[];
 }
 
+interface FamilyStats {
+  totalFamilies: number;
+  premiumFamilies: number;
+  freeFamilies: number;
+  totalGuardians: number;
+  totalChildren: number;
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [questStats, setQuestStats] = useState<QuestStats | null>(null);
+  const [familyStats, setFamilyStats] = useState<FamilyStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get('/admin/quest-library/stats')
-      .then((res) => setStats(res.data))
+    Promise.all([
+      api.get('/admin/quest-library/stats').then((res) => setQuestStats(res.data)),
+      api.get('/admin/families/stats').then((res) => setFamilyStats(res.data)),
+    ])
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -40,27 +50,53 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500">Quest Library overview</p>
+        <p className="text-sm text-gray-500">Platform overview</p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <p className="text-sm font-medium text-gray-500">Total Quests</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">{stats?.totalQuests ?? 0}</p>
-        </Card>
-        <Card>
-          <p className="text-sm font-medium text-gray-500">Published</p>
-          <p className="mt-1 text-3xl font-bold text-green-600">{stats?.publishedQuests ?? 0}</p>
-        </Card>
-        <Card>
-          <p className="text-sm font-medium text-gray-500">Drafts</p>
-          <p className="mt-1 text-3xl font-bold text-yellow-600">{stats?.draftQuests ?? 0}</p>
-        </Card>
-        <Card>
-          <p className="text-sm font-medium text-gray-500">Categories</p>
-          <p className="mt-1 text-3xl font-bold text-brand-600">{stats?.totalCategories ?? 0}</p>
-        </Card>
+      {/* Family & User Stats */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Families & Users</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Total Families</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900">{familyStats?.totalFamilies ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Premium</p>
+            <p className="mt-1 text-3xl font-bold text-green-600">{familyStats?.premiumFamilies ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Guardians</p>
+            <p className="mt-1 text-3xl font-bold text-brand-600">{familyStats?.totalGuardians ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Children</p>
+            <p className="mt-1 text-3xl font-bold text-brand-600">{familyStats?.totalChildren ?? 0}</p>
+          </Card>
+        </div>
+      </div>
+
+      {/* Quest Stats */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Quest Library</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Total Quests</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900">{questStats?.totalQuests ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Published</p>
+            <p className="mt-1 text-3xl font-bold text-green-600">{questStats?.publishedQuests ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Drafts</p>
+            <p className="mt-1 text-3xl font-bold text-yellow-600">{questStats?.draftQuests ?? 0}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-gray-500">Categories</p>
+            <p className="mt-1 text-3xl font-bold text-brand-600">{questStats?.totalCategories ?? 0}</p>
+          </Card>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -77,22 +113,22 @@ export default function DashboardPage() {
             Import CSV
           </Button>
         </Link>
-        <Link href="/quests">
+        <Link href="/families">
           <Button variant="outline">
-            <BookOpen className="h-4 w-4" />
-            View All Quests
+            <Home className="h-4 w-4" />
+            View Families
           </Button>
         </Link>
-        <Link href="/categories">
+        <Link href="/users">
           <Button variant="outline">
-            <FolderTree className="h-4 w-4" />
-            Manage Categories
+            <Users className="h-4 w-4" />
+            View Users
           </Button>
         </Link>
       </div>
 
       {/* Top Used Quests */}
-      {stats?.topUsed && stats.topUsed.length > 0 && (
+      {questStats?.topUsed && questStats.topUsed.length > 0 && (
         <Card>
           <CardTitle>Most Used Library Quests</CardTitle>
           <div className="mt-4 overflow-x-auto">
@@ -105,7 +141,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {stats.topUsed.map((q) => (
+                {questStats.topUsed.map((q) => (
                   <tr key={q.id}>
                     <td className="py-3">
                       <span className="mr-2">{q.icon}</span>
