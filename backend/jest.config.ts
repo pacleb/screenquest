@@ -10,6 +10,7 @@ const config: Config = {
       moduleFileExtensions: ['js', 'json', 'ts'],
       testEnvironment: 'node',
       collectCoverageFrom: ['**/*.service.ts', '**/constants/*.ts'],
+      coverageReporters: ['text', 'text-summary', 'lcov', 'cobertura'],
       coverageDirectory: '../coverage/unit',
     },
     {
