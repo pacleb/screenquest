@@ -97,6 +97,7 @@ interface StreakCalendarProps {
 
 /**
  * GitHub-style heatmap calendar showing quest completion days.
+ * Days are aligned to their actual weekday columns (Mon–Sun).
  */
 export function StreakCalendar({
   days,
@@ -105,11 +106,26 @@ export function StreakCalendar({
 }: StreakCalendarProps) {
   if (!days || days.length === 0) return null;
 
-  // Show most recent 28 days in a 7-col grid
   const recent = days.slice(-28);
-  const rows: StreakDay[][] = [];
-  for (let i = 0; i < recent.length; i += 7) {
-    rows.push(recent.slice(i, i + 7));
+
+  // Mon=0, Tue=1, … Sun=6  (matches the M T W T F S S header)
+  const getDow = (dateStr: string): number => {
+    const d = new Date(dateStr + "T12:00:00"); // noon avoids DST edge cases
+    return (d.getDay() + 6) % 7;
+  };
+
+  // Pad the start so the first day lands in its correct weekday column
+  const firstDow = getDow(recent[0].date);
+  const padded: (StreakDay | null)[] = [];
+  for (let i = 0; i < firstDow; i++) padded.push(null);
+  padded.push(...recent);
+
+  // Build rows of 7, padding the last row if needed
+  const rows: (StreakDay | null)[][] = [];
+  for (let i = 0; i < padded.length; i += 7) {
+    const row = padded.slice(i, i + 7);
+    while (row.length < 7) row.push(null);
+    rows.push(row);
   }
 
   const completedCount = recent.filter((d) => d.completed).length;
@@ -135,31 +151,26 @@ export function StreakCalendar({
       </View>
       {rows.map((row, rowIdx) => (
         <View key={rowIdx} style={styles.calendarRow}>
-          {row.map((day) => (
+          {row.map((cell, colIdx) => (
             <View
-              key={day.date}
+              key={cell ? cell.date : `empty-${rowIdx}-${colIdx}`}
               style={[
                 styles.calendarCell,
                 {
-                  backgroundColor: day.completed
-                    ? streakColor
-                    : colors.border + "60",
+                  backgroundColor: cell
+                    ? cell.completed
+                      ? streakColor
+                      : colors.border + "60"
+                    : "transparent",
                 },
               ]}
-              accessibilityLabel={`${day.date}: ${day.completed ? "completed" : "not completed"}`}
+              accessibilityLabel={
+                cell
+                  ? `${cell.date}: ${cell.completed ? "completed" : "not completed"}`
+                  : undefined
+              }
             />
           ))}
-          {/* Fill empty cells */}
-          {row.length < 7 &&
-            Array.from({ length: 7 - row.length }).map((_, i) => (
-              <View
-                key={`empty-${i}`}
-                style={[
-                  styles.calendarCell,
-                  { backgroundColor: "transparent" },
-                ]}
-              />
-            ))}
         </View>
       ))}
     </View>

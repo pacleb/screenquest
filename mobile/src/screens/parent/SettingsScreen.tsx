@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
-  TextInput,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,7 +23,36 @@ import { gamificationService } from "../../services/gamification";
 import { privacyService, DeletionStatus } from "../../services/privacy";
 import { SoundEffects } from "../../services/soundEffects";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
-import { Badge } from "../../components";
+import { Badge, DropdownPicker, DropdownOption } from "../../components";
+
+/* ── Daily-cap dropdown options (values in seconds) ── */
+const DAILY_CAP_OPTIONS: DropdownOption<number | null>[] = [
+  { label: "No limit", value: null },
+  { label: "30 min", value: 1800 },
+  { label: "1 hr", value: 3600 },
+  { label: "1 hr 30 min", value: 5400 },
+  { label: "2 hr", value: 7200 },
+  { label: "2 hr 30 min", value: 9000 },
+  { label: "3 hr", value: 10800 },
+  { label: "3 hr 30 min", value: 12600 },
+  { label: "4 hr", value: 14400 },
+  { label: "5 hr", value: 18000 },
+  { label: "6 hr", value: 21600 },
+];
+
+/* ── Time-of-day dropdown options ("HH:mm") ── */
+const TIME_OPTIONS: DropdownOption<string>[] = Array.from(
+  { length: 48 },
+  (_, i) => {
+    const h = Math.floor(i / 2);
+    const m = i % 2 === 0 ? "00" : "30";
+    const value = `${String(h).padStart(2, "0")}:${m}`;
+    const ampm = h < 12 ? "AM" : "PM";
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const label = `${h12}:${m} ${ampm}`;
+    return { label, value };
+  },
+);
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
@@ -301,49 +329,32 @@ export default function SettingsScreen() {
                 <Text style={styles.subsectionTitle}>Weekdays</Text>
                 <View style={styles.timeRow}>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>Daily Cap (min)</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={
-                        settings.dailyScreenTimeCap != null
-                          ? String(settings.dailyScreenTimeCap)
-                          : ""
-                      }
-                      onChangeText={(t) =>
-                        updateSetting(
-                          "dailyScreenTimeCap",
-                          t ? parseInt(t, 10) || 0 : null,
-                        )
-                      }
-                      keyboardType="number-pad"
+                    <DropdownPicker
+                      label="Daily Cap"
+                      options={DAILY_CAP_OPTIONS}
+                      selectedValue={settings.dailyScreenTimeCap}
+                      onSelect={(v) => updateSetting("dailyScreenTimeCap", v)}
                       placeholder="No limit"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                 </View>
                 <View style={styles.timeRow}>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>Start</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={settings.allowedPlayHoursStart}
-                      onChangeText={(t) =>
-                        updateSetting("allowedPlayHoursStart", t)
-                      }
+                    <DropdownPicker
+                      label="Start"
+                      options={TIME_OPTIONS}
+                      selectedValue={settings.allowedPlayHoursStart}
+                      onSelect={(v) => updateSetting("allowedPlayHoursStart", v)}
                       placeholder="08:00"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>End</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={settings.allowedPlayHoursEnd}
-                      onChangeText={(t) =>
-                        updateSetting("allowedPlayHoursEnd", t)
-                      }
+                    <DropdownPicker
+                      label="End"
+                      options={TIME_OPTIONS}
+                      selectedValue={settings.allowedPlayHoursEnd}
+                      onSelect={(v) => updateSetting("allowedPlayHoursEnd", v)}
                       placeholder="20:00"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                 </View>
@@ -352,49 +363,32 @@ export default function SettingsScreen() {
                 <Text style={styles.subsectionTitle}>Weekends</Text>
                 <View style={styles.timeRow}>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>Daily Cap (min)</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={
-                        settings.weekendDailyScreenTimeCap != null
-                          ? String(settings.weekendDailyScreenTimeCap)
-                          : ""
-                      }
-                      onChangeText={(t) =>
-                        updateSetting(
-                          "weekendDailyScreenTimeCap",
-                          t ? parseInt(t, 10) || 0 : null,
-                        )
-                      }
-                      keyboardType="number-pad"
+                    <DropdownPicker
+                      label="Daily Cap"
+                      options={DAILY_CAP_OPTIONS}
+                      selectedValue={settings.weekendDailyScreenTimeCap}
+                      onSelect={(v) => updateSetting("weekendDailyScreenTimeCap", v)}
                       placeholder="No limit"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                 </View>
                 <View style={styles.timeRow}>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>Start</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={settings.weekendPlayHoursStart}
-                      onChangeText={(t) =>
-                        updateSetting("weekendPlayHoursStart", t)
-                      }
+                    <DropdownPicker
+                      label="Start"
+                      options={TIME_OPTIONS}
+                      selectedValue={settings.weekendPlayHoursStart}
+                      onSelect={(v) => updateSetting("weekendPlayHoursStart", v)}
                       placeholder="09:00"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                   <View style={styles.timeField}>
-                    <Text style={styles.timeLabel}>End</Text>
-                    <TextInput
-                      style={styles.timeInput}
-                      value={settings.weekendPlayHoursEnd}
-                      onChangeText={(t) =>
-                        updateSetting("weekendPlayHoursEnd", t)
-                      }
+                    <DropdownPicker
+                      label="End"
+                      options={TIME_OPTIONS}
+                      selectedValue={settings.weekendPlayHoursEnd}
+                      onSelect={(v) => updateSetting("weekendPlayHoursEnd", v)}
                       placeholder="21:00"
-                      placeholderTextColor={colors.textSecondary}
                     />
                   </View>
                 </View>
