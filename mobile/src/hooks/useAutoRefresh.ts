@@ -77,10 +77,7 @@ export function useAutoRefresh({
     return () => {
       unsubscribers.forEach((unsub) => unsub());
     };
-    // Events array identity — stringify for stable dep
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events.join(',')]);
-
+  }, [events.join(',')]);  // events array identity — stringify for stable dep
   // ── 3. Resume refresh when app comes back to foreground ──────────────
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {

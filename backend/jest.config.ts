@@ -1,6 +1,8 @@
 import type { Config } from 'jest';
 
 const config: Config = {
+  coverageReporters: ['text', 'text-summary', 'lcov', 'cobertura'],
+  coverageDirectory: 'coverage/unit',
   projects: [
     {
       displayName: 'unit',
@@ -10,8 +12,6 @@ const config: Config = {
       moduleFileExtensions: ['js', 'json', 'ts'],
       testEnvironment: 'node',
       collectCoverageFrom: ['**/*.service.ts', '**/constants/*.ts'],
-      coverageReporters: ['text', 'text-summary', 'lcov', 'cobertura'],
-      coverageDirectory: '../coverage/unit',
     },
     {
       displayName: 'e2e',

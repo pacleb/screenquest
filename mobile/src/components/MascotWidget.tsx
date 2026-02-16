@@ -88,7 +88,9 @@ export function MascotWidget(props: MascotWidgetProps) {
   const { colors: themeColors } = useTheme();
   const [showTip, setShowTip] = useState(false);
   const [tapCount, setTapCount] = useState(0);
-  const tapTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
+  const tapTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const mascotSize = size === "sm" ? 40 : size === "md" ? 56 : 72;
   const fontSize = size === "sm" ? 24 : size === "md" ? 36 : 48;

@@ -33,6 +33,7 @@ export const createMockPrisma = () => ({
   childAchievement: createModelMock(),
   avatarItem: createModelMock(),
   childEquippedItem: createModelMock(),
+  inAppNotification: createModelMock(),
   notificationPreference: createModelMock(),
   parentalConsent: createModelMock(),
   accountDeletionRequest: createModelMock(),
