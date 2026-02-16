@@ -18,6 +18,7 @@ import { completionService, QuestCompletion } from "../../services/completion";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
+import { formatTimeLabel } from "../../utils/formatTime";
 
 type FilterTab = "pending" | "approved" | "denied" | "all";
 
@@ -223,7 +224,7 @@ export default function ApprovalsScreen() {
               <View style={styles.questInfo}>
                 <Text style={styles.questName}>{completion.quest.name}</Text>
                 <Text style={styles.questReward}>
-                  {completion.earnedSeconds} min
+                  {formatTimeLabel(completion.earnedSeconds)}
                   {completion.stackingType === "non_stackable"
                     ? " (Today Only)"
                     : ""}

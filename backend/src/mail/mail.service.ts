@@ -43,7 +43,7 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(email: string, name: string, token: string) {
-    const resetUrl = `screenquest://reset-password?token=${token}`;
+    const resetUrl = `${this.appUrl}/api/auth/reset-password-redirect?token=${token}`;
     const html = passwordResetTemplate({ name, resetUrl });
 
     return this.send({

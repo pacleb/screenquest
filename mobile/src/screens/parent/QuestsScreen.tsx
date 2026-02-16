@@ -16,6 +16,7 @@ import { questService, Quest } from "../../services/quest";
 import { colors, spacing, borderRadius } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
+import { formatTimeLabel } from "../../utils/formatTime";
 
 const CATEGORY_LABELS: Record<string, string> = {
   chores: "Chores",
@@ -135,7 +136,9 @@ export default function QuestsScreen() {
       <View style={styles.questInfo}>
         <Text style={styles.questName}>{quest.name}</Text>
         <View style={styles.questMeta}>
-          <Text style={styles.questReward}>{quest.rewardSeconds} min</Text>
+          <Text style={styles.questReward}>
+            {formatTimeLabel(quest.rewardSeconds)}
+          </Text>
           <View
             style={[
               styles.badge,

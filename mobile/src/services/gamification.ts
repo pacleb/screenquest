@@ -55,15 +55,17 @@ export const gamificationService = {
   getProgress: (childId: string) =>
     api.get<ChildProgressData>(`/children/${childId}/gamification/progress`).then((r) => r.data),
 
-  getChildWeeklyStats: (childId: string) =>
-    api.get<{
+  getChildWeeklyStats: (childId: string) => {
+    const tzOffset = -(new Date().getTimezoneOffset());
+    return api.get<{
       questsCompleted: number;
       secondsEarned: number;
       xpEarned: number;
       totalPlaySeconds: number;
       currentStreak: number;
       dailyStats: { date: string; quests: number; seconds: number; xp: number; playSeconds: number }[];
-    }>(`/children/${childId}/gamification/weekly-stats`).then((r) => r.data),
+    }>(`/children/${childId}/gamification/weekly-stats`, { params: { tzOffset } }).then((r) => r.data);
+  },
 
   getAchievements: (childId: string) =>
     api.get<AchievementData[]>(`/children/${childId}/gamification/achievements`).then((r) => r.data),

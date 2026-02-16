@@ -62,8 +62,10 @@ export const themeService = {
   setActiveTheme: (themeId: string) =>
     api.put('/gamification/themes/active', { themeId }).then((r) => r.data),
 
-  getWeeklyStats: () =>
-    api.get<WeeklyStatsData>('/gamification/progress/weekly-stats').then((r) => r.data),
+  getWeeklyStats: () => {
+    const tzOffset = -(new Date().getTimezoneOffset());
+    return api.get<WeeklyStatsData>('/gamification/progress/weekly-stats', { params: { tzOffset } }).then((r) => r.data);
+  },
 
   getActivityFeed: (familyId: string, page = 1, limit = 20) =>
     api

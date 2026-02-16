@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   FlatList,
   Dimensions,
@@ -14,21 +15,26 @@ import { Button } from "../../components";
 
 const { width } = Dimensions.get("window");
 
+const screenquestLogo = require("../../../assets/screenquest-logo.png");
+
 const ONBOARDING_SLIDES = [
   {
-    emoji: "🏰",
+    emoji: null,
+    useLogo: true,
     title: "Welcome to ScreenQuest!",
     description:
       "Help your kids earn screen time through real-world quests and adventures!",
   },
   {
     emoji: "🎯",
+    useLogo: false,
     title: "Parents Set Quests",
     description:
       "Create custom quests like chores, homework, or exercise. Kids complete them to earn time!",
   },
   {
     emoji: "🚀",
+    useLogo: false,
     title: "Everyone Wins!",
     description:
       "Kids learn responsibility. Parents stay in control. Get started in just 2 minutes!",
@@ -65,7 +71,15 @@ export default function WelcomeScreen() {
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
           renderItem={({ item }) => (
             <View style={[styles.slide, { width }]}>
-              <Text style={styles.emoji}>{item.emoji}</Text>
+              {item.useLogo ? (
+                <Image
+                  source={screenquestLogo}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text style={styles.emoji}>{item.emoji}</Text>
+              )}
               <Text style={styles.slideTitle}>{item.title}</Text>
               <Text style={styles.slideDesc}>{item.description}</Text>
             </View>
@@ -126,6 +140,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: spacing.xl,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: spacing.lg,
   },
   emoji: {
     fontSize: 96,

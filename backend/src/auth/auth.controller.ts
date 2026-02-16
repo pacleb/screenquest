@@ -3,11 +3,14 @@ import {
   Post,
   Body,
   Get,
+  Query,
+  Res,
   UseGuards,
   Request,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -74,6 +77,42 @@ export class AuthController {
   @ApiOperation({ summary: 'Request password reset email' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
+  }
+
+  @Get('reset-password-redirect')
+  @ApiOperation({ summary: 'Redirect to app deep link for password reset' })
+  async resetPasswordRedirect(
+    @Query('token') token: string,
+    @Res() res: Response,
+  ) {
+    const deepLink = `screenquest://reset-password?token=${encodeURIComponent(token)}`;
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ScreenQuest – Reset Password</title>
+        <style>
+          body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f4f4f7; }
+          .card { background: white; border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+          h1 { color: #333; font-size: 22px; }
+          p { color: #666; line-height: 1.6; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #6C63FF, #4ECDC4); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>🏰 ScreenQuest</h1>
+          <p>Opening the app to reset your password...</p>
+          <a class="btn" href="${deepLink}">Open ScreenQuest</a>
+          <p style="margin-top:24px;font-size:13px;color:#999;">If the app didn't open automatically, tap the button above.</p>
+        </div>
+        <script>window.location.href = "${deepLink}";</script>
+      </body>
+      </html>
+    `);
   }
 
   @Post('reset-password')

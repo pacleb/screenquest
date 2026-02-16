@@ -35,8 +35,11 @@ export class ChildGamificationController {
 
   @Get('weekly-stats')
   @ApiOperation({ summary: 'Weekly quest/XP/time stats for a child (parent-accessible)' })
-  async getChildWeeklyStats(@Param('childId') childId: string) {
-    return this.themeService.getWeeklyStats(childId);
+  async getChildWeeklyStats(
+    @Param('childId') childId: string,
+    @Query('tzOffset') tzOffset?: string,
+  ) {
+    return this.themeService.getWeeklyStats(childId, tzOffset ? parseInt(tzOffset, 10) : 0);
   }
 
   @Get('achievements')
@@ -165,8 +168,8 @@ export class StreakStatsController {
 
   @Get('progress/weekly-stats')
   @ApiOperation({ summary: 'Weekly quest/XP/time stats for charts' })
-  async getWeeklyStats(@Request() req: any) {
-    return this.themeService.getWeeklyStats(req.user.id);
+  async getWeeklyStats(@Request() req: any, @Query('tzOffset') tzOffset?: string) {
+    return this.themeService.getWeeklyStats(req.user.id, tzOffset ? parseInt(tzOffset, 10) : 0);
   }
 }
 

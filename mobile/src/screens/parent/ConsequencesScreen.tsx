@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { familyService, FamilyMember } from "../../services/family";
+import { formatTimeShort } from "../../utils/formatTime";
 import {
   violationService,
   Violation,
@@ -135,10 +136,10 @@ export default function ConsequencesScreen() {
   };
 
   const handleForgive = (violation: Violation) => {
-    const hours = violation.penaltySeconds / 60;
+    const timeStr = formatTimeShort(violation.penaltySeconds);
     Alert.alert(
       "Forgive Violation",
-      `This will refund ${hours}h back to the Time Bank. Are you sure?`,
+      `This will refund ${timeStr} back to the Time Bank. Are you sure?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -345,7 +346,7 @@ export default function ConsequencesScreen() {
                   </View>
 
                   <Text style={styles.penaltyText}>
-                    -{violation.penaltySeconds / 60}h penalty
+                    -{formatTimeShort(violation.penaltySeconds)} penalty
                   </Text>
 
                   {violation.description && (

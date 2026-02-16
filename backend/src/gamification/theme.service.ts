@@ -208,7 +208,12 @@ export class ThemeService {
 
   // ─── Weekly Stats ───────────────────────────────────────────
 
-  async getWeeklyStats(childId: string) {
+  /**
+   * @param tzOffset Client timezone offset in minutes (e.g. 480 for GMT+8).
+   *                  Positive = east of UTC, matching -(new Date().getTimezoneOffset()).
+   */
+  async getWeeklyStats(childId: string, tzOffset = 0) {
+    const offsetMs = tzOffset * 60 * 1000;
     const now = new Date();
     const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
 
@@ -248,19 +253,25 @@ export class ThemeService {
       return sum + Math.round((s.endedAt.getTime() - s.startedAt!.getTime()) / 1000);
     }, 0);
 
+    // Helper: format a Date as YYYY-MM-DD in the client's local timezone
+    const toLocalDateStr = (d: Date) => {
+      const local = new Date(d.getTime() + offsetMs);
+      return local.toISOString().slice(0, 10);
+    };
+
     // Daily breakdown for charts — 28 days for streak calendar
     const dailyStats: { date: string; quests: number; seconds: number; xp: number; playSeconds: number }[] = [];
     for (let i = 27; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = toLocalDateStr(date);
 
       const dayCompletions = completions.filter(
-        (c) => c.completedAt.toISOString().slice(0, 10) === dateStr,
+        (c) => toLocalDateStr(c.completedAt) === dateStr,
       );
 
       const dayPlaySeconds = playSessions
-        .filter((s) => s.startedAt!.toISOString().slice(0, 10) === dateStr && s.endedAt)
+        .filter((s) => toLocalDateStr(s.startedAt!) === dateStr && s.endedAt)
         .reduce((sum, s) => sum + Math.round((s.endedAt!.getTime() - s.startedAt!.getTime()) / 1000), 0);
 
       const daySeconds = dayCompletions.reduce(
@@ -342,12 +353,25 @@ export class ThemeService {
     const feed: FeedEntry[] = [];
 
     for (const c of completions) {
+      const secs = c.quest.rewardSeconds;
+      let timeStr: string;
+      if (secs >= 3600) {
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      } else if (secs >= 60) {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        timeStr = s > 0 ? `${m}m ${s}s` : `${m} min`;
+      } else {
+        timeStr = `${secs}s`;
+      }
       feed.push({
         type: 'quest_completion',
         childId: c.child.id,
         childName: c.child.name,
         childAvatar: c.child.avatarUrl,
-        message: `completed "${c.quest.name}" (+${c.quest.rewardSeconds}s)`,
+        message: `completed "${c.quest.name}" (+${timeStr})`,
         icon: '✅',
         timestamp: c.completedAt,
       });

@@ -18,6 +18,7 @@ import { subscriptionService } from "../../services/subscription";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Card, Button } from "../../components";
 import { eventBus, AppEvents } from "../../utils/eventBus";
+import { formatTimeCompact } from "../../utils/formatTime";
 
 const MAX_KEEP = 3;
 
@@ -207,7 +208,8 @@ export default function QuestArchivalScreen() {
                   <View style={styles.questInfo}>
                     <Text style={styles.questName}>{quest.name}</Text>
                     <Text style={styles.questMeta}>
-                      {quest.rewardSeconds}m • {quest.category}
+                      {formatTimeCompact(quest.rewardSeconds)} •{" "}
+                      {quest.category}
                     </Text>
                   </View>
                 </View>

@@ -16,6 +16,7 @@ import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { EmptyState } from "../../components";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents } from "../../utils/eventBus";
+import { formatTimeLabel } from "../../utils/formatTime";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -152,7 +153,7 @@ export default function ChildQuests() {
             </Text>
             <View style={styles.gridReward}>
               <Text style={styles.gridRewardText}>
-                {quest.rewardSeconds} min
+                {formatTimeLabel(quest.rewardSeconds)}
               </Text>
             </View>
             <View
