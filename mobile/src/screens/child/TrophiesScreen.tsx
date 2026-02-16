@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { useGamificationStore } from "../../store/gamification";
 import { useThemeStore } from "../../store/theme";
 import { offlineCache } from "../../services/offlineCache";
 import { AchievementData } from "../../services/gamification";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents } from "../../utils/eventBus";
 
 export default function ChildTrophies() {
   const user = useAuthStore((s) => s.user);
@@ -62,9 +64,11 @@ export default function ChildTrophies() {
     }
   }, [user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useAutoRefresh({
+    fetchData: loadData,
+    events: [AppEvents.GAMIFICATION_CHANGED, AppEvents.COMPLETION_CHANGED],
+    intervalMs: 60_000,
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);

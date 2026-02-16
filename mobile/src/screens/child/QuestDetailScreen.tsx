@@ -30,6 +30,7 @@ import { SoundEffects } from "../../services/soundEffects";
 import { getNetworkStatus } from "../../hooks/useNetworkStatus";
 import { offlineQueue } from "../../services/offlineQueue";
 import { showToast } from "../../services/toastBridge";
+import { eventBus, AppEvents } from "../../utils/eventBus";
 
 export default function QuestDetailScreen() {
   const navigation = useNavigation<any>();
@@ -131,7 +132,11 @@ export default function QuestDetailScreen() {
       );
       setCompleted(true);
       setResultStatus(completion.status as "approved" | "pending");
+      // Notify other screens
+      eventBus.emit(AppEvents.COMPLETION_CHANGED);
       if (completion.status === "approved") {
+        eventBus.emit(AppEvents.TIME_BANK_CHANGED);
+        eventBus.emit(AppEvents.GAMIFICATION_CHANGED);
         setShowConfetti(true);
         SoundEffects.play("questComplete");
       }

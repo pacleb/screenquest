@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { useAuthStore } from "../../store/auth";
 import { completionService, ChildQuest } from "../../services/completion";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { EmptyState } from "../../components";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents } from "../../utils/eventBus";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -47,9 +49,11 @@ export default function ChildQuests() {
     }
   }, [user?.id]);
 
-  useEffect(() => {
-    fetchQuests();
-  }, [fetchQuests]);
+  useAutoRefresh({
+    fetchData: fetchQuests,
+    events: [AppEvents.QUEST_CHANGED, AppEvents.COMPLETION_CHANGED],
+    intervalMs: 30_000,
+  });
 
   const filteredQuests =
     selectedCategory === "all"

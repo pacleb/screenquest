@@ -36,6 +36,8 @@ import {
 import { useThemeStore } from "../../store/theme";
 import { useHaptics } from "../../hooks/useAccessibility";
 import { offlineCache } from "../../services/offlineCache";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents } from "../../utils/eventBus";
 
 export default function ChildHome() {
   const navigation = useNavigation<any>();
@@ -90,9 +92,18 @@ export default function ChildHome() {
     }
   }, [user?.id]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useAutoRefresh({
+    fetchData,
+    events: [
+      AppEvents.TIME_BANK_CHANGED,
+      AppEvents.PLAY_SESSION_CHANGED,
+      AppEvents.QUEST_CHANGED,
+      AppEvents.COMPLETION_CHANGED,
+      AppEvents.VIOLATION_CHANGED,
+      AppEvents.GAMIFICATION_CHANGED,
+    ],
+    intervalMs: 15_000,
+  });
 
   const isNegativeBalance = balance.totalSeconds < 0;
   const canPlay = !isNegativeBalance && balance.totalSeconds > 0;

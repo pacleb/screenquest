@@ -17,6 +17,7 @@ import { questService, Quest } from "../../services/quest";
 import { subscriptionService } from "../../services/subscription";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Card, Button } from "../../components";
+import { eventBus, AppEvents } from "../../utils/eventBus";
 
 const MAX_KEEP = 3;
 
@@ -86,6 +87,7 @@ export default function QuestArchivalScreen() {
         Array.from(selectedIds),
       );
       await fetchStatus(familyId);
+      eventBus.emit(AppEvents.QUEST_CHANGED);
       Alert.alert("Done", "The remaining quests have been archived.", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);

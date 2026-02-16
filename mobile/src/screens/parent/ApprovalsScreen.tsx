@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { completionService, QuestCompletion } from "../../services/completion";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents, eventBus } from "../../utils/eventBus";
 
 type FilterTab = "pending" | "approved" | "denied" | "all";
 
@@ -48,14 +50,18 @@ export default function ApprovalsScreen() {
     }
   }, [familyId, filter]);
 
-  useEffect(() => {
-    fetchCompletions();
-  }, [fetchCompletions]);
+  useAutoRefresh({
+    fetchData: fetchCompletions,
+    events: [AppEvents.COMPLETION_CHANGED, AppEvents.PLAY_SESSION_CHANGED],
+    intervalMs: 15_000,
+  });
 
   const handleApprove = async (completion: QuestCompletion) => {
     setProcessing(completion.id);
     try {
       await completionService.approveCompletion(completion.id);
+      eventBus.emit(AppEvents.COMPLETION_CHANGED);
+      eventBus.emit(AppEvents.TIME_BANK_CHANGED);
       fetchCompletions();
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to approve";
@@ -74,6 +80,7 @@ export default function ApprovalsScreen() {
       );
       setDenyingId(null);
       setDenyNote("");
+      eventBus.emit(AppEvents.COMPLETION_CHANGED);
       fetchCompletions();
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to deny";

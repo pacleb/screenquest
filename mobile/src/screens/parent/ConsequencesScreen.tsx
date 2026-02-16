@@ -20,6 +20,8 @@ import {
   ViolationStatus,
 } from "../../services/violation";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents, eventBus } from "../../utils/eventBus";
 
 export default function ConsequencesScreen() {
   const user = useAuthStore((s) => s.user);
@@ -74,10 +76,11 @@ export default function ConsequencesScreen() {
     }
   }, [selectedChildId]);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchData();
-  }, [fetchData]);
+  useAutoRefresh({
+    fetchData,
+    events: [AppEvents.VIOLATION_CHANGED, AppEvents.TIME_BANK_CHANGED],
+    intervalMs: 30_000,
+  });
 
   const handleRecordViolation = async () => {
     if (!selectedChildId) return;
@@ -93,6 +96,8 @@ export default function ConsequencesScreen() {
       );
       setShowDescInput(false);
       setDescription("");
+      eventBus.emit(AppEvents.VIOLATION_CHANGED);
+      eventBus.emit(AppEvents.TIME_BANK_CHANGED);
       fetchData();
     } catch (error: any) {
       Alert.alert(
@@ -117,6 +122,8 @@ export default function ConsequencesScreen() {
           onPress: async () => {
             try {
               await violationService.resetCounter(selectedChildId);
+              eventBus.emit(AppEvents.VIOLATION_CHANGED);
+              eventBus.emit(AppEvents.TIME_BANK_CHANGED);
               fetchData();
             } catch {
               Alert.alert("Error", "Failed to reset counter");
@@ -139,6 +146,8 @@ export default function ConsequencesScreen() {
           onPress: async () => {
             try {
               await violationService.forgiveViolation(violation.id);
+              eventBus.emit(AppEvents.VIOLATION_CHANGED);
+              eventBus.emit(AppEvents.TIME_BANK_CHANGED);
               fetchData();
             } catch (error: any) {
               Alert.alert(

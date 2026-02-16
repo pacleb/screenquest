@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import {
 import { colors, spacing, borderRadius, fonts } from "../../theme";
 import { typography } from "../../theme/typography";
 import { Card, Badge, ProgressBar } from "../../components";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents } from "../../utils/eventBus";
 
 export default function ChildProfile() {
   const navigation = useNavigation<any>();
@@ -43,9 +45,11 @@ export default function ChildProfile() {
     ]);
   }, [user?.id]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useAutoRefresh({
+    fetchData: loadData,
+    events: [AppEvents.GAMIFICATION_CHANGED],
+    intervalMs: 60_000,
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);

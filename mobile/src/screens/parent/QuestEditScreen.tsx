@@ -24,6 +24,7 @@ import {
 import { familyService, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius } from "../../theme";
 import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
+import { eventBus, AppEvents } from "../../utils/eventBus";
 
 const CATEGORIES = [
   { value: "chores", label: "Chores", icon: "🧹" },
@@ -217,6 +218,7 @@ export default function QuestEditScreen() {
         await questService.create(familyId, data);
       }
 
+      eventBus.emit(AppEvents.QUEST_CHANGED);
       navigation.goBack();
     } catch (error: any) {
       if (error.response?.status === 402) {
@@ -266,6 +268,7 @@ export default function QuestEditScreen() {
         stackingType: lq.suggestedStackingType,
         assignedChildIds: selectedChildIds,
       });
+      eventBus.emit(AppEvents.QUEST_CHANGED);
       navigation.goBack();
     } catch (error: any) {
       if (error.response?.status === 402) {

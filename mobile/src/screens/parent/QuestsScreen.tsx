@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { questService, Quest } from "../../services/quest";
 import { colors, spacing, borderRadius } from "../../theme";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents, eventBus } from "../../utils/eventBus";
 
 const CATEGORY_LABELS: Record<string, string> = {
   chores: "Chores",
@@ -57,9 +59,11 @@ export default function QuestsScreen() {
     }
   }, [familyId, filter]);
 
-  useEffect(() => {
-    fetchQuests();
-  }, [fetchQuests]);
+  useAutoRefresh({
+    fetchData: fetchQuests,
+    events: [AppEvents.QUEST_CHANGED],
+    intervalMs: 30_000,
+  });
 
   const handleArchive = async (quest: Quest) => {
     if (!familyId) return;
@@ -69,6 +73,7 @@ export default function QuestsScreen() {
       } else {
         await questService.archive(familyId, quest.id);
       }
+      eventBus.emit(AppEvents.QUEST_CHANGED);
       fetchQuests();
     } catch (error: any) {
       Alert.alert("Error", error.response?.data?.message || "Action failed");
@@ -88,6 +93,7 @@ export default function QuestsScreen() {
           onPress: async () => {
             try {
               await questService.remove(familyId, quest.id);
+              eventBus.emit(AppEvents.QUEST_CHANGED);
               fetchQuests();
             } catch {
               Alert.alert("Error", "Failed to delete quest");

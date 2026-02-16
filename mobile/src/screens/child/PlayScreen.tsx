@@ -24,6 +24,7 @@ import { Animations } from "../../../assets/animations";
 import { SoundEffects } from "../../services/soundEffects";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
+import { eventBus, AppEvents } from "../../utils/eventBus";
 
 const PRESETS = [900, 1800, 2700, 3600, 5400, 7200];
 
@@ -108,6 +109,9 @@ export default function ChildPlay() {
             setScreenState("completed");
             setShowConfetti(true);
             SoundEffects.play("timerComplete");
+            // Notify other screens
+            eventBus.emit(AppEvents.TIME_BANK_CHANGED);
+            eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
             return 0;
           }
           // Play warning sound at 60 seconds remaining
@@ -187,8 +191,10 @@ export default function ChildPlay() {
       if (result.status === "active") {
         setRemainingSeconds(result.remainingSeconds);
         setScreenState("active");
+        eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
       } else {
         setScreenState("waiting");
+        eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
       }
     } catch (error: any) {
       const msg =
@@ -242,6 +248,9 @@ export default function ChildPlay() {
             setScreenState("completed");
             setRemainingSeconds(0);
             setShowConfetti(true);
+            // Notify other screens that time bank & play session changed
+            eventBus.emit(AppEvents.TIME_BANK_CHANGED);
+            eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
           } catch (error: any) {
             Alert.alert(
               "Error",

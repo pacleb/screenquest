@@ -17,6 +17,8 @@ import Clipboard from "@react-native-clipboard/clipboard";
 import { useAuthStore } from "../../store/auth";
 import { familyService, Family, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius } from "../../theme";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents, eventBus } from "../../utils/eventBus";
 
 const ROLE_LABELS: Record<string, string> = {
   parent: "Parent",
@@ -72,9 +74,11 @@ export default function FamilyScreen() {
     }
   }, [familyId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useAutoRefresh({
+    fetchData,
+    events: [AppEvents.FAMILY_CHANGED],
+    intervalMs: 60_000,
+  });
 
   const handleCopyCode = async () => {
     if (!family) return;
@@ -133,6 +137,7 @@ export default function FamilyScreen() {
       setChildPin("");
       setConsentChecked(false);
       setShowAddChild(false);
+      eventBus.emit(AppEvents.FAMILY_CHANGED);
       fetchData();
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to add child";
@@ -173,6 +178,7 @@ export default function FamilyScreen() {
         onPress: async () => {
           try {
             await familyService.removeChild(familyId, child.id);
+            eventBus.emit(AppEvents.FAMILY_CHANGED);
             fetchData();
           } catch {
             Alert.alert("Error", "Failed to remove child");

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -40,6 +39,8 @@ import {
   ScreenTimeTrend,
   StreakCalendar,
 } from "../../components/ParentCharts";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
+import { AppEvents, eventBus } from "../../utils/eventBus";
 
 interface ChildWeeklyStats {
   questsCompleted: number;
@@ -118,11 +119,19 @@ export default function ParentDashboard() {
     }
   }, [familyId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchData();
-    }, [fetchData]),
-  );
+  useAutoRefresh({
+    fetchData,
+    events: [
+      AppEvents.TIME_BANK_CHANGED,
+      AppEvents.PLAY_SESSION_CHANGED,
+      AppEvents.QUEST_CHANGED,
+      AppEvents.COMPLETION_CHANGED,
+      AppEvents.VIOLATION_CHANGED,
+      AppEvents.GAMIFICATION_CHANGED,
+      AppEvents.FAMILY_CHANGED,
+    ],
+    intervalMs: 20_000,
+  });
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -367,6 +376,8 @@ export default function ParentDashboard() {
                             await completionService.approveCompletion(
                               completion.id,
                             );
+                            eventBus.emit(AppEvents.COMPLETION_CHANGED);
+                            eventBus.emit(AppEvents.TIME_BANK_CHANGED);
                             fetchData();
                           } catch {
                             /* silent */
@@ -424,6 +435,8 @@ export default function ParentDashboard() {
                             onPress={async () => {
                               try {
                                 await playSessionService.end(activeSession!.id);
+                                eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+                                eventBus.emit(AppEvents.TIME_BANK_CHANGED);
                                 fetchData();
                               } catch {
                                 /* silent */
