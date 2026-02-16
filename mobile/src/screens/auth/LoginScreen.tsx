@@ -31,7 +31,6 @@ export default function LoginScreen() {
   // Child login
   const [familyCode, setFamilyCode] = useState("");
   const [childName, setChildName] = useState("");
-  const [pin, setPin] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -56,19 +55,19 @@ export default function LoginScreen() {
   };
 
   const handleChildLogin = async () => {
-    if (!familyCode.trim() || !childName.trim() || !pin.trim()) {
+    if (!familyCode.trim() || !childName.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
-      await childLogin(familyCode.trim(), childName.trim(), pin);
+      await childLogin(familyCode.trim(), childName.trim());
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
       Alert.alert(
         "Login Failed",
-        error.response?.data?.message || "Invalid family code, name, or PIN",
+        error.response?.data?.message || "Invalid family code or name",
       );
     } finally {
       setLoading(false);
@@ -166,7 +165,7 @@ export default function LoginScreen() {
                 <Text style={styles.label}>Family Code</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="ABC12345"
+                  placeholder="ABCDEFGH"
                   value={familyCode}
                   onChangeText={setFamilyCode}
                   autoCapitalize="characters"
@@ -181,19 +180,6 @@ export default function LoginScreen() {
                   value={childName}
                   onChangeText={setChildName}
                   autoCapitalize="words"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>PIN</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="1234"
-                  value={pin}
-                  onChangeText={setPin}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  secureTextEntry
                 />
               </View>
 

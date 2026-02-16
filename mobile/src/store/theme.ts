@@ -113,8 +113,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     try {
       const result = await themeService.useStreakFreeze();
       return result;
-    } catch {
-      return { success: false, message: 'Failed to use streak freeze' };
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || 'Failed to use streak freeze';
+      return { success: false, message };
     }
   },
 

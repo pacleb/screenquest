@@ -28,7 +28,7 @@ interface AuthState {
   initialize: () => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  childLogin: (familyCode: string, name: string, pin: string) => Promise<void>;
+  childLogin: (familyCode: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: UserProfile) => void;
 }
@@ -68,8 +68,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: response.user, isAuthenticated: true });
   },
 
-  childLogin: async (familyCode, name, pin) => {
-    const response = await authService.childLogin({ familyCode, name, pin });
+  childLogin: async (familyCode, name) => {
+    const response = await authService.childLogin({ familyCode, name });
     await setToken('accessToken', response.accessToken);
     await setToken('refreshToken', response.refreshToken);
     set({ user: response.user, isAuthenticated: true });

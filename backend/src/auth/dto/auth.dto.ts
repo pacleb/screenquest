@@ -77,7 +77,7 @@ export class SocialAuthDto {
 }
 
 export class ChildLoginDto {
-  @ApiProperty({ example: 'ABC12345' })
+  @ApiProperty({ example: 'ABCDEFGH' })
   @IsString()
   @IsNotEmpty()
   familyCode: string;
@@ -87,9 +87,10 @@ export class ChildLoginDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional({ example: '1234' })
   @IsString()
+  @IsOptional()
   @MinLength(4)
   @MaxLength(6)
-  pin: string;
+  pin?: string;
 }

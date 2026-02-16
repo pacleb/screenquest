@@ -20,9 +20,8 @@ export interface FamilyMember {
 
 export interface CreateChildData {
   name: string;
-  age: number;
-  pin: string;
   consentText: string;
+  age?: number;
   avatarUrl?: string;
   email?: string;
 }

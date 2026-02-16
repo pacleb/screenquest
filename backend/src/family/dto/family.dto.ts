@@ -40,11 +40,12 @@ export class CreateChildDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ example: 8 })
+  @ApiPropertyOptional({ example: 8 })
   @IsInt()
+  @IsOptional()
   @Min(1)
   @Max(17)
-  age: number;
+  age?: number;
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.png' })
   @IsString()
@@ -56,11 +57,12 @@ export class CreateChildDto {
   @IsOptional()
   email?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional({ example: '1234' })
   @IsString()
+  @IsOptional()
   @MinLength(4)
   @MaxLength(6)
-  pin: string;
+  pin?: string;
 
   @ApiProperty({ example: 'I consent to the collection of my child\'s data for app functionality.' })
   @IsString()

@@ -21,24 +21,20 @@ export default function AddChildScreen() {
   const user = useAuthStore((s) => s.user);
 
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [pin, setPin] = useState("");
+  const [consentChecked, setConsentChecked] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAddChild = async () => {
-    if (!name.trim() || !age.trim() || !pin.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter a name");
       return;
     }
 
-    const ageNum = parseInt(age);
-    if (isNaN(ageNum) || ageNum < 1 || ageNum > 17) {
-      Alert.alert("Error", "Age must be between 1 and 17");
-      return;
-    }
-
-    if (pin.length < 4) {
-      Alert.alert("Error", "PIN must be at least 4 digits");
+    if (!consentChecked) {
+      Alert.alert(
+        "Consent Required",
+        "You must provide parental consent to add a child.",
+      );
       return;
     }
 
@@ -51,8 +47,6 @@ export default function AddChildScreen() {
     try {
       await familyService.createChild(user.familyId, {
         name: name.trim(),
-        age: ageNum,
-        pin,
         consentText:
           "I, the parent/guardian, consent to the collection and use of my child's information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.",
       });
@@ -62,8 +56,7 @@ export default function AddChildScreen() {
           text: "Add Another Child",
           onPress: () => {
             setName("");
-            setAge("");
-            setPin("");
+            setConsentChecked(false);
           },
         },
         {
@@ -108,33 +101,22 @@ export default function AddChildScreen() {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Age</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="8"
-                value={age}
-                onChangeText={setAge}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>PIN (for child login)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="1234"
-                value={pin}
-                onChangeText={setPin}
-                keyboardType="number-pad"
-                maxLength={6}
-                secureTextEntry
-              />
-              <Text style={styles.hint}>
-                Your child will use this PIN to log in
+            <TouchableOpacity
+              style={styles.consentRow}
+              onPress={() => setConsentChecked(!consentChecked)}
+              activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: consentChecked }}
+              accessibilityLabel="COPPA parental consent"
+            >
+              <Text style={styles.consentCheckbox}>
+                {consentChecked ? "☑" : "☐"}
               </Text>
-            </View>
+              <Text style={styles.consentText}>
+                I consent to ScreenQuest collecting my child's data as
+                described in the Privacy Policy (COPPA).
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -214,6 +196,22 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  consentRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  consentCheckbox: {
+    fontSize: 22,
+    color: colors.primary,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   button: {
     backgroundColor: colors.primary,

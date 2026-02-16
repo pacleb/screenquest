@@ -195,7 +195,7 @@ export class FamilyService {
       const child = await tx.user.create({
         data: {
           name: dto.name,
-          age: dto.age,
+          age: dto.age ?? null,
           avatarUrl: dto.avatarUrl || null,
           email: dto.email?.toLowerCase() || null,
           pin: hashedPin,
@@ -400,7 +400,7 @@ export class FamilyService {
   }
 
   private generateFamilyCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // Letters only, no I or O to avoid confusion
     let code = '';
     for (let i = 0; i < 8; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));

@@ -64,62 +64,82 @@ async function ensureChannel() {
 }
 
 async function showLocalNotification(notification: InAppNotification) {
-  if (!permissionGranted) return;
+  if (!permissionGranted) {
+    if (__DEV__) console.warn('[NotifPoller] Cannot show notification — permission not granted');
+    return;
+  }
   await ensureChannel();
 
   if (__DEV__) {
-    console.log(`[NotifPoller] Showing local notification: "${notification.title}"`);
+    console.log(`[NotifPoller] Displaying local notification: "${notification.title}" / "${notification.body}"`);
   }
 
-  await notifee.displayNotification({
-    title: notification.title,
-    body: notification.body,
-    data: {
-      ...(notification.data || {}),
-      notificationId: notification.id,
-    },
-    android: {
-      channelId: 'screenquest',
-      smallIcon: 'ic_launcher',
-      pressAction: { id: 'default' },
-      sound: 'default',
-    },
-    ios: {
-      sound: 'default',
-      // Critical: show banner + badge + sound even when app is in the foreground
-      foregroundPresentationOptions: {
-        alert: true,
-        badge: true,
-        sound: true,
+  try {
+    const id = await notifee.displayNotification({
+      title: notification.title,
+      body: notification.body,
+      data: {
+        ...(notification.data || {}),
+        notificationId: notification.id,
       },
-    },
-  });
+      android: {
+        channelId: 'screenquest',
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+        sound: 'default',
+      },
+      ios: {
+        sound: 'default',
+        foregroundPresentationOptions: {
+          alert: true,
+          badge: true,
+          sound: true,
+        },
+      },
+    });
+    if (__DEV__) {
+      console.log(`[NotifPoller] ✅ Notification displayed with id: ${id}`);
+    }
+  } catch (err) {
+    if (__DEV__) {
+      console.error('[NotifPoller] ❌ Failed to display notification:', err);
+    }
+  }
 }
 
 async function pollForNotifications() {
   if (!currentUserId) return;
 
   try {
+    if (__DEV__) {
+      console.log(`[NotifPoller] Polling for user ${currentUserId}...`);
+    }
+
     const { data: notifications } = await api.get<InAppNotification[]>(
       `/users/${currentUserId}/notifications/unread`,
     );
 
-    if (__DEV__ && notifications.length > 0) {
-      const newCount = notifications.filter((n) => !SEEN_NOTIFICATION_IDS.has(n.id)).length;
-      if (newCount > 0) {
-        console.log(`[NotifPoller] ${newCount} NEW notification(s) to display`);
-      }
+    if (__DEV__) {
+      console.log(
+        `[NotifPoller] Got ${notifications.length} unread, seenSet size=${SEEN_NOTIFICATION_IDS.size}`,
+      );
     }
 
+    let displayedCount = 0;
     for (const notification of notifications) {
       if (!SEEN_NOTIFICATION_IDS.has(notification.id)) {
         SEEN_NOTIFICATION_IDS.add(notification.id);
         await showLocalNotification(notification);
+        displayedCount++;
       }
+    }
+
+    if (__DEV__ && displayedCount > 0) {
+      console.log(`[NotifPoller] Displayed ${displayedCount} new notification(s)`);
     }
   } catch (err) {
     if (__DEV__) {
-      console.warn('[NotifPoller] Poll failed:', (err as any)?.message || err);
+      console.warn('[NotifPoller] Poll failed:', (err as any)?.response?.status, (err as any)?.message || err);
     }
   }
 }
@@ -159,6 +179,35 @@ export async function startNotificationPoller(userId: string) {
 
   // Start polling
   pollerInterval = setInterval(pollForNotifications, POLL_INTERVAL_MS);
+
+  // In dev, fire a test notification to verify Notifee works on this device
+  if (__DEV__ && permissionGranted) {
+    setTimeout(async () => {
+      try {
+        await ensureChannel();
+        const testId = await notifee.displayNotification({
+          title: '🔔 ScreenQuest Notifications Active',
+          body: 'You will receive play session alerts here.',
+          android: {
+            channelId: 'screenquest',
+            smallIcon: 'ic_launcher',
+            pressAction: { id: 'default' },
+          },
+          ios: {
+            sound: 'default',
+            foregroundPresentationOptions: {
+              alert: true,
+              badge: true,
+              sound: true,
+            },
+          },
+        });
+        console.log(`[NotifPoller] ✅ Test notification sent (id=${testId})`);
+      } catch (err) {
+        console.error('[NotifPoller] ❌ Test notification FAILED:', err);
+      }
+    }, 2000);
+  }
 }
 
 /**

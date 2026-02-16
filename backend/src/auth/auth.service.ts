@@ -130,16 +130,18 @@ export class AuthService {
       },
     });
 
-    if (!child || !child.pin) {
+    if (!child) {
       await this.recordFailedAttempt(lockoutKey);
-      throw new UnauthorizedException('Invalid name or PIN');
+      throw new UnauthorizedException('Invalid name');
     }
 
-    // Compare PIN with bcrypt
-    const pinValid = await bcrypt.compare(dto.pin, child.pin);
-    if (!pinValid) {
-      await this.recordFailedAttempt(lockoutKey);
-      throw new UnauthorizedException('Invalid name or PIN');
+    // If PIN is provided and the child has a PIN, verify it
+    if (dto.pin && child.pin) {
+      const pinValid = await bcrypt.compare(dto.pin, child.pin);
+      if (!pinValid) {
+        await this.recordFailedAttempt(lockoutKey);
+        throw new UnauthorizedException('Invalid name or PIN');
+      }
     }
 
     await this.clearLoginAttempts(lockoutKey);

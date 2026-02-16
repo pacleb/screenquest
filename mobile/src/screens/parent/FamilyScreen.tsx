@@ -44,8 +44,6 @@ export default function FamilyScreen() {
   // Add Child form
   const [showAddChild, setShowAddChild] = useState(false);
   const [childName, setChildName] = useState("");
-  const [childAge, setChildAge] = useState("");
-  const [childPin, setChildPin] = useState("");
   const [consentChecked, setConsentChecked] = useState(false);
   const [addingChild, setAddingChild] = useState(false);
 
@@ -103,22 +101,10 @@ export default function FamilyScreen() {
       Alert.alert("Validation", "Child name is required");
       return;
     }
-    if (
-      !childAge ||
-      parseInt(childAge, 10) < 1 ||
-      parseInt(childAge, 10) > 17
-    ) {
-      Alert.alert("Validation", "Please enter a valid age (1-17)");
-      return;
-    }
-    if (!childPin || childPin.length < 4) {
-      Alert.alert("Validation", "PIN must be at least 4 digits");
-      return;
-    }
     if (!consentChecked) {
       Alert.alert(
         "Consent Required",
-        "You must provide parental consent to add a child under COPPA regulations.",
+        "You must provide parental consent to add a child.",
       );
       return;
     }
@@ -127,14 +113,10 @@ export default function FamilyScreen() {
     try {
       await familyService.createChild(familyId, {
         name: childName.trim(),
-        age: parseInt(childAge, 10),
-        pin: childPin,
         consentText:
           "I, the parent/guardian, consent to the collection and use of my child's information as described in the ScreenQuest Privacy Policy, in accordance with COPPA.",
       });
       setChildName("");
-      setChildAge("");
-      setChildPin("");
       setConsentChecked(false);
       setShowAddChild(false);
       eventBus.emit(AppEvents.FAMILY_CHANGED);
@@ -368,30 +350,6 @@ export default function FamilyScreen() {
                 onChangeText={setChildName}
                 accessibilityLabel="Child's name"
               />
-              <View style={styles.formRow}>
-                <TextInput
-                  style={[styles.formInput, { flex: 1 }]}
-                  placeholder="Age"
-                  placeholderTextColor={colors.textSecondary}
-                  value={childAge}
-                  onChangeText={setChildAge}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  accessibilityLabel="Child's age"
-                />
-                <TextInput
-                  style={[styles.formInput, { flex: 2 }]}
-                  placeholder="PIN (4+ digits)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={childPin}
-                  onChangeText={setChildPin}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  secureTextEntry
-                  accessibilityLabel="Child's PIN code"
-                  accessibilityHint="Enter at least 4 digits"
-                />
-              </View>
               <TouchableOpacity
                 style={styles.consentRow}
                 onPress={() => setConsentChecked(!consentChecked)}
