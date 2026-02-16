@@ -1,12 +1,6 @@
 import React, { Component, ErrorInfo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Sentry from "@sentry/react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors, spacing, borderRadius } from "../theme";

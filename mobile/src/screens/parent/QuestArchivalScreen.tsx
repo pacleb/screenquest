@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuthStore } from '../../store/auth';
-import { useSubscriptionStore } from '../../store/subscription';
-import { questService, Quest } from '../../services/quest';
-import { subscriptionService } from '../../services/subscription';
-import { colors, spacing, borderRadius, fonts, typography } from '../../theme';
-import { Card, Button } from '../../components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { useAuthStore } from "../../store/auth";
+import { useSubscriptionStore } from "../../store/subscription";
+import { questService, Quest } from "../../services/quest";
+import { subscriptionService } from "../../services/subscription";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { Card, Button } from "../../components";
 
 const MAX_KEEP = 3;
 
@@ -40,7 +40,10 @@ export default function QuestArchivalScreen() {
         setQuests(qs);
         // Pre-select the 3 oldest
         const preselected = qs
-          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          )
           .slice(0, MAX_KEEP)
           .map((q) => q.id);
         setSelectedIds(new Set(preselected));
@@ -57,7 +60,10 @@ export default function QuestArchivalScreen() {
       } else if (next.size < MAX_KEEP) {
         next.add(questId);
       } else {
-        Alert.alert('Limit Reached', `You can only keep ${MAX_KEEP} quests on the free plan.`);
+        Alert.alert(
+          "Limit Reached",
+          `You can only keep ${MAX_KEEP} quests on the free plan.`,
+        );
       }
       return next;
     });
@@ -66,32 +72,48 @@ export default function QuestArchivalScreen() {
   const handleConfirm = async () => {
     if (!familyId) return;
     if (selectedIds.size !== MAX_KEEP) {
-      Alert.alert('Select Quests', `Please select exactly ${MAX_KEEP} quests to keep.`);
+      Alert.alert(
+        "Select Quests",
+        `Please select exactly ${MAX_KEEP} quests to keep.`,
+      );
       return;
     }
 
     setSaving(true);
     try {
-      await subscriptionService.archiveQuests(familyId, Array.from(selectedIds));
+      await subscriptionService.archiveQuests(
+        familyId,
+        Array.from(selectedIds),
+      );
       await fetchStatus(familyId);
-      Alert.alert('Done', 'The remaining quests have been archived.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
+      Alert.alert("Done", "The remaining quests have been archived.", [
+        { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch {
-      Alert.alert('Error', 'Failed to archive quests. Please try again.');
+      Alert.alert("Error", "Failed to archive quests. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
   const daysRemaining = gracePeriodEndsAt
-    ? Math.max(0, Math.ceil((new Date(gracePeriodEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(gracePeriodEndsAt).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      )
     : null;
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xxl }} />
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ marginTop: spacing.xxl }}
+        />
       </SafeAreaView>
     );
   }
@@ -103,9 +125,16 @@ export default function QuestArchivalScreen() {
           <Icon name="checkmark-circle" size={64} color={colors.secondary} />
           <Text style={styles.allGoodTitle}>All Good!</Text>
           <Text style={styles.allGoodDesc}>
-            You have {quests.length} active quest{quests.length !== 1 ? 's' : ''}, which is within the free plan limit.
+            You have {quests.length} active quest
+            {quests.length !== 1 ? "s" : ""}, which is within the free plan
+            limit.
           </Text>
-          <Button title="Go Back" onPress={() => navigation.goBack()} variant="secondary" size="lg" />
+          <Button
+            title="Go Back"
+            onPress={() => navigation.goBack()}
+            variant="secondary"
+            size="lg"
+          />
         </View>
       </SafeAreaView>
     );
@@ -113,23 +142,31 @@ export default function QuestArchivalScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+        >
           <Icon name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <Text style={styles.title}>Choose Quests to Keep</Text>
         <Text style={styles.subtitle}>
-          Your plan changed to Free. You have {quests.length} active quests but the free plan allows {MAX_KEEP}.
-          Please choose which {MAX_KEEP} to keep — the rest will be archived.
+          Your plan changed to Free. You have {quests.length} active quests but
+          the free plan allows {MAX_KEEP}. Please choose which {MAX_KEEP} to
+          keep — the rest will be archived.
         </Text>
 
         {daysRemaining !== null && (
           <View style={styles.countdownBanner}>
             <Icon name="time-outline" size={16} color={colors.accent} />
             <Text style={styles.countdownText}>
-              {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} until auto-archival
+              {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} until
+              auto-archival
             </Text>
           </View>
         )}
@@ -142,11 +179,27 @@ export default function QuestArchivalScreen() {
         {quests.map((quest) => {
           const isSelected = selectedIds.has(quest.id);
           return (
-            <TouchableOpacity key={quest.id} onPress={() => toggleQuest(quest.id)}>
-              <Card style={isSelected ? { ...styles.questCard, ...styles.questCardSelected } : styles.questCard}>
+            <TouchableOpacity
+              key={quest.id}
+              onPress={() => toggleQuest(quest.id)}
+            >
+              <Card
+                style={
+                  isSelected
+                    ? { ...styles.questCard, ...styles.questCardSelected }
+                    : styles.questCard
+                }
+              >
                 <View style={styles.questRow}>
-                  <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                    {isSelected && <Icon name="checkmark" size={16} color="#FFF" />}
+                  <View
+                    style={[
+                      styles.checkbox,
+                      isSelected && styles.checkboxSelected,
+                    ]}
+                  >
+                    {isSelected && (
+                      <Icon name="checkmark" size={16} color="#FFF" />
+                    )}
                   </View>
                   <Text style={styles.questIcon}>{quest.icon}</Text>
                   <View style={styles.questInfo}>
@@ -164,7 +217,11 @@ export default function QuestArchivalScreen() {
         <View style={{ height: spacing.lg }} />
 
         <Button
-          title={saving ? 'Archiving...' : `Keep ${selectedIds.size} Quests & Archive Rest`}
+          title={
+            saving
+              ? "Archiving..."
+              : `Keep ${selectedIds.size} Quests & Archive Rest`
+          }
           onPress={handleConfirm}
           disabled={saving || selectedIds.size !== MAX_KEEP}
           size="lg"
@@ -172,7 +229,7 @@ export default function QuestArchivalScreen() {
 
         <TouchableOpacity
           style={styles.upgradeLink}
-          onPress={() => navigation.navigate('Paywall')}
+          onPress={() => navigation.navigate("Paywall")}
         >
           <Text style={styles.upgradeLinkText}>
             Or upgrade to Premium to keep all quests
@@ -200,10 +257,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   countdownBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.accent + '15',
+    backgroundColor: colors.accent + "15",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
@@ -228,8 +285,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   questRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   checkbox: {
@@ -238,8 +295,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkboxSelected: {
     backgroundColor: colors.primary,
@@ -259,19 +316,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   upgradeLink: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.lg,
   },
   upgradeLinkText: {
     fontFamily: fonts.parent.medium,
     fontSize: 14,
     color: colors.primary,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   allGood: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.xl,
     gap: spacing.md,
   },
@@ -283,7 +340,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.parent.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
 });

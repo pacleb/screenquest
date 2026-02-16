@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as admin from 'firebase-admin';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface PushPayload {
@@ -8,10 +10,35 @@ interface PushPayload {
 }
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
   private readonly logger = new Logger(NotificationService.name);
+  private fcmEnabled = false;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
+
+  onModuleInit() {
+    const serviceAccountJson = this.configService.get<string>('FIREBASE_SERVICE_ACCOUNT');
+    if (!serviceAccountJson) {
+      this.logger.warn('FIREBASE_SERVICE_ACCOUNT not set — push notifications disabled');
+      return;
+    }
+
+    try {
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        });
+      }
+      this.fcmEnabled = true;
+      this.logger.log('Firebase Admin initialized — push notifications enabled');
+    } catch (error) {
+      this.logger.warn(`Failed to initialize Firebase Admin: ${error}`);
+    }
+  }
 
   /**
    * Register a push token for a user
@@ -44,7 +71,6 @@ export class NotificationService {
    * Send notification to a specific user
    */
   async sendToUser(userId: string, payload: PushPayload, category?: string) {
-    // Check notification preferences
     if (category) {
       const shouldSend = await this.checkPreference(userId, category);
       if (!shouldSend) return;
@@ -57,7 +83,7 @@ export class NotificationService {
 
     if (tokens.length === 0) return;
 
-    await this.sendExpoPush(
+    await this.sendFCM(
       tokens.map((t: { token: string }) => t.token),
       payload,
     );
@@ -136,7 +162,7 @@ export class NotificationService {
       where: { userId },
     });
 
-    if (!prefs) return true; // Default: all enabled
+    if (!prefs) return true;
 
     const categoryMap: Record<string, keyof typeof prefs> = {
       quest_completions: 'questCompletions',
@@ -154,34 +180,64 @@ export class NotificationService {
   }
 
   /**
-   * Send push notifications via Expo Push API
+   * Send push notifications via Firebase Cloud Messaging
    */
-  private async sendExpoPush(tokens: string[], payload: PushPayload) {
-    const messages = tokens
-      .filter((token) => token.startsWith('ExponentPushToken') || token.startsWith('ExpoPushToken'))
-      .map((token) => ({
-        to: token,
-        sound: 'default' as const,
+  private async sendFCM(tokens: string[], payload: PushPayload) {
+    if (!this.fcmEnabled) {
+      this.logger.debug('FCM disabled — skipping push notification');
+      return;
+    }
+
+    const messages: admin.messaging.Message[] = tokens.map((token) => ({
+      token,
+      notification: {
         title: payload.title,
         body: payload.body,
-        data: payload.data || {},
-      }));
-
-    if (messages.length === 0) return;
+      },
+      data: payload.data || {},
+      android: {
+        priority: 'high' as const,
+        notification: {
+          sound: 'default',
+          channelId: 'default',
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
+        },
+      },
+    }));
 
     try {
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-Encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messages),
+      const response = await admin.messaging().sendEach(messages);
+
+      // Clean up stale tokens
+      const staleTokens: string[] = [];
+      response.responses.forEach((result, index) => {
+        if (
+          result.error &&
+          (result.error.code === 'messaging/registration-token-not-registered' ||
+            result.error.code === 'messaging/invalid-registration-token')
+        ) {
+          staleTokens.push(tokens[index]);
+        }
       });
 
-      if (!response.ok) {
-        this.logger.warn(`Expo push failed: ${response.status} ${response.statusText}`);
+      if (staleTokens.length > 0) {
+        await this.prisma.pushToken.deleteMany({
+          where: { token: { in: staleTokens } },
+        });
+        this.logger.log(`Cleaned up ${staleTokens.length} stale push token(s)`);
+      }
+
+      if (response.failureCount > staleTokens.length) {
+        this.logger.warn(
+          `FCM: ${response.successCount} sent, ${response.failureCount} failed`,
+        );
       }
     } catch (error) {
       this.logger.warn(`Failed to send push notification: ${error}`);

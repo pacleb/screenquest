@@ -1,34 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Linking,
   Platform,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { PurchasesPackage } from 'react-native-purchases';
-import { subscriptionService } from '../../services/subscription';
-import { useSubscriptionStore } from '../../store/subscription';
-import { useAuthStore } from '../../store/auth';
-import { colors, spacing, borderRadius, fonts, typography } from '../../theme';
-import { Button, Card } from '../../components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { PurchasesPackage } from "react-native-purchases";
+import { subscriptionService } from "../../services/subscription";
+import { useSubscriptionStore } from "../../store/subscription";
+import { useAuthStore } from "../../store/auth";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { Button, Card } from "../../components";
 
-type BillingPeriod = 'monthly' | 'yearly';
+type BillingPeriod = "monthly" | "yearly";
 
 const FEATURES = [
-  { name: 'Active Quests', free: '3', premium: 'Unlimited', icon: 'list-outline' },
-  { name: 'Photo Proof', free: false, premium: true, icon: 'camera-outline' },
-  { name: 'Quest History', free: '7 days', premium: 'Full', icon: 'time-outline' },
-  { name: 'Reports', free: 'Basic', premium: 'Detailed', icon: 'bar-chart-outline' },
-  { name: 'Avatar Packs', free: false, premium: true, icon: 'shirt-outline' },
-  { name: 'Data Export', free: false, premium: true, icon: 'download-outline' },
+  {
+    name: "Active Quests",
+    free: "3",
+    premium: "Unlimited",
+    icon: "list-outline",
+  },
+  { name: "Photo Proof", free: false, premium: true, icon: "camera-outline" },
+  {
+    name: "Quest History",
+    free: "7 days",
+    premium: "Full",
+    icon: "time-outline",
+  },
+  {
+    name: "Reports",
+    free: "Basic",
+    premium: "Detailed",
+    icon: "bar-chart-outline",
+  },
+  { name: "Avatar Packs", free: false, premium: true, icon: "shirt-outline" },
+  { name: "Data Export", free: false, premium: true, icon: "download-outline" },
 ];
 
 export default function PaywallScreen() {
@@ -37,7 +52,7 @@ export default function PaywallScreen() {
   const { isActive, isTrialing } = useSubscriptionStore();
   const fetchStatus = useSubscriptionStore((s) => s.fetchStatus);
 
-  const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>('yearly');
+  const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("yearly");
   const [packages, setPackages] = useState<{
     monthly: PurchasesPackage | null;
     yearly: PurchasesPackage | null;
@@ -54,12 +69,14 @@ export default function PaywallScreen() {
     try {
       const offerings = await subscriptionService.getOfferings();
       if (offerings?.current) {
-        const monthly = offerings.current.availablePackages.find(
-          (p) => p.packageType === 'MONTHLY',
-        ) ?? null;
-        const yearly = offerings.current.availablePackages.find(
-          (p) => p.packageType === 'ANNUAL',
-        ) ?? null;
+        const monthly =
+          offerings.current.availablePackages.find(
+            (p) => p.packageType === "MONTHLY",
+          ) ?? null;
+        const yearly =
+          offerings.current.availablePackages.find(
+            (p) => p.packageType === "ANNUAL",
+          ) ?? null;
         setPackages({ monthly, yearly });
       }
     } catch {
@@ -70,9 +87,13 @@ export default function PaywallScreen() {
   };
 
   const handlePurchase = async () => {
-    const pkg = selectedPeriod === 'yearly' ? packages.yearly : packages.monthly;
+    const pkg =
+      selectedPeriod === "yearly" ? packages.yearly : packages.monthly;
     if (!pkg) {
-      Alert.alert('Unavailable', 'This plan is not available right now. Please try again later.');
+      Alert.alert(
+        "Unavailable",
+        "This plan is not available right now. Please try again later.",
+      );
       return;
     }
 
@@ -83,12 +104,14 @@ export default function PaywallScreen() {
         if (user?.familyId) {
           await fetchStatus(user.familyId);
         }
-        Alert.alert('Welcome to Premium!', 'You now have access to all ScreenQuest features.', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        Alert.alert(
+          "Welcome to Premium!",
+          "You now have access to all ScreenQuest features.",
+          [{ text: "OK", onPress: () => navigation.goBack() }],
+        );
       }
     } catch {
-      Alert.alert('Purchase Failed', 'Something went wrong. Please try again.');
+      Alert.alert("Purchase Failed", "Something went wrong. Please try again.");
     } finally {
       setPurchasing(false);
     }
@@ -102,21 +125,29 @@ export default function PaywallScreen() {
         if (user?.familyId) {
           await fetchStatus(user.familyId);
         }
-        Alert.alert('Restored!', 'Your premium subscription has been restored.', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        Alert.alert(
+          "Restored!",
+          "Your premium subscription has been restored.",
+          [{ text: "OK", onPress: () => navigation.goBack() }],
+        );
       } else {
-        Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
+        Alert.alert(
+          "No Purchases Found",
+          "No previous purchases were found for this account.",
+        );
       }
     } catch {
-      Alert.alert('Restore Failed', 'Could not restore purchases. Please try again.');
+      Alert.alert(
+        "Restore Failed",
+        "Could not restore purchases. Please try again.",
+      );
     } finally {
       setRestoring(false);
     }
   };
 
-  const monthlyPrice = packages.monthly?.product?.priceString ?? '$4.99';
-  const yearlyPrice = packages.yearly?.product?.priceString ?? '$39.99';
+  const monthlyPrice = packages.monthly?.product?.priceString ?? "$4.99";
+  const yearlyPrice = packages.yearly?.product?.priceString ?? "$39.99";
 
   if (isActive && !isTrialing) {
     return (
@@ -124,8 +155,15 @@ export default function PaywallScreen() {
         <View style={styles.alreadyPremium}>
           <Icon name="checkmark-circle" size={64} color={colors.secondary} />
           <Text style={styles.alreadyTitle}>You're Premium!</Text>
-          <Text style={styles.alreadyDesc}>You have access to all ScreenQuest features.</Text>
-          <Button title="Go Back" onPress={() => navigation.goBack()} variant="secondary" size="lg" />
+          <Text style={styles.alreadyDesc}>
+            You have access to all ScreenQuest features.
+          </Text>
+          <Button
+            title="Go Back"
+            onPress={() => navigation.goBack()}
+            variant="secondary"
+            size="lg"
+          />
         </View>
       </SafeAreaView>
     );
@@ -133,15 +171,23 @@ export default function PaywallScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Close button */}
-        <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={() => navigation.goBack()}
+        >
           <Icon name="close" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Header */}
         <Text style={styles.title}>Unlock ScreenQuest Plus!</Text>
-        <Text style={styles.subtitle}>Give your family the full experience</Text>
+        <Text style={styles.subtitle}>
+          Give your family the full experience
+        </Text>
 
         {/* Feature Comparison */}
         <Card style={styles.featureCard}>
@@ -153,29 +199,39 @@ export default function PaywallScreen() {
           {FEATURES.map((feature) => (
             <View key={feature.name} style={styles.featureRow}>
               <View style={styles.featureNameRow}>
-                <Icon name={feature.icon as any} size={16} color={colors.textSecondary} />
+                <Icon
+                  name={feature.icon as any}
+                  size={16}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.featureName}>{feature.name}</Text>
               </View>
               <View style={styles.featureValue}>
-                {typeof feature.free === 'boolean' ? (
+                {typeof feature.free === "boolean" ? (
                   <Icon
-                    name={feature.free ? 'checkmark-circle' : 'close-circle'}
+                    name={feature.free ? "checkmark-circle" : "close-circle"}
                     size={20}
-                    color={feature.free ? colors.secondary : colors.textSecondary + '60'}
+                    color={
+                      feature.free
+                        ? colors.secondary
+                        : colors.textSecondary + "60"
+                    }
                   />
                 ) : (
                   <Text style={styles.featureFreeText}>{feature.free}</Text>
                 )}
               </View>
               <View style={styles.featureValue}>
-                {typeof feature.premium === 'boolean' ? (
+                {typeof feature.premium === "boolean" ? (
                   <Icon
                     name="checkmark-circle"
                     size={20}
                     color={colors.secondary}
                   />
                 ) : (
-                  <Text style={styles.featurePremiumText}>{feature.premium}</Text>
+                  <Text style={styles.featurePremiumText}>
+                    {feature.premium}
+                  </Text>
                 )}
               </View>
             </View>
@@ -185,27 +241,53 @@ export default function PaywallScreen() {
         {/* Pricing Toggle */}
         <View style={styles.pricingToggle}>
           <TouchableOpacity
-            style={[styles.pricingOption, selectedPeriod === 'monthly' && styles.pricingOptionActive]}
-            onPress={() => setSelectedPeriod('monthly')}
+            style={[
+              styles.pricingOption,
+              selectedPeriod === "monthly" && styles.pricingOptionActive,
+            ]}
+            onPress={() => setSelectedPeriod("monthly")}
           >
-            <Text style={[styles.pricingLabel, selectedPeriod === 'monthly' && styles.pricingLabelActive]}>
+            <Text
+              style={[
+                styles.pricingLabel,
+                selectedPeriod === "monthly" && styles.pricingLabelActive,
+              ]}
+            >
               Monthly
             </Text>
-            <Text style={[styles.pricingPrice, selectedPeriod === 'monthly' && styles.pricingPriceActive]}>
+            <Text
+              style={[
+                styles.pricingPrice,
+                selectedPeriod === "monthly" && styles.pricingPriceActive,
+              ]}
+            >
               {monthlyPrice}/mo
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.pricingOption, selectedPeriod === 'yearly' && styles.pricingOptionActive]}
-            onPress={() => setSelectedPeriod('yearly')}
+            style={[
+              styles.pricingOption,
+              selectedPeriod === "yearly" && styles.pricingOptionActive,
+            ]}
+            onPress={() => setSelectedPeriod("yearly")}
           >
             <View style={styles.saveBadge}>
               <Text style={styles.saveBadgeText}>Save 33%</Text>
             </View>
-            <Text style={[styles.pricingLabel, selectedPeriod === 'yearly' && styles.pricingLabelActive]}>
+            <Text
+              style={[
+                styles.pricingLabel,
+                selectedPeriod === "yearly" && styles.pricingLabelActive,
+              ]}
+            >
               Yearly
             </Text>
-            <Text style={[styles.pricingPrice, selectedPeriod === 'yearly' && styles.pricingPriceActive]}>
+            <Text
+              style={[
+                styles.pricingPrice,
+                selectedPeriod === "yearly" && styles.pricingPriceActive,
+              ]}
+            >
               {yearlyPrice}/yr
             </Text>
           </TouchableOpacity>
@@ -213,7 +295,13 @@ export default function PaywallScreen() {
 
         {/* CTA Button */}
         <Button
-          title={purchasing ? 'Processing...' : isTrialing ? 'Subscribe Now' : 'Start 14-Day Free Trial'}
+          title={
+            purchasing
+              ? "Processing..."
+              : isTrialing
+                ? "Subscribe Now"
+                : "Start 14-Day Free Trial"
+          }
           onPress={handlePurchase}
           size="lg"
           disabled={purchasing || loading}
@@ -227,17 +315,18 @@ export default function PaywallScreen() {
           disabled={restoring}
         >
           <Text style={styles.restoreText}>
-            {restoring ? 'Restoring...' : 'Restore Purchases'}
+            {restoring ? "Restoring..." : "Restore Purchases"}
           </Text>
         </TouchableOpacity>
 
         {/* Fine print */}
         <Text style={styles.finePrint}>
           {isTrialing
-            ? 'Subscription auto-renews. Cancel anytime.'
-            : 'Free trial for 14 days, then auto-renews. Cancel anytime.'}
-          {' '}Payment will be charged to your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} account.
-          By subscribing, you agree to our Terms of Service and Privacy Policy.
+            ? "Subscription auto-renews. Cancel anytime."
+            : "Free trial for 14 days, then auto-renews. Cancel anytime."}{" "}
+          Payment will be charged to your{" "}
+          {Platform.OS === "ios" ? "Apple ID" : "Google Play"} account. By
+          subscribing, you agree to our Terms of Service and Privacy Policy.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -248,26 +337,26 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
   closeBtn: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     padding: spacing.xs,
     marginBottom: spacing.md,
   },
   title: {
     ...typography.parentH1,
     color: colors.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fonts.parent.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   featureCard: { marginBottom: spacing.xl, paddingVertical: spacing.sm },
   featureHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -276,27 +365,27 @@ const styles = StyleSheet.create({
   featureHeaderLabel: { flex: 1 },
   featureHeaderFree: {
     width: 60,
-    textAlign: 'center',
+    textAlign: "center",
     fontFamily: fonts.parent.semiBold,
     fontSize: 12,
     color: colors.textSecondary,
   },
   featureHeaderPremium: {
     width: 60,
-    textAlign: 'center',
+    textAlign: "center",
     fontFamily: fonts.parent.bold,
     fontSize: 12,
     color: colors.primary,
   },
   featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing.sm,
   },
   featureNameRow: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   featureName: {
@@ -306,7 +395,7 @@ const styles = StyleSheet.create({
   },
   featureValue: {
     width: 60,
-    alignItems: 'center',
+    alignItems: "center",
   },
   featureFreeText: {
     fontFamily: fonts.parent.regular,
@@ -319,13 +408,13 @@ const styles = StyleSheet.create({
     color: colors.secondary,
   },
   pricingToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },
   pricingOption: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 2,
@@ -334,7 +423,7 @@ const styles = StyleSheet.create({
   },
   pricingOptionActive: {
     borderColor: colors.primary,
-    backgroundColor: colors.primary + '08',
+    backgroundColor: colors.primary + "08",
   },
   pricingLabel: {
     fontFamily: fonts.parent.semiBold,
@@ -359,7 +448,7 @@ const styles = StyleSheet.create({
   saveBadgeText: {
     fontFamily: fonts.parent.bold,
     fontSize: 10,
-    color: '#FFF',
+    color: "#FFF",
   },
   ctaButton: {
     shadowColor: colors.primary,
@@ -369,27 +458,27 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   restoreBtn: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: spacing.md,
   },
   restoreText: {
     fontFamily: fonts.parent.medium,
     fontSize: 14,
     color: colors.textSecondary,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   finePrint: {
     fontFamily: fonts.parent.regular,
     fontSize: 11,
-    color: colors.textSecondary + '80',
-    textAlign: 'center',
+    color: colors.textSecondary + "80",
+    textAlign: "center",
     lineHeight: 16,
     paddingHorizontal: spacing.md,
   },
   alreadyPremium: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.xl,
     gap: spacing.md,
   },
@@ -401,7 +490,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.parent.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
 });

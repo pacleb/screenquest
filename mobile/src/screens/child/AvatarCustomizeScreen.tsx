@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
@@ -22,13 +22,7 @@ import {
   gamificationService,
   AvatarItemData,
 } from "../../services/gamification";
-import {
-  colors,
-  spacing,
-  borderRadius,
-  fonts,
-  useTheme,
-} from "../../theme";
+import { colors, spacing, borderRadius, fonts, useTheme } from "../../theme";
 import { Card } from "../../components";
 
 const SLOTS = [
@@ -145,11 +139,7 @@ export default function AvatarCustomize() {
           onPress={() => navigation.goBack()}
           style={[styles.backBtn, { backgroundColor: themeColors.card }]}
         >
-          <Icon
-            name="chevron-back"
-            size={24}
-            color={themeColors.textPrimary}
-          />
+          <Icon name="chevron-back" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
           Customize Avatar

@@ -11,43 +11,71 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { useAuthStore } from "../../store/auth";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { authService } from "../../services/auth";
 import { colors, spacing, borderRadius } from "../../theme";
 
-export default function RegisterScreen() {
+export default function ResetPasswordScreen() {
   const navigation = useNavigation<any>();
-  const register = useAuthStore((s) => s.register);
+  const route = useRoute<any>();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const token: string = route.params?.token ?? "";
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+  const handleSubmit = async () => {
+    if (!newPassword || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-
-    if (password.length < 8) {
+    if (newPassword.length < 8) {
       Alert.alert("Error", "Password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
     setLoading(true);
     try {
-      await register(email.trim(), password, name.trim());
-      // RootNavigator will detect familyId is null and show the Setup flow
+      await authService.resetPassword(token, newPassword);
+      Alert.alert(
+        "Password Reset",
+        "Your password has been reset successfully. Please sign in with your new password.",
+        [{ text: "Sign In", onPress: () => navigation.navigate("Login") }],
+      );
     } catch (error: any) {
       Alert.alert(
-        "Registration Failed",
-        error.response?.data?.message || "Something went wrong",
+        "Error",
+        error.response?.data?.message ||
+          "Invalid or expired reset link. Please request a new one.",
       );
     } finally {
       setLoading(false);
     }
   };
+
+  if (!token) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Invalid Link</Text>
+          <Text style={styles.subtitle}>
+            This password reset link is invalid or has expired. Please request a
+            new one.
+          </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("ForgotPassword")}
+          >
+            <Text style={styles.buttonText}>Request New Link</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,65 +84,44 @@ export default function RegisterScreen() {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.content}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Back</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.title}>Set New Password</Text>
           <Text style={styles.subtitle}>
-            Set up your parent account to get started
+            Enter your new password below. It must be at least 8 characters
+            long.
           </Text>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Your Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Jane Smith"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="parent@example.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>New Password</Text>
               <TextInput
                 style={styles.input}
                 placeholder="At least 8 characters"
-                value={password}
-                onChangeText={setPassword}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
                 secureTextEntry
               />
             </View>
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleRegister}
+              onPress={handleSubmit}
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading ? "Resetting..." : "Reset Password"}
               </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-              <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -133,23 +140,19 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  backButton: {
-    fontSize: 16,
-    color: colors.primary,
-    marginBottom: spacing.lg,
+    paddingTop: spacing.xl,
   },
   title: {
     fontSize: 28,
     fontWeight: "800",
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    lineHeight: 22,
+    marginBottom: spacing.lg,
   },
   form: {
     gap: spacing.md,
@@ -185,19 +188,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "700",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: spacing.xl,
-  },
-  footerText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  footerLink: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: "600",
   },
 });

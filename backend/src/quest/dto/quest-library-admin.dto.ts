@@ -38,7 +38,7 @@ export class CreateLibraryQuestDto {
   @ApiProperty()
   @IsInt()
   @Min(1)
-  @Max(480)
+  @Max(28800)
   suggestedRewardSeconds: number;
 
   @ApiPropertyOptional({ default: 'stackable' })
@@ -87,7 +87,7 @@ export class UpdateLibraryQuestDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(480)
+  @Max(28800)
   suggestedRewardSeconds?: number;
 
   @ApiPropertyOptional()

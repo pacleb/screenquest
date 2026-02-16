@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, spacing, borderRadius, useTheme } from "../../theme";
@@ -53,7 +53,9 @@ export default function ChildTrophies() {
       }
     } catch {
       // Load cached achievements if network fails
-      const cached = await offlineCache.getAchievements<AchievementData[]>(user.id).catch(() => null);
+      const cached = await offlineCache
+        .getAchievements<AchievementData[]>(user.id)
+        .catch(() => null);
       if (cached?.data && cached.data.length > 0) {
         useGamificationStore.setState({ achievements: cached.data });
       }

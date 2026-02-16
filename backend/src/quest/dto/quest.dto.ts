@@ -45,9 +45,9 @@ export class CreateQuestDto {
   @MaxLength(50)
   icon?: string;
 
-  @ApiProperty({ example: 'chores', enum: VALID_CATEGORIES })
+  @ApiProperty({ example: 'chores' })
   @IsString()
-  @IsIn(VALID_CATEGORIES)
+  @IsNotEmpty()
   category: string;
 
   @ApiProperty({ example: 30 })
@@ -116,10 +116,10 @@ export class UpdateQuestDto {
   @MaxLength(50)
   icon?: string;
 
-  @ApiPropertyOptional({ enum: VALID_CATEGORIES })
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  @IsIn(VALID_CATEGORIES)
+  @IsNotEmpty()
   category?: string;
 
   @ApiPropertyOptional()

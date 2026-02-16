@@ -1,22 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
   RefreshControl,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuthStore } from '../../store/auth';
-import { useGamificationStore } from '../../store/gamification';
-import { AVATAR_PACKS, AvatarPack, avatarPackService } from '../../services/avatarPacks';
-import { colors, spacing, borderRadius, fonts } from '../../theme';
-import { typography } from '../../theme/typography';
-import { Card, Badge, ProgressBar } from '../../components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { useAuthStore } from "../../store/auth";
+import { useGamificationStore } from "../../store/gamification";
+import {
+  AVATAR_PACKS,
+  AvatarPack,
+  avatarPackService,
+} from "../../services/avatarPacks";
+import { colors, spacing, borderRadius, fonts } from "../../theme";
+import { typography } from "../../theme/typography";
+import { Card, Badge, ProgressBar } from "../../components";
 
 export default function ChildProfile() {
   const navigation = useNavigation<any>();
@@ -32,7 +36,10 @@ export default function ChildProfile() {
     await Promise.all([
       fetchProgress(user.id),
       fetchAchievements(user.id),
-      avatarPackService.getOwnedPacks(user.id).then(setOwnedPacks).catch(() => {}),
+      avatarPackService
+        .getOwnedPacks(user.id)
+        .then(setOwnedPacks)
+        .catch(() => {}),
     ]);
   }, [user?.id]);
 
@@ -53,10 +60,10 @@ export default function ChildProfile() {
       const success = await avatarPackService.purchasePack(user.id, pack.id);
       if (success) {
         setOwnedPacks((prev) => [...prev, pack.id]);
-        Alert.alert('Purchased!', `You now own the ${pack.name} pack!`);
+        Alert.alert("Purchased!", `You now own the ${pack.name} pack!`);
       }
     } catch {
-      Alert.alert('Error', 'Could not complete the purchase. Try again later.');
+      Alert.alert("Error", "Could not complete the purchase. Try again later.");
     } finally {
       setPurchasing(null);
     }
@@ -64,7 +71,10 @@ export default function ChildProfile() {
 
   const recentBadges = achievements
     .filter((a) => a.unlockedAt)
-    .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime(),
+    )
     .slice(0, 5);
 
   return (
@@ -86,7 +96,7 @@ export default function ChildProfile() {
           {/* Level + Streak Row */}
           <View style={styles.levelRow}>
             <Text style={styles.level}>
-              Level {progress?.level ?? 1} — {progress?.levelName ?? 'Starter'}
+              Level {progress?.level ?? 1} — {progress?.levelName ?? "Starter"}
             </Text>
             {progress && progress.currentStreak > 0 && (
               <View style={styles.streakBadge}>
@@ -106,7 +116,8 @@ export default function ChildProfile() {
                 height={10}
               />
               <Text style={styles.xpText}>
-                {progress.totalXp} / {progress.totalXp + progress.xpToNextLevel} XP
+                {progress.totalXp} / {progress.totalXp + progress.xpToNextLevel}{" "}
+                XP
               </Text>
             </View>
           )}
@@ -117,7 +128,7 @@ export default function ChildProfile() {
           <View style={styles.badgesSection}>
             <View style={styles.badgesHeader}>
               <Text style={styles.sectionTitle}>Badges</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Trophies')}>
+              <TouchableOpacity onPress={() => navigation.navigate("Trophies")}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -137,13 +148,15 @@ export default function ChildProfile() {
         {/* Customize Avatar Button */}
         <TouchableOpacity
           style={styles.customizeBtn}
-          onPress={() => navigation.navigate('AvatarCustomize')}
+          onPress={() => navigation.navigate("AvatarCustomize")}
           activeOpacity={0.85}
         >
           <Text style={styles.customizeBtnIcon}>🎭</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.customizeBtnText}>Customize Avatar</Text>
-            <Text style={styles.customizeBtnHint}>Equip hats, outfits & more!</Text>
+            <Text style={styles.customizeBtnHint}>
+              Equip hats, outfits & more!
+            </Text>
           </View>
           <Icon name="chevron-forward" size={20} color={colors.purple} />
         </TouchableOpacity>
@@ -161,7 +174,9 @@ export default function ChildProfile() {
                 <Text style={styles.packName}>{pack.name}</Text>
                 <View style={styles.packItems}>
                   {pack.items.slice(0, 4).map((item, i) => (
-                    <Text key={i} style={styles.packItemEmoji}>{item}</Text>
+                    <Text key={i} style={styles.packItemEmoji}>
+                      {item}
+                    </Text>
                   ))}
                 </View>
                 {owned ? (
@@ -173,7 +188,7 @@ export default function ChildProfile() {
                     disabled={purchasing === pack.id}
                   >
                     <Text style={styles.buyBtnText}>
-                      {purchasing === pack.id ? '...' : pack.priceString}
+                      {purchasing === pack.id ? "..." : pack.priceString}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -196,7 +211,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
   profileHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.lg,
   },
   avatar: {
@@ -204,10 +219,10 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.md,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -221,8 +236,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   levelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
@@ -232,7 +247,7 @@ const styles = StyleSheet.create({
     color: colors.purple,
   },
   streakBadge: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: "#FFF3E0",
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.full,
@@ -240,26 +255,26 @@ const styles = StyleSheet.create({
   streakText: {
     fontFamily: fonts.child.bold,
     fontSize: 13,
-    color: '#E65100',
+    color: "#E65100",
   },
   xpSection: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: spacing.xl,
   },
   xpText: {
     fontFamily: fonts.child.semiBold,
     fontSize: 12,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.xs,
   },
   badgesSection: {
     marginBottom: spacing.lg,
   },
   badgesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.sm,
   },
   sectionTitle: {
@@ -273,11 +288,11 @@ const styles = StyleSheet.create({
     color: colors.purple,
   },
   badgesRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   badgeItem: {
-    alignItems: 'center',
+    alignItems: "center",
     width: 56,
   },
   badgeIcon: { fontSize: 28 },
@@ -285,19 +300,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.regular,
     fontSize: 10,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 2,
   },
   customizeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.lg,
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.purple + '30',
+    borderColor: colors.purple + "30",
   },
   customizeBtnIcon: { fontSize: 28 },
   customizeBtnText: {
@@ -323,14 +338,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   packsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },
   packCard: {
-    width: '47%' as any,
-    alignItems: 'center',
+    width: "47%" as any,
+    alignItems: "center",
     paddingVertical: spacing.md,
   },
   packIcon: { fontSize: 36, marginBottom: spacing.xs },
@@ -338,11 +353,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.bold,
     fontSize: 13,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
   },
   packItems: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
     marginBottom: spacing.sm,
   },
@@ -356,12 +371,12 @@ const styles = StyleSheet.create({
   buyBtnText: {
     fontFamily: fonts.child.bold,
     fontSize: 13,
-    color: '#FFF',
+    color: "#FFF",
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.xs,
     backgroundColor: colors.error,
     paddingVertical: spacing.md,
@@ -369,7 +384,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontFamily: fonts.child.bold,
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
   },
 });

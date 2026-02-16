@@ -1,6 +1,7 @@
 import api from './api';
 import notifee, { AndroidImportance } from '@notifee/react-native';
-import messaging from '@react-native-firebase/messaging';
+import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
 import { Platform } from 'react-native';
 
 export interface NotificationPreferences {
@@ -13,22 +14,55 @@ export interface NotificationPreferences {
   weeklySummary: boolean;
 }
 
+export interface NotificationData {
+  type?: string;
+  questId?: string;
+  completionId?: string;
+  sessionId?: string;
+  childId?: string;
+  [key: string]: string | undefined;
+}
+
+type NavigationCallback = (data: NotificationData) => void;
+
+let navigationCallback: NavigationCallback | null = null;
+
+/**
+ * Check if Firebase is configured (GoogleService-Info.plist / google-services.json exists).
+ */
+function isFirebaseAvailable(): boolean {
+  try {
+    getApp();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const notificationService = {
   async registerPushToken(userId: string): Promise<void> {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (!isFirebaseAvailable()) return;
 
-    if (!enabled) return;
+    try {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-    const token = await messaging().getToken();
-    const platform = Platform.OS as string;
+      if (!enabled) return;
 
-    await api.post(`/users/${userId}/push-token`, { token, platform });
+      const token = await messaging().getToken();
+      const platform = Platform.OS as string;
+
+      await api.post(`/users/${userId}/push-token`, { token, platform });
+    } catch {
+      // Firebase not configured or permission denied
+    }
   },
 
   async unregisterPushToken(userId: string): Promise<void> {
+    if (!isFirebaseAvailable()) return;
+
     try {
       const token = await messaging().getToken();
       await api.delete(`/users/${userId}/push-token`, {
@@ -54,9 +88,30 @@ export const notificationService = {
 };
 
 /**
- * Configure notification handler for foreground notifications
+ * Set callback for handling notification taps that require navigation.
+ * Should be called once from App.tsx with the navigation ref.
+ */
+export function setNotificationNavigationCallback(callback: NavigationCallback) {
+  navigationCallback = callback;
+}
+
+function handleNotificationData(remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) {
+  if (!remoteMessage?.data || !navigationCallback) return;
+  navigationCallback(remoteMessage.data as NotificationData);
+}
+
+/**
+ * Configure notification handlers for foreground display, background/killed-state taps,
+ * and token refresh.
  */
 export async function setupNotificationHandler() {
+  if (!isFirebaseAvailable()) {
+    if (__DEV__) {
+      console.log('[Notifications] Firebase not configured — push notifications disabled');
+    }
+    return;
+  }
+
   // Create a default channel for Android
   if (Platform.OS === 'android') {
     await notifee.createChannel({
@@ -66,16 +121,56 @@ export async function setupNotificationHandler() {
     });
   }
 
-  // Handle foreground messages
-  messaging().onMessage(async (remoteMessage) => {
-    await notifee.displayNotification({
-      title: remoteMessage.notification?.title ?? 'ScreenQuest',
-      body: remoteMessage.notification?.body ?? '',
-      android: {
-        channelId: 'default',
-        smallIcon: 'ic_launcher',
-        pressAction: { id: 'default' },
-      },
+  try {
+    // Handle foreground messages — display as local notification
+    messaging().onMessage(async (remoteMessage) => {
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title ?? 'ScreenQuest',
+        body: remoteMessage.notification?.body ?? '',
+        data: remoteMessage.data,
+        android: {
+          channelId: 'default',
+          smallIcon: 'ic_launcher',
+          pressAction: { id: 'default' },
+        },
+      });
     });
-  });
+
+    // Handle notification tap when app is in background
+    messaging().onNotificationOpenedApp((remoteMessage) => {
+      handleNotificationData(remoteMessage);
+    });
+
+    // Handle notification tap when app was killed (cold start)
+    const initialNotification = await messaging().getInitialNotification();
+    if (initialNotification) {
+      // Delay slightly to ensure navigation is ready
+      setTimeout(() => handleNotificationData(initialNotification), 1000);
+    }
+  } catch {
+    // Firebase messaging setup failed
+  }
+}
+
+/**
+ * Listen for FCM token refresh and re-register with backend.
+ * Should be called when user is authenticated.
+ */
+export function setupTokenRefreshListener(userId: string): () => void {
+  if (!isFirebaseAvailable()) return () => {};
+
+  try {
+    const unsubscribe = messaging().onTokenRefresh(async (newToken) => {
+      try {
+        const platform = Platform.OS as string;
+        await api.post(`/users/${userId}/push-token`, { token: newToken, platform });
+      } catch {
+        // best effort
+      }
+    });
+
+    return unsubscribe;
+  } catch {
+    return () => {};
+  }
 }

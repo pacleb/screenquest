@@ -1,7 +1,12 @@
 import * as Sentry from "@sentry/react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, ActivityIndicator, StatusBar } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  LinkingOptions,
+  NavigationContainerRef,
+} from "@react-navigation/native";
+import { Linking } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "./src/store/auth";
 import { useSubscriptionStore } from "./src/store/subscription";
@@ -9,11 +14,38 @@ import { useThemeStore } from "./src/store/theme";
 import {
   setupNotificationHandler,
   notificationService,
+  setNotificationNavigationCallback,
+  setupTokenRefreshListener,
 } from "./src/services/notification";
+import type { NotificationData } from "./src/services/notification";
 import { subscriptionService } from "./src/services/subscription";
 import { colors, ThemeProvider } from "./src/theme";
 import { ErrorBoundary, OfflineBanner, ToastProvider } from "./src/components";
 import { RootNavigator } from "./src/navigation/RootNavigator";
+import type { RootStackParamList } from "./src/navigation/types";
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ["screenquest://"],
+  config: {
+    screens: {
+      Auth: {
+        screens: {
+          ResetPassword: "reset-password",
+        },
+      },
+    },
+  },
+  async getInitialURL() {
+    const url = await Linking.getInitialURL();
+    return url;
+  },
+  subscribe(listener) {
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      listener(url);
+    });
+    return () => subscription.remove();
+  },
+};
 
 setupNotificationHandler();
 
@@ -27,6 +59,7 @@ if (SENTRY_DSN) {
 }
 
 function App() {
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const initialize = useAuthStore((s) => s.initialize);
   const user = useAuthStore((s) => s.user);
   const [fontsReady, setFontsReady] = useState(true); // Fonts are linked natively now
@@ -37,11 +70,61 @@ function App() {
   useEffect(() => {
     subscriptionService.initRevenueCat();
     initialize();
+
+    // Set up notification tap navigation handler
+    setNotificationNavigationCallback((data: NotificationData) => {
+      const nav = navigationRef.current;
+      if (!nav?.isReady()) return;
+
+      switch (data.type) {
+        case "quest_completed":
+        case "quest_approved":
+        case "quest_denied":
+          // Navigate parent to Approvals tab
+          nav.navigate("App" as any, {
+            screen: "ParentTabs",
+            params: { screen: "Approvals" },
+          });
+          break;
+        case "play_request":
+        case "play_approved":
+        case "play_denied":
+          // Navigate parent to Approvals tab for play requests too
+          nav.navigate("App" as any, {
+            screen: "ParentTabs",
+            params: { screen: "Approvals" },
+          });
+          break;
+        case "violation":
+          nav.navigate("App" as any, {
+            screen: "ParentTabs",
+            params: { screen: "Consequences" },
+          });
+          break;
+        case "achievement":
+        case "level_up":
+          nav.navigate("App" as any, {
+            screen: "ChildTabs",
+            params: { screen: "Trophies" },
+          });
+          break;
+        default:
+          // Navigate to dashboard/home as fallback
+          nav.navigate("App" as any, {
+            screen: "ParentTabs",
+            params: { screen: "Dashboard" },
+          });
+          break;
+      }
+    });
   }, []);
 
   useEffect(() => {
+    let unsubscribeTokenRefresh: (() => void) | undefined;
+
     if (user?.id) {
       notificationService.registerPushToken(user.id);
+      unsubscribeTokenRefresh = setupTokenRefreshListener(user.id);
       if (user.role === "child") {
         fetchThemes();
       }
@@ -50,6 +133,10 @@ function App() {
       subscriptionService.identifyUser(user.familyId);
       fetchSubscriptionStatus(user.familyId);
     }
+
+    return () => {
+      unsubscribeTokenRefresh?.();
+    };
   }, [user?.id, user?.familyId]);
 
   if (!fontsReady) {
@@ -74,7 +161,7 @@ function App() {
           <ToastProvider>
             <StatusBar barStyle="dark-content" />
             <OfflineBanner />
-            <NavigationContainer>
+            <NavigationContainer ref={navigationRef} linking={linking}>
               <RootNavigator />
             </NavigationContainer>
           </ToastProvider>

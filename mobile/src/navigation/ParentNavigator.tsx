@@ -16,6 +16,7 @@ import SettingsScreen from "../screens/parent/SettingsScreen";
 import QuestEditScreen from "../screens/parent/QuestEditScreen";
 import PaywallScreen from "../screens/parent/PaywallScreen";
 import QuestArchivalScreen from "../screens/parent/QuestArchivalScreen";
+import NotificationPreferencesScreen from "../screens/parent/NotificationPreferencesScreen";
 
 const Tab = createBottomTabNavigator<ParentTabParamList>();
 const Stack = createNativeStackNavigator<ParentStackParamList>();
@@ -115,6 +116,7 @@ export function ParentNavigator() {
       <Stack.Screen name="QuestEdit" component={QuestEditScreen} />
       <Stack.Screen name="Paywall" component={PaywallScreen} />
       <Stack.Screen name="QuestArchival" component={QuestArchivalScreen} />
+      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
     </Stack.Navigator>
   );
 }

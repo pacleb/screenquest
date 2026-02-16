@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
@@ -11,6 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Linking, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -18,21 +18,12 @@ import { useAuthStore } from "../../store/auth";
 import { useSubscriptionStore } from "../../store/subscription";
 import { useThemeStore, DarkModePreference } from "../../store/theme";
 import { familyService, FamilyMember } from "../../services/family";
-import {
-  playSessionService,
-  PlaySettings,
-} from "../../services/playSession";
+import { playSessionService, PlaySettings } from "../../services/playSession";
 import { subscriptionService } from "../../services/subscription";
 import { gamificationService } from "../../services/gamification";
 import { privacyService, DeletionStatus } from "../../services/privacy";
 import { SoundEffects } from "../../services/soundEffects";
-import {
-  colors,
-  spacing,
-  borderRadius,
-  fonts,
-  typography,
-} from "../../theme";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Badge } from "../../components";
 
 export default function SettingsScreen() {
@@ -126,11 +117,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.infoRow}>
-            <Icon
-              name="mail-outline"
-              size={20}
-              color={colors.textSecondary}
-            />
+            <Icon name="mail-outline" size={20} color={colors.textSecondary} />
             <Text style={styles.infoText}>{user?.email}</Text>
           </View>
           <View style={styles.infoRow}>
@@ -461,6 +448,27 @@ export default function SettingsScreen() {
           </View>
         )}
 
+        {/* Notifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate("NotificationPreferences")}
+          >
+            <Icon
+              name="notifications-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.linkText}>Notification Preferences</Text>
+            <Icon
+              name="chevron-forward"
+              size={16}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
         {/* Privacy & Legal */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Preferences</Text>
@@ -581,11 +589,7 @@ export default function SettingsScreen() {
             !deletionStatus.cancelledAt &&
             !deletionStatus.purgedAt && (
               <View style={styles.deletionBanner}>
-                <Icon
-                  name="warning-outline"
-                  size={20}
-                  color={colors.error}
-                />
+                <Icon name="warning-outline" size={20} color={colors.error} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.deletionBannerTitle}>
                     Deletion Scheduled

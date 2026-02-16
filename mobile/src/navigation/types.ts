@@ -8,6 +8,8 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Login: { mode?: 'parent' | 'child' } | undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
   CreateFamily: undefined;
   JoinFamily: undefined;
   AddChild: undefined;
@@ -32,6 +34,7 @@ export type ParentStackParamList = {
   QuestEdit: { id?: string };
   Paywall: undefined;
   QuestArchival: undefined;
+  NotificationPreferences: undefined;
 };
 
 export type ChildTabParamList = {

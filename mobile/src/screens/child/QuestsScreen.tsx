@@ -1,29 +1,29 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   RefreshControl,
   ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuthStore } from '../../store/auth';
-import { completionService, ChildQuest } from '../../services/completion';
-import { colors, spacing, borderRadius, fonts, typography } from '../../theme';
-import { EmptyState } from '../../components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { useAuthStore } from "../../store/auth";
+import { completionService, ChildQuest } from "../../services/completion";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
+import { EmptyState } from "../../components";
 
 const CATEGORIES = [
-  { key: 'all', label: 'All' },
-  { key: 'chores', label: 'Chores' },
-  { key: 'studying', label: 'Study' },
-  { key: 'exercise', label: 'Exercise' },
-  { key: 'reading', label: 'Reading' },
-  { key: 'creative', label: 'Creative' },
-  { key: 'helping_others', label: 'Helping' },
-  { key: 'custom', label: 'Custom' },
+  { key: "all", label: "All" },
+  { key: "chores", label: "Chores" },
+  { key: "studying", label: "Study" },
+  { key: "exercise", label: "Exercise" },
+  { key: "reading", label: "Reading" },
+  { key: "creative", label: "Creative" },
+  { key: "helping_others", label: "Helping" },
+  { key: "custom", label: "Custom" },
 ];
 
 export default function ChildQuests() {
@@ -32,7 +32,7 @@ export default function ChildQuests() {
   const [quests, setQuests] = useState<ChildQuest[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   const fetchQuests = useCallback(async () => {
     if (!user?.id) return;
@@ -52,7 +52,7 @@ export default function ChildQuests() {
   }, [fetchQuests]);
 
   const filteredQuests =
-    selectedCategory === 'all'
+    selectedCategory === "all"
       ? quests
       : quests.filter((q) => q.category === selectedCategory);
 
@@ -64,7 +64,7 @@ export default function ChildQuests() {
       <View style={styles.header}>
         <Text style={styles.title}>Quest Board</Text>
         <Text style={styles.subtitle}>
-          {availableCount} quest{availableCount !== 1 ? 's' : ''} available
+          {availableCount} quest{availableCount !== 1 ? "s" : ""} available
         </Text>
       </View>
 
@@ -77,10 +77,18 @@ export default function ChildQuests() {
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
             key={cat.key}
-            style={[styles.chip, selectedCategory === cat.key && styles.chipActive]}
+            style={[
+              styles.chip,
+              selectedCategory === cat.key && styles.chipActive,
+            ]}
             onPress={() => setSelectedCategory(cat.key)}
           >
-            <Text style={[styles.chipText, selectedCategory === cat.key && styles.chipTextActive]}>
+            <Text
+              style={[
+                styles.chipText,
+                selectedCategory === cat.key && styles.chipTextActive,
+              ]}
+            >
               {cat.label}
             </Text>
           </TouchableOpacity>
@@ -94,7 +102,13 @@ export default function ChildQuests() {
         numColumns={2}
         columnWrapperStyle={styles.gridRow}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchQuests(); }} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchQuests();
+            }}
+          />
         }
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -103,40 +117,57 @@ export default function ChildQuests() {
             <EmptyState
               emoji="🗺️"
               title="No quests found"
-              message={selectedCategory !== 'all' ? 'Try a different category!' : 'Ask your parents to create quests for you!'}
+              message={
+                selectedCategory !== "all"
+                  ? "Try a different category!"
+                  : "Ask your parents to create quests for you!"
+              }
               childUI
             />
           ) : null
         }
         renderItem={({ item: quest }) => (
           <TouchableOpacity
-            style={[styles.gridCard, !quest.availableToComplete && styles.gridCardDisabled]}
-            onPress={() =>
-              navigation.navigate('QuestDetail', { id: quest.id })
-            }
+            style={[
+              styles.gridCard,
+              !quest.availableToComplete && styles.gridCardDisabled,
+            ]}
+            onPress={() => navigation.navigate("QuestDetail", { id: quest.id })}
             activeOpacity={0.85}
           >
             {!quest.availableToComplete && (
               <View style={styles.gridOverlay}>
                 <Text style={styles.gridOverlayText}>
-                  {quest.statusLabel === 'pending' ? '⏳' : '✅'}
+                  {quest.statusLabel === "pending" ? "⏳" : "✅"}
                 </Text>
               </View>
             )}
             <Text style={styles.gridIcon}>{quest.icon}</Text>
-            <Text style={styles.gridName} numberOfLines={2}>{quest.name}</Text>
+            <Text style={styles.gridName} numberOfLines={2}>
+              {quest.name}
+            </Text>
             <View style={styles.gridReward}>
-              <Text style={styles.gridRewardText}>{quest.rewardSeconds} min</Text>
+              <Text style={styles.gridRewardText}>
+                {quest.rewardSeconds} min
+              </Text>
             </View>
-            <View style={[
-              styles.gridStack,
-              quest.stackingType === 'stackable' ? styles.stackable : styles.todayOnly,
-            ]}>
-              <Text style={[
-                styles.gridStackText,
-                quest.stackingType === 'stackable' ? styles.stackableText : styles.todayOnlyText,
-              ]}>
-                {quest.stackingType === 'stackable' ? 'Stackable' : 'Today'}
+            <View
+              style={[
+                styles.gridStack,
+                quest.stackingType === "stackable"
+                  ? styles.stackable
+                  : styles.todayOnly,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.gridStackText,
+                  quest.stackingType === "stackable"
+                    ? styles.stackableText
+                    : styles.todayOnlyText,
+                ]}
+              >
+                {quest.stackingType === "stackable" ? "Stackable" : "Today"}
               </Text>
             </View>
           </TouchableOpacity>
@@ -185,20 +216,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
   },
-  chipTextActive: { color: '#FFF' },
+  chipTextActive: { color: "#FFF" },
   list: { paddingHorizontal: spacing.md, paddingBottom: 100 },
   gridRow: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingHorizontal: spacing.sm,
   },
   gridCard: {
-    width: '47%',
+    width: "47%",
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.md,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -210,14 +241,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.bold,
     fontSize: 14,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
     minHeight: 36,
   },
   gridReward: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    backgroundColor: colors.primary + '12',
+    backgroundColor: colors.primary + "12",
     borderRadius: borderRadius.sm,
     marginBottom: spacing.xs,
   },
@@ -231,16 +262,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
-  stackable: { backgroundColor: '#E8F5E9' },
-  todayOnly: { backgroundColor: '#FFF3E0' },
+  stackable: { backgroundColor: "#E8F5E9" },
+  todayOnly: { backgroundColor: "#FFF3E0" },
   gridStackText: {
     fontFamily: fonts.child.semiBold,
     fontSize: 11,
   },
-  stackableText: { color: '#388E3C' },
-  todayOnlyText: { color: '#E65100' },
+  stackableText: { color: "#388E3C" },
+  todayOnlyText: { color: "#E65100" },
   gridOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: spacing.sm,
     right: spacing.sm,
     zIndex: 1,
