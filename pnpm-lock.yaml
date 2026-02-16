@@ -110,6 +110,9 @@ importers:
       posthog-node:
         specifier: ^5.24.15
         version: 5.24.15
+      prisma:
+        specifier: ^5.18.0
+        version: 5.22.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -174,9 +177,6 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.19.10)(ts-node@10.9.2(@types/node@22.19.10)(typescript@5.9.3))
-      prisma:
-        specifier: ^5.18.0
-        version: 5.22.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21

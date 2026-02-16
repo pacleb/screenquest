@@ -1,0 +1,15 @@
+node_modules
+.git
+.gitignore
+*.md
+.env
+.env.*
+backend/dist
+backend/coverage
+backend/test
+backend/uploads/proofs/*
+mobile
+cms
+docs
+phases
+.DS_Store
