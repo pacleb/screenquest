@@ -41,7 +41,11 @@
       "sharp",
       "@sentry/cli"
     ],
-    "overrides": {}
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "@types/react": "^19.0.0"
+    }
   },
   "dependencies": {
     "react": "19.1.0",

@@ -2,4 +2,5 @@ packages:
   - "backend"
   - "mobile"
   - "cms"
+  - "web"
   - "shared"

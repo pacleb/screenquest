@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-brand-700;
+  }
+  .hero-gradient {
+    background: radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(99, 102, 241, 0.15),
+      transparent
+    );
+  }
+}
