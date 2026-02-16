@@ -150,19 +150,21 @@ export default function QuestArchivalScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        >
-          <Icon name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+          >
+            <Icon name="arrow-back" size={24} color={colors.primary} />
+          </TouchableOpacity>
 
-        <Text style={styles.title}>Choose Quests to Keep</Text>
-        <Text style={styles.subtitle}>
-          Your plan changed to Free. You have {quests.length} active quests but
-          the free plan allows {MAX_KEEP}. Please choose which {MAX_KEEP} to
-          keep — the rest will be archived.
-        </Text>
+          <Text style={styles.title}>Choose Quests to Keep</Text>
+          <Text style={styles.subtitle}>
+            Your plan changed to Free. You have {quests.length} active quests
+            but the free plan allows {MAX_KEEP}. Please choose which {MAX_KEEP}{" "}
+            to keep — the rest will be archived.
+          </Text>
+        </View>
 
         {daysRemaining !== null && (
           <View style={styles.countdownBanner}>
@@ -250,7 +252,9 @@ const styles = StyleSheet.create({
   backBtn: { marginBottom: spacing.md },
   title: {
     ...typography.parentH1,
-    color: colors.textPrimary,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
     marginBottom: spacing.sm,
   },
   subtitle: {
@@ -258,7 +262,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textSecondary,
     lineHeight: 22,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   countdownBanner: {
     flexDirection: "row",

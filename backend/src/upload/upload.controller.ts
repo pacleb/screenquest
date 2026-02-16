@@ -24,7 +24,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { memoryStorage } from 'multer';
 import { basename } from 'path';
 import { v4 as uuid } from 'uuid';
-import sharp from 'sharp';
+import * as sharp from 'sharp';
 import { StorageService } from './storage.service';
 
 // Magic byte signatures for allowed image types

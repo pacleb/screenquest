@@ -380,7 +380,9 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.lg },
   title: {
     ...typography.parentH1,
-    color: colors.textPrimary,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
     marginBottom: spacing.md,
   },
   childSelector: {

@@ -17,10 +17,6 @@ export interface ThemeColors {
   streak: string;
 }
 
-export type DarkModePreference = 'system' | 'light' | 'dark';
-
-const DARK_MODE_KEY = '@screenquest_dark_mode';
-
 interface ThemeState {
   themes: ThemeData[];
   activeTheme: ThemeData | null;
@@ -28,8 +24,6 @@ interface ThemeState {
   activityFeed: ActivityFeedData | null;
   showcaseBadges: BadgeShowcaseData[];
   loading: boolean;
-  darkModePref: DarkModePreference;
-
   fetchThemes: () => Promise<void>;
   setActiveTheme: (themeId: string) => Promise<void>;
   fetchWeeklyStats: () => Promise<void>;
@@ -37,8 +31,6 @@ interface ThemeState {
   fetchShowcase: (childId: string) => Promise<void>;
   setShowcase: (badgeIds: string[]) => Promise<void>;
   useStreakFreeze: () => Promise<{ success: boolean; message: string }>;
-  setDarkModePref: (pref: DarkModePreference) => void;
-  loadDarkModePref: () => Promise<void>;
   reset: () => void;
 }
 
@@ -49,7 +41,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   activityFeed: null,
   showcaseBadges: [],
   loading: false,
-  darkModePref: 'system' as DarkModePreference,
 
   fetchThemes: async () => {
     try {
@@ -120,20 +111,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     }
   },
 
-  setDarkModePref: (pref: DarkModePreference) => {
-    set({ darkModePref: pref });
-    AsyncStorage.setItem(DARK_MODE_KEY, pref).catch(() => {});
-  },
-
-  loadDarkModePref: async () => {
-    try {
-      const stored = await AsyncStorage.getItem(DARK_MODE_KEY);
-      if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        set({ darkModePref: stored });
-      }
-    } catch {}
-  },
-
   reset: () =>
     set({
       themes: [],
@@ -142,6 +119,5 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       activityFeed: null,
       showcaseBadges: [],
       loading: false,
-      darkModePref: 'system',
     }),
 }));

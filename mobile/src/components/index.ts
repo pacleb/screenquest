@@ -19,6 +19,7 @@ export { SkeletonLoader, SkeletonQuestCard, SkeletonDashboard } from './Skeleton
 export { LottieAnimation } from './LottieAnimation';
 export { ErrorBoundary } from './ErrorBoundary';
 export { OfflineBanner } from './OfflineBanner';
+export { ParentHeader } from './ParentHeader';
 export { DropdownPicker } from './DropdownPicker';
 export type { DropdownOption } from './DropdownPicker';
 export { ToastProvider } from './Toast';

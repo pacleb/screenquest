@@ -16,7 +16,7 @@ import {
   notificationService,
   NotificationPreferences,
 } from "../../services/notification";
-import { colors, spacing, borderRadius, fonts } from "../../theme";
+import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 
 interface PreferenceItem {
   key: keyof Omit<NotificationPreferences, "userId">;
@@ -104,7 +104,7 @@ export default function NotificationPreferencesScreen() {
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Icon name="arrow-back" size={24} color={colors.textPrimary} />
+          <Icon name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.title}>Notifications</Text>
         <View style={{ width: 24 }} />
@@ -165,10 +165,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "700",
-    fontFamily: fonts.parent.bold,
-    color: colors.textPrimary,
+    ...typography.parentH2,
+    fontWeight: "bold",
+    color: colors.primary,
   },
   scrollContent: { padding: spacing.lg, paddingTop: 0 },
   sectionDesc: {

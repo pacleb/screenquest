@@ -22,7 +22,7 @@ import {
   CreateQuestData,
 } from "../../services/quest";
 import { familyService, FamilyMember } from "../../services/family";
-import { colors, spacing, borderRadius } from "../../theme";
+import { colors, spacing, borderRadius, typography } from "../../theme";
 import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
 import { eventBus, AppEvents } from "../../utils/eventBus";
 
@@ -313,7 +313,7 @@ export default function QuestEditScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
-          <Icon name="arrow-back" size={24} color={colors.textPrimary} />
+          <Icon name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {isEditMode ? "Edit Quest" : "New Quest"}
@@ -713,16 +713,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
   },
   backBtn: { marginRight: spacing.md },
   headerTitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.textPrimary,
+    ...typography.parentH2,
+    fontWeight: "bold",
+    color: colors.primary,
   },
   saveBtn: {
     backgroundColor: colors.primary,

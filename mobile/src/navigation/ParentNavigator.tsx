@@ -29,11 +29,11 @@ function ParentTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: "rgba(255,255,255,0.6)",
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          backgroundColor: colors.primaryDark,
+          borderTopColor: colors.primaryDark,
           height: 56 + bottomPadding,
           paddingBottom: bottomPadding,
           paddingTop: 4,
@@ -116,7 +116,10 @@ export function ParentNavigator() {
       <Stack.Screen name="QuestEdit" component={QuestEditScreen} />
       <Stack.Screen name="Paywall" component={PaywallScreen} />
       <Stack.Screen name="QuestArchival" component={QuestArchivalScreen} />
-      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+      />
     </Stack.Navigator>
   );
 }

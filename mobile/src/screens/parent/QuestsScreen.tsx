@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { questService, Quest } from "../../services/quest";
-import { colors, spacing, borderRadius } from "../../theme";
+import { colors, spacing, borderRadius, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
 import { formatTimeLabel } from "../../utils/formatTime";
@@ -166,7 +166,7 @@ export default function QuestsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.headerRow}>
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>
           <Text style={styles.counter}>
@@ -243,8 +243,17 @@ export default function QuestsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  title: { fontSize: 28, fontWeight: "800", color: colors.textPrimary },
+  headerRow: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    marginBottom: spacing.md,
+  },
+  title: {
+    ...typography.parentH1,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
+  },
   counterRow: {
     flexDirection: "row",
     alignItems: "center",

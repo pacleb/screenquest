@@ -166,32 +166,9 @@ export default function ParentDashboard() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>
-              {getGreeting()}, {user?.name}
-            </Text>
-            <Text style={styles.date}>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={logout}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel="Log out"
-            accessibilityRole="button"
-          >
-            <Icon
-              name="log-out-outline"
-              size={22}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.greeting}>
+          {getGreeting()}, {user?.name}
+        </Text>
 
         {/* Trial Banner */}
         {isTrialing && trialDaysRemaining !== null && (
@@ -545,8 +522,10 @@ export default function ParentDashboard() {
                     </View>
                     <View style={styles.feedContent}>
                       <Text style={styles.feedMessage}>
-                        <Text style={styles.feedChildName}>{item.childName}</Text>
-                        {' '}{item.message}
+                        <Text style={styles.feedChildName}>
+                          {item.childName}
+                        </Text>{" "}
+                        {item.message}
                       </Text>
                       <Text style={styles.feedTime}>
                         {formatTimeAgo(item.timestamp)}
@@ -578,23 +557,13 @@ function formatTimeAgo(timestamp: string): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { padding: spacing.lg, paddingBottom: 100 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: spacing.xl,
-  },
-  headerLeft: { flex: 1 },
+  scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   greeting: {
     ...typography.parentH1,
-    color: colors.textPrimary,
-  },
-  date: {
-    fontFamily: fonts.parent.regular,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
+    marginBottom: spacing.md,
   },
   childScroll: { paddingRight: spacing.lg, marginBottom: spacing.lg },
   childCard: {

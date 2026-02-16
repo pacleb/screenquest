@@ -111,13 +111,13 @@ export class AuthController {
           .card { background: white; border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
           h1 { color: #333; font-size: 22px; }
           p { color: #666; line-height: 1.6; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #6C63FF, #4ECDC4); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #6B2FA0, #8B5FBF); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
           .error { color: #e74c3c; }
         </style>
       </head>
       <body>
         <div class="card">
-          <h1>🏰 ScreenQuest</h1>
+          <h1>ScreenQuest</h1>
           ${success
             ? '<p>Your email has been verified successfully! ✅</p>'
             : '<p class="error">Verification failed. The link may have expired or already been used.</p>'}
@@ -158,12 +158,12 @@ export class AuthController {
           .card { background: white; border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
           h1 { color: #333; font-size: 22px; }
           p { color: #666; line-height: 1.6; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #6C63FF, #4ECDC4); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #6B2FA0, #8B5FBF); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
         </style>
       </head>
       <body>
         <div class="card">
-          <h1>🏰 ScreenQuest</h1>
+          <h1>ScreenQuest</h1>
           <p>Opening the app to reset your password...</p>
           <a class="btn" href="${deepLink}">Open ScreenQuest</a>
           <p style="margin-top:24px;font-size:13px;color:#999;">If the app didn't open automatically, tap the button above.</p>

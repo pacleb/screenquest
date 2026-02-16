@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useAuthStore } from "../../store/auth";
 import { familyService, Family, FamilyMember } from "../../services/family";
-import { colors, spacing, borderRadius } from "../../theme";
+import { colors, spacing, borderRadius, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
 
@@ -450,16 +450,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  title: { fontSize: 28, fontWeight: "800", color: colors.textPrimary },
+  title: {
+    ...typography.parentH1,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
+  },
   planBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.xl,
-    backgroundColor: colors.accent + "20",
+    backgroundColor: colors.primaryLight,
   },
-  planText: { fontSize: 12, fontWeight: "700", color: colors.accent },
+  planText: { fontSize: 12, fontWeight: "700", color: "#FFFFFF" },
   codeCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,

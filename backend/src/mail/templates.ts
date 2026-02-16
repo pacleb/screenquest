@@ -24,8 +24,8 @@ function layout(content: string): string {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #6C63FF 0%, #4ECDC4 100%); padding:32px 40px; text-align:center;">
-              <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:-0.5px;">🏰 ScreenQuest</h1>
+            <td style="background: linear-gradient(135deg, #6B2FA0 0%, #4A1D73 100%); padding:32px 40px; text-align:center;">
+              <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:-0.5px;">ScreenQuest</h1>
               <p style="margin:6px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">Earn screen time through real-world quests</p>
             </td>
           </tr>
@@ -57,7 +57,7 @@ function button(text: string, url: string): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
     <tr>
       <td align="center">
-        <a href="${url}" target="_blank" style="display:inline-block; background:linear-gradient(135deg, #6C63FF 0%, #4ECDC4 100%); color:#ffffff; text-decoration:none; padding:14px 36px; border-radius:8px; font-size:16px; font-weight:600; letter-spacing:0.3px;">
+        <a href="${url}" target="_blank" style="display:inline-block; background:linear-gradient(135deg, #6B2FA0 0%, #8B5FBF 100%); color:#ffffff; text-decoration:none; padding:14px 36px; border-radius:8px; font-size:16px; font-weight:600; letter-spacing:0.3px;">
           ${text}
         </a>
       </td>
@@ -112,9 +112,9 @@ export function familyInviteTemplate(data: {
     <p style="margin:0 0 8px; color:#555; font-size:15px; line-height:24px;">
       ScreenQuest helps kids earn screen time by completing real-world quests — chores, learning activities, and more!
     </p>
-    <div style="margin:24px 0; padding:20px; background-color:#f8f7ff; border-radius:8px; text-align:center; border:2px dashed #6C63FF;">
+    <div style="margin:24px 0; padding:20px; background-color:#F5F0FA; border-radius:8px; text-align:center; border:2px dashed #6B2FA0;">
       <p style="margin:0 0 8px; color:#666; font-size:13px; text-transform:uppercase; letter-spacing:1px;">Your Family Code</p>
-      <p style="margin:0; color:#6C63FF; font-size:32px; font-weight:700; letter-spacing:4px; font-family:monospace;">${data.familyCode}</p>
+      <p style="margin:0; color:#6B2FA0; font-size:32px; font-weight:700; letter-spacing:4px; font-family:monospace;">${data.familyCode}</p>
     </div>
     <p style="margin:0 0 16px; color:#555; font-size:15px; line-height:24px;">
       <strong>How to join:</strong>

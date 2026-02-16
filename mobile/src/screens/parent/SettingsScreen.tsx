@@ -15,7 +15,7 @@ import { Linking, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthStore } from "../../store/auth";
 import { useSubscriptionStore } from "../../store/subscription";
-import { useThemeStore, DarkModePreference } from "../../store/theme";
+import { useThemeStore } from "../../store/theme";
 import { familyService, FamilyMember } from "../../services/family";
 import { playSessionService, PlaySettings } from "../../services/playSession";
 import { subscriptionService } from "../../services/subscription";
@@ -73,8 +73,6 @@ export default function SettingsScreen() {
   );
   const [deletionLoading, setDeletionLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(SoundEffects.isEnabled());
-  const darkModePref = useThemeStore((s) => s.darkModePref);
-  const setDarkModePref = useThemeStore((s) => s.setDarkModePref);
 
   // Fetch children + leaderboard setting
   useEffect(() => {
@@ -489,59 +487,6 @@ export default function SettingsScreen() {
               accessibilityLabel="Toggle sound effects"
             />
           </View>
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Appearance</Text>
-              <Text style={styles.settingDesc}>
-                Choose light, dark, or follow system setting
-              </Text>
-            </View>
-          </View>
-          <View style={styles.darkModeRow}>
-            {(["system", "light", "dark"] as DarkModePreference[]).map(
-              (pref) => (
-                <TouchableOpacity
-                  key={pref}
-                  style={[
-                    styles.darkModeOption,
-                    darkModePref === pref && styles.darkModeOptionActive,
-                  ]}
-                  onPress={() => setDarkModePref(pref)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: darkModePref === pref }}
-                  accessibilityLabel={`${pref === "system" ? "System" : pref === "light" ? "Light" : "Dark"} mode`}
-                >
-                  <Icon
-                    name={
-                      pref === "system"
-                        ? "phone-portrait-outline"
-                        : pref === "light"
-                          ? "sunny-outline"
-                          : "moon-outline"
-                    }
-                    size={18}
-                    color={
-                      darkModePref === pref
-                        ? colors.primary
-                        : colors.textSecondary
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.darkModeLabel,
-                      darkModePref === pref && styles.darkModeLabelActive,
-                    ]}
-                  >
-                    {pref === "system"
-                      ? "System"
-                      : pref === "light"
-                        ? "Light"
-                        : "Dark"}
-                  </Text>
-                </TouchableOpacity>
-              ),
-            )}
-          </View>
         </View>
 
         {/* Privacy & Legal - original */}
@@ -687,10 +632,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.lg },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
+    ...typography.parentH1,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
+    marginBottom: spacing.md,
   },
   section: { marginBottom: spacing.xl },
   sectionTitle: {
@@ -744,37 +690,7 @@ const styles = StyleSheet.create({
   settingInfo: { flex: 1 },
   settingLabel: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
   settingDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  darkModeRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  darkModeOption: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  darkModeOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + "10",
-  },
-  darkModeLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: colors.textSecondary,
-  },
-  darkModeLabelActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
+
   subsectionTitle: {
     fontSize: 13,
     fontWeight: "700",

@@ -175,19 +175,19 @@ export default function PaywallScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Close button */}
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="close" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
-
         {/* Header */}
-        <Text style={styles.title}>Unlock ScreenQuest Plus!</Text>
-        <Text style={styles.subtitle}>
-          Give your family the full experience
-        </Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="close" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Unlock ScreenQuest Plus!</Text>
+          <Text style={styles.subtitle}>
+            Give your family the full experience
+          </Text>
+        </View>
 
         {/* Feature Comparison */}
         <Card style={styles.featureCard}>
@@ -336,6 +336,9 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
+  headerRow: {
+    marginBottom: spacing.lg,
+  },
   closeBtn: {
     alignSelf: "flex-end",
     padding: spacing.xs,
@@ -343,16 +346,15 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.parentH1,
+    fontWeight: "bold",
     color: colors.primary,
-    textAlign: "center",
+    textAlign: "left",
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fonts.parent.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: spacing.xl,
   },
   featureCard: { marginBottom: spacing.xl, paddingVertical: spacing.sm },
   featureHeader: {

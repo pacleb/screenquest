@@ -109,7 +109,7 @@ export default function ApprovalsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.headerRow}>
         <Text style={styles.title}>Approvals</Text>
         {filter === "pending" && pendingCount > 0 && (
           <View style={styles.countBadge}>
@@ -329,14 +329,20 @@ export default function ApprovalsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  title: { ...typography.parentH1, color: colors.textPrimary },
+  title: {
+    ...typography.parentH1,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "left",
+  },
   countBadge: {
     backgroundColor: colors.error,
     borderRadius: 12,

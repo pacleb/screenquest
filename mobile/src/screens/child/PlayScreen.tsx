@@ -23,10 +23,8 @@ import {
 import { Animations } from "../../../assets/animations";
 import { SoundEffects } from "../../services/soundEffects";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
-import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
+import { formatTimeLabel } from "../../utils/formatTime";
 import { eventBus, AppEvents } from "../../utils/eventBus";
-
-const PRESETS = [900, 1800, 2700, 3600, 5400, 7200];
 
 type ScreenState =
   | "select"
@@ -45,7 +43,6 @@ export default function ChildPlay() {
     nonStackableSeconds: 0,
     totalSeconds: 0,
   });
-  const [selectedSeconds, setSelectedSeconds] = useState(1800);
   const [session, setSession] = useState<PlaySession | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -185,7 +182,7 @@ export default function ChildPlay() {
     try {
       const result = await playSessionService.requestPlay(
         user.id,
-        selectedSeconds,
+        balance.totalSeconds,
       );
       setSession(result);
       if (result.status === "active") {
@@ -331,7 +328,7 @@ export default function ChildPlay() {
           <Text style={styles.waitingTitle}>Request Sent!</Text>
           <Text style={styles.waitingSubtitle}>
             Waiting for your parent to approve{" "}
-            {formatTimeLabel(selectedSeconds)}...
+            {formatTimeLabel(balance.totalSeconds)}...
           </Text>
           <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleDone}>
             <Text style={styles.cancelWaitText}>Cancel</Text>
@@ -421,50 +418,6 @@ export default function ChildPlay() {
           )}
         </View>
 
-        {/* Time presets */}
-        <Text style={styles.sectionLabel}>How long?</Text>
-        <View style={styles.presetGrid}>
-          {PRESETS.map((secs) => {
-            const disabled = secs > balance.totalSeconds;
-            const displayMins = Math.floor(secs / 60);
-            return (
-              <TouchableOpacity
-                key={secs}
-                style={[
-                  styles.presetBtn,
-                  selectedSeconds === secs && styles.presetBtnActive,
-                  disabled && styles.presetBtnDisabled,
-                ]}
-                onPress={() => !disabled && setSelectedSeconds(secs)}
-                disabled={disabled}
-                accessibilityLabel={formatTimeLabel(secs)}
-                accessibilityRole="button"
-                accessibilityState={{
-                  selected: selectedSeconds === secs,
-                  disabled,
-                }}
-              >
-                <Text
-                  style={[
-                    styles.presetText,
-                    selectedSeconds === secs && styles.presetTextActive,
-                    disabled && styles.presetTextDisabled,
-                  ]}
-                >
-                  {formatTimeCompact(secs)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Selected time display */}
-        <View style={styles.selectedDisplay}>
-          <Text style={styles.selectedValue}>
-            {formatTimeLabel(selectedSeconds)}
-          </Text>
-        </View>
-
         {/* Start button */}
         <Button
           title="Start Playing!"
@@ -525,51 +478,7 @@ const styles = StyleSheet.create({
     color: colors.accent,
     marginTop: spacing.xs,
   },
-  sectionLabel: {
-    fontFamily: fonts.child.bold,
-    fontSize: 16,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  presetGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  presetBtn: {
-    width: "30%" as any,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: colors.border,
-    flexGrow: 1,
-  },
-  presetBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + "10",
-  },
-  presetBtnDisabled: { opacity: 0.4 },
-  presetText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
-  presetTextActive: { color: colors.primary },
-  presetTextDisabled: { color: colors.textSecondary },
-  selectedDisplay: { alignItems: "center", marginBottom: spacing.xl },
-  selectedValue: {
-    fontFamily: fonts.child.extraBold,
-    fontSize: 56,
-    color: colors.primary,
-  },
-  selectedUnit: {
-    fontFamily: fonts.child.semiBold,
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
+
   startBtn: {
     shadowColor: colors.secondary,
     shadowOffset: { width: 0, height: 6 },
