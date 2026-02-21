@@ -1,9 +1,17 @@
 {
   "cli": {
-    "version": ">= 12.0.0"
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "20.11.0",
+      "pnpm": {
+        "version": "9.x"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
@@ -13,7 +21,23 @@
         "APP_ENV": "development"
       }
     },
+    "development-device": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "bundleIdentifier": "com.screenquest.app",
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_ENV": "development"
+      }
+    },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "ios": {
         "bundleIdentifier": "com.screenquest.app"
@@ -23,19 +47,24 @@
       },
       "env": {
         "APP_ENV": "staging"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
+      "extends": "base",
       "autoIncrement": true,
       "ios": {
-        "bundleIdentifier": "com.screenquest.app"
+        "bundleIdentifier": "com.screenquest.app",
+        "autoIncrement": "buildNumber"
       },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "autoIncrement": "versionCode"
       },
       "env": {
         "APP_ENV": "production"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

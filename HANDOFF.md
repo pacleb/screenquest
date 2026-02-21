@@ -1,6 +1,6 @@
 # ScreenQuest — Developer Handoff Document
 
-> **Last updated:** Phase 11 complete, Phase 15 done (Feb 2026)
+> **Last updated:** Phase 15 complete, EAS Build configured (Feb 2026)
 > **Purpose:** Gives any AI agent or developer full context to continue implementation from any phase.
 
 ---
@@ -71,7 +71,7 @@ screenquest/
 - **Redis:** `RedisService` extends ioredis `Redis`, `@Global()` module
 - **Auth tokens:** JWT access (15min) + refresh token rotation (nanoid(64), SHA-256 hashed, 30-day expiry)
 - **Passwords:** bcrypt with 12 salt rounds
-- **Rate limiting:** `ThrottlerModule` with 3 tiers (short/medium/long)
+- **Rate limiting:** `ThrottlerModule` with 3 tiers (short/medium/long), `ThrottlerGuard` registered as `APP_GUARD`
 - **Scheduled jobs:** `@nestjs/schedule` for cron tasks (e.g., non-stackable time expiry)
 
 ### Mobile (Expo + React Native)
@@ -400,7 +400,7 @@ _Implemented by another AI agent._
 
 - ~~`req.user.id` not `req.user.sub`~~ — Fixed in notification + violation controllers
 - ~~`ensureFamilyAccess` throws `Error`~~ — Now throws `ForbiddenException` (403)
-- ~~`ThrottlerGuard` not globally applied~~ — Registered as `APP_GUARD`
+- ~~`ThrottlerGuard` not globally applied~~ — Registered as `APP_GUARD`; `@SkipThrottle()` on health endpoint
 - ~~Debug `console.log` in `jwt.strategy.ts`~~ — Removed
 - ~~Uploads served as public static assets~~ — Now authenticated GET endpoint
 - ~~Child PINs stored in plaintext~~ — Now bcrypt-hashed (10 rounds)

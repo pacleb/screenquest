@@ -72,6 +72,10 @@ import { MetricsModule } from './common/metrics/metrics.module';
   providers: [
     {
       provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: EmailVerifiedGuard,
     },
   ],

@@ -572,7 +572,7 @@ A full **admin dashboard web application** for the app owner to monitor and mana
 
 ## 12. Deployment & DevOps
 
-- **CI/CD:** GitHub Actions or Bitrise for automated builds and tests
+- **CI/CD:** GitLab CI/CD for automated builds and tests
 - **App Store / Play Store:** Follow all guidelines, especially for kids' apps
   - Apple: Kids Category requirements
   - Google: Designed for Families program requirements

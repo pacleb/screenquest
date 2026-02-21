@@ -107,12 +107,12 @@ Verify:
 
 ### 2. CI/CD Pipeline
 
-Set up **GitHub Actions** workflows:
+Set up **GitLab CI/CD** pipelines:
 
-#### 2.1 Backend CI (on every PR + push to main)
+#### 2.1 Backend CI (on every MR + push to main)
 
 ```yaml
-# .github/workflows/backend-ci.yml
+# .gitlab-ci.yml (backend stage)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint (ESLint)
@@ -123,10 +123,10 @@ Set up **GitHub Actions** workflows:
 - Upload test coverage report
 ```
 
-#### 2.2 Mobile CI (on every PR + push to main)
+#### 2.2 Mobile CI (on every MR + push to main)
 
 ```yaml
-# .github/workflows/mobile-ci.yml
+# .gitlab-ci.yml (mobile stage)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint (ESLint)
@@ -136,10 +136,10 @@ Set up **GitHub Actions** workflows:
 - Build Android (eas build --platform android --profile preview --non-interactive)
 ```
 
-#### 2.3 CMS CI (on every PR + push to main)
+#### 2.3 CMS CI (on every MR + push to main)
 
 ```yaml
-# .github/workflows/cms-ci.yml
+# .gitlab-ci.yml (cms stage)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint + Type check
