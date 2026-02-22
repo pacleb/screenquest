@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { join } from 'path';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -18,13 +19,8 @@ export async function createApp(): Promise<INestApplication> {
       AppModule,
     ],
   })
-    .overrideProvider(ConfigModule)
-    .useValue(
-      ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: join(__dirname, '.env.test'),
-      }),
-    )
+    .overrideGuard(ThrottlerGuard)
+    .useValue({ canActivate: () => true })
     .compile();
 
   const app = moduleRef.createNestApplication();
@@ -89,11 +85,18 @@ export async function registerAndLogin(
   data: { email: string; password: string; name: string },
 ) {
   const agent = getAgent(app);
+  const prisma = app.get(PrismaService);
 
   const res = await agent
     .post('/api/auth/register')
     .send(data)
     .expect(201);
+
+  // Mark user as email-verified so EmailVerifiedGuard doesn't block
+  await prisma.user.update({
+    where: { id: res.body.user.id },
+    data: { emailVerified: true },
+  });
 
   return {
     accessToken: res.body.accessToken as string,
