@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { join } from 'path';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -19,8 +18,6 @@ export async function createApp(): Promise<INestApplication> {
       AppModule,
     ],
   })
-    .overrideGuard(ThrottlerGuard)
-    .useValue({ canActivate: () => true })
     .compile();
 
   const app = moduleRef.createNestApplication();

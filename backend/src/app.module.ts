@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { TestAwareThrottlerGuard } from './common/guards/test-aware-throttler.guard';
 import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -72,7 +73,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: TestAwareThrottlerGuard,
     },
     {
       provide: APP_GUARD,
