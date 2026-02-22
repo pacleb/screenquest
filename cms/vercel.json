@@ -2,9 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
-  "regions": ["iad1"],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api-url",
-    "NEXTAUTH_SECRET": "@nextauth-secret"
-  }
+  "regions": ["iad1"]
 }
