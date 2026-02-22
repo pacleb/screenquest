@@ -20,11 +20,11 @@ COPY shared/package.json shared/package.json
 COPY backend/ backend/
 COPY shared/ shared/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --filter @screenquest/backend...
+# Dummy DATABASE_URL so Prisma's postinstall schema validation passes at build time
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
-# Generate Prisma client (dummy URL satisfies schema validation at build time)
-RUN cd backend && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+# Install dependencies (prisma postinstall runs generate automatically)
+RUN pnpm install --frozen-lockfile --filter @screenquest/backend...
 
 # Copy generated Prisma client to a predictable location for the production stage
 RUN cp -r $(find /app/node_modules/.pnpm -path "*/.prisma/client" -type d | head -1) /app/prisma-client
@@ -50,6 +50,9 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY backend/package.json backend/package.json
 COPY shared/package.json shared/package.json
 
+# Dummy DATABASE_URL so Prisma's postinstall schema validation passes at build time
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 # Install production deps only
 RUN pnpm install --frozen-lockfile --prod --filter @screenquest/backend...
 
@@ -57,8 +60,8 @@ RUN pnpm install --frozen-lockfile --prod --filter @screenquest/backend...
 COPY --from=builder /app/backend/dist backend/dist
 COPY backend/prisma backend/prisma
 
-# Generate Prisma client in production stage (ensures correct engine binaries for this OS)
-RUN cd backend && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+# Re-generate Prisma client (ensures correct engine binaries for this OS)
+RUN cd backend && npx prisma generate
 
 # Create uploads dir (for local dev fallback)
 RUN mkdir -p backend/uploads/proofs && chown -R appuser:appuser backend/uploads
