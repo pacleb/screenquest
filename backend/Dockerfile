@@ -21,8 +21,8 @@ ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 # Install dependencies (prisma postinstall runs generate automatically)
 RUN pnpm install --frozen-lockfile --filter @screenquest/backend...
 
-# Copy generated Prisma client to a predictable location for the production stage
-RUN cp -r $(find /app/node_modules/.pnpm -path "*/.prisma/client" -type d | head -1) /app/prisma-client
+# Generate Prisma client (postinstall may not find schema in monorepo context)
+RUN cd backend && npx prisma generate
 
 # Build
 RUN cd backend && pnpm build
