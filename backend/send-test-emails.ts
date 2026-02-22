@@ -12,7 +12,12 @@ import {
   accountDeletedTemplate,
 } from './src/mail/templates';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_AvTLJK4k_CJ45Cj6ysNAcM4wVDkLdTxxK';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+if (!RESEND_API_KEY) {
+  console.error('Error: RESEND_API_KEY environment variable is not set.');
+  console.error('Set it before running: export RESEND_API_KEY=re_yourkey');
+  process.exit(1);
+}
 const FROM = 'ScreenQuest <noreply@restdayapps.com>';
 
 async function main() {
