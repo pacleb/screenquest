@@ -19,13 +19,32 @@ async function bootstrap() {
 
   app.use(helmet());
 
+  // Build CORS allowed origins
+  const allowedOrigins: string[] = [];
+  if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+  if (process.env.CMS_URL) allowedOrigins.push(process.env.CMS_URL);
+  if (process.env.ALLOWED_ORIGINS) {
+    allowedOrigins.push(...process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean));
+  }
+  // Always allow mobile (no Origin header) and localhost for dev
+  if (process.env.NODE_ENV !== 'production') {
+    allowedOrigins.push('http://localhost:3001', 'http://localhost:8081');
+  }
+  console.log('[CORS DEBUG] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[CORS DEBUG] Allowed origins:', allowedOrigins);
+
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production'
-      ? [
-          process.env.FRONTEND_URL || 'http://localhost:8081',
-          process.env.CMS_URL || 'http://localhost:3001',
-        ]
-      : true, // Allow all origins in development (mobile devices on LAN)
+    origin: process.env.NODE_ENV === 'production' && allowedOrigins.length > 0
+      ? (origin, callback) => {
+          // Allow requests with no origin (mobile apps, curl, etc.)
+          if (!origin) return callback(null, true);
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          console.warn('[CORS DEBUG] Blocked origin:', origin);
+          callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+      : true, // Allow all origins in development or if no origins configured
     credentials: true,
   });
 

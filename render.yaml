@@ -35,6 +35,12 @@ services:
         sync: false  # Set manually
       - key: EMAIL_FROM
         value: "ScreenQuest <onboarding@resend.dev>"
+      - key: FRONTEND_URL
+        sync: false  # Set to your web app URL (e.g. https://screenquest.vercel.app)
+      - key: CMS_URL
+        sync: false  # Set to your CMS URL (e.g. https://screenquest-cms.vercel.app)
+      - key: ALLOWED_ORIGINS
+        sync: false  # Comma-separated additional origins (e.g. https://other.vercel.app)
 
 databases:
   - name: screenquest-db
