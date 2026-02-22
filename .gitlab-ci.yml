@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────
-# CI/CD pipeline disabled – GitLab free-tier compute minutes exhausted.
-# Render.com handles builds & deploys directly from the repo.
-# Re-enable by removing the workflow block below when minutes are available.
+# ARCHIVED — Migrated to GitHub Actions (.github/workflows/)
+# This file is kept for reference only. CI/CD now runs on GitHub.
+# GitLab free-tier compute minutes (400/mo) were insufficient.
 # ──────────────────────────────────────────────
 
 workflow:

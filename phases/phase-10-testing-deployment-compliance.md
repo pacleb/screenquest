@@ -107,12 +107,12 @@ Verify:
 
 ### 2. CI/CD Pipeline
 
-Set up **GitLab CI/CD** pipelines:
+Set up **GitHub Actions** CI/CD workflows:
 
 #### 2.1 Backend CI (on every MR + push to main)
 
 ```yaml
-# .gitlab-ci.yml (backend stage)
+# .github/workflows/ci.yml (backend jobs)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint (ESLint)
@@ -126,7 +126,7 @@ Set up **GitLab CI/CD** pipelines:
 #### 2.2 Mobile CI (on every MR + push to main)
 
 ```yaml
-# .gitlab-ci.yml (mobile stage)
+# .github/workflows/ci.yml (mobile jobs)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint (ESLint)
@@ -139,7 +139,7 @@ Set up **GitLab CI/CD** pipelines:
 #### 2.3 CMS CI (on every MR + push to main)
 
 ```yaml
-# .gitlab-ci.yml (cms stage)
+# .github/workflows/ci.yml (cms jobs)
 - Checkout code
 - Install dependencies (pnpm)
 - Lint + Type check

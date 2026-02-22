@@ -30,7 +30,7 @@ RUN cd backend && pnpm build
 # ---- Production stage ----
 FROM node:22-slim AS production
 
-LABEL org.opencontainers.image.source="https://gitlab.com/screenquest/screenquest"
+LABEL org.opencontainers.image.source="https://github.com/pacleb/screenquest"
 LABEL org.opencontainers.image.description="ScreenQuest Backend API"
 
 RUN apt-get update && apt-get install -y openssl wget && rm -rf /var/lib/apt/lists/*

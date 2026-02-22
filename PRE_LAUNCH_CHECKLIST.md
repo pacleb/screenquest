@@ -11,13 +11,13 @@
 
 ## CI/CD & Infrastructure
 
-| #   | Item                                           | Status | Notes                                                   |
-| --- | ---------------------------------------------- | ------ | ------------------------------------------------------- |
-| 5   | CI/CD pipeline builds and deploys successfully | TODO   | Set up `.gitlab-ci.yml` with test/build/deploy stages   |
-| 6   | Staging environment mirrors production         | TODO   | Set `RENDER_DEPLOY_HOOK_STAGING` in GitLab CI variables |
-| 7   | Health check endpoint responds correctly       | PASS   | `GET /health` checks DB + Redis, returns status         |
-| 8   | SSL certificates valid and auto-renewing       | TODO   | Verify on hosting provider (Render handles this)        |
-| 9   | Database backups running and verified          | TODO   | Configure on hosting provider                           |
+| #   | Item                                           | Status | Notes                                                      |
+| --- | ---------------------------------------------- | ------ | ---------------------------------------------------------- |
+| 5   | CI/CD pipeline builds and deploys successfully | TODO   | GitHub Actions workflows in `.github/workflows/`           |
+| 6   | Staging environment mirrors production         | TODO   | Set `RENDER_DEPLOY_HOOK_STAGING` in GitHub Actions secrets |
+| 7   | Health check endpoint responds correctly       | PASS   | `GET /health` checks DB + Redis, returns status            |
+| 8   | SSL certificates valid and auto-renewing       | TODO   | Verify on hosting provider (Render handles this)           |
+| 9   | Database backups running and verified          | TODO   | Configure on hosting provider                              |
 
 ## Error Tracking & Monitoring
 
