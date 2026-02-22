@@ -31,21 +31,52 @@ async function bootstrap() {
     allowedOrigins.push('http://localhost:3001', 'http://localhost:8081');
   }
   console.log('[CORS DEBUG] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[CORS DEBUG] FRONTEND_URL:', process.env.FRONTEND_URL);
+  console.log('[CORS DEBUG] CMS_URL:', process.env.CMS_URL);
+  console.log('[CORS DEBUG] ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
   console.log('[CORS DEBUG] Allowed origins:', allowedOrigins);
+
+  // Check if an origin matches an allowed pattern (exact match or Vercel preview subdomain)
+  const isOriginAllowed = (origin: string): boolean => {
+    if (allowedOrigins.includes(origin)) return true;
+    // Allow Vercel preview deployments for configured Vercel domains
+    // e.g. if CMS_URL is https://screenquest-cms.vercel.app, also allow
+    //       https://screenquest-cms-*.vercel.app (preview deploys)
+    for (const allowed of allowedOrigins) {
+      try {
+        const allowedUrl = new URL(allowed);
+        if (allowedUrl.hostname.endsWith('.vercel.app')) {
+          const baseName = allowedUrl.hostname.replace('.vercel.app', '');
+          const originUrl = new URL(origin);
+          if (
+            originUrl.hostname.endsWith('.vercel.app') &&
+            originUrl.hostname.startsWith(baseName)
+          ) {
+            return true;
+          }
+        }
+      } catch {
+        // skip malformed URLs
+      }
+    }
+    return false;
+  };
 
   app.enableCors({
     origin: process.env.NODE_ENV === 'production' && allowedOrigins.length > 0
       ? (origin, callback) => {
           // Allow requests with no origin (mobile apps, curl, etc.)
           if (!origin) return callback(null, true);
-          if (allowedOrigins.includes(origin)) {
+          if (isOriginAllowed(origin)) {
             return callback(null, true);
           }
-          console.warn('[CORS DEBUG] Blocked origin:', origin);
+          console.warn('[CORS DEBUG] Blocked origin:', origin, '| Allowed:', allowedOrigins);
           callback(new Error(`Origin ${origin} not allowed by CORS`));
         }
       : true, // Allow all origins in development or if no origins configured
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   });
 
   app.setGlobalPrefix('api');
