@@ -1,3 +1,13 @@
+# ──────────────────────────────────────────────
+# CI/CD pipeline disabled – GitLab free-tier compute minutes exhausted.
+# Render.com handles builds & deploys directly from the repo.
+# Re-enable by removing the workflow block below when minutes are available.
+# ──────────────────────────────────────────────
+
+workflow:
+  rules:
+    - when: never
+
 stages:
   - test
   - build
