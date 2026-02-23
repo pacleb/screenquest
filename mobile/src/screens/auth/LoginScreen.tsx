@@ -49,11 +49,11 @@ export default function LoginScreen() {
     } catch (error: any) {
       const debugInfo = [
         `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? 'N/A'}`,
-        `Code: ${error.code ?? 'N/A'}`,
+        `Status: ${error.response?.status ?? "N/A"}`,
+        `Code: ${error.code ?? "N/A"}`,
         `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
-      ].join('\n');
+        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
+      ].join("\n");
       Alert.alert("[DEBUG] Login Failed", debugInfo);
     } finally {
       setLoading(false);
@@ -73,11 +73,11 @@ export default function LoginScreen() {
     } catch (error: any) {
       const debugInfo = [
         `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? 'N/A'}`,
-        `Code: ${error.code ?? 'N/A'}`,
+        `Status: ${error.response?.status ?? "N/A"}`,
+        `Code: ${error.code ?? "N/A"}`,
         `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
-      ].join('\n');
+        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
+      ].join("\n");
       Alert.alert("[DEBUG] Child Login Failed", debugInfo);
     } finally {
       setLoading(false);
@@ -216,7 +216,10 @@ export default function LoginScreen() {
           {!isChildMode && (
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Register")} testID="login-signup-link">
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Register")}
+                testID="login-signup-link"
+              >
                 <Text style={styles.footerLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

@@ -44,11 +44,11 @@ export default function RegisterScreen() {
     } catch (error: any) {
       const debugInfo = [
         `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? 'N/A'}`,
-        `Code: ${error.code ?? 'N/A'}`,
+        `Status: ${error.response?.status ?? "N/A"}`,
+        `Code: ${error.code ?? "N/A"}`,
         `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
-      ].join('\n');
+        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
+      ].join("\n");
       Alert.alert("[DEBUG] Registration Failed", debugInfo);
     } finally {
       setLoading(false);
@@ -123,7 +123,10 @@ export default function RegisterScreen() {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")} testID="register-login-link">
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Login")}
+              testID="register-login-link"
+            >
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>

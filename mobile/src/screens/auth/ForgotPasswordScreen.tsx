@@ -36,11 +36,11 @@ export default function ForgotPasswordScreen() {
     } catch (error: any) {
       const debugInfo = [
         `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? 'N/A'}`,
-        `Code: ${error.code ?? 'N/A'}`,
+        `Status: ${error.response?.status ?? "N/A"}`,
+        `Code: ${error.code ?? "N/A"}`,
         `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
-      ].join('\n');
+        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
+      ].join("\n");
       Alert.alert("[DEBUG] Forgot Password Failed", debugInfo);
     } finally {
       setLoading(false);
