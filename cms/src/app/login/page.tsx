@@ -34,8 +34,15 @@ export default function LoginPage() {
         err.response?.status,
         err.response?.data,
       );
+      const isServerWaking =
+        err.code === 'ECONNABORTED' ||
+        err.code === 'ERR_NETWORK' ||
+        err.message === 'Network Error' ||
+        err.message === 'Request aborted';
       setError(
-        `Login failed: ${err.response?.data?.message || err.message || "Please try again."}`,
+        isServerWaking
+          ? "Server is waking up — please wait a moment and try again."
+          : `Login failed: ${err.response?.data?.message || err.message || "Please try again."}`,
       );
     } finally {
       setLoading(false);
@@ -79,7 +86,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Signing in\u2026 (server may be waking up)" : "Sign In"}
           </Button>
         </form>
       </div>

@@ -8,6 +8,7 @@ console.log('[CMS DEBUG] NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 60_000, // 60s — Render free tier cold starts can take 30-50s
 });
 
 // Attach JWT token from localStorage
