@@ -113,18 +113,27 @@ export class AuthController {
           p { color: #666; line-height: 1.6; }
           .btn { display: inline-block; background: linear-gradient(135deg, #6B2FA0, #8B5FBF); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
           .error { color: #e74c3c; }
+          .mobile-only { display: none; }
         </style>
       </head>
       <body>
         <div class="card">
           <h1>ScreenQuest</h1>
           ${success
-            ? '<p>Your email has been verified successfully! ✅</p>'
+            ? `<p>✅ Your email has been verified successfully!</p>
+               <p class="mobile-only"><a class="btn" href="${deepLink}">Open ScreenQuest</a></p>
+               <p id="desktop-msg" style="margin-top:16px;color:#666;">You can now open the ScreenQuest app on your phone to continue.</p>`
             : '<p class="error">Verification failed. The link may have expired or already been used.</p>'}
-          <a class="btn" href="${deepLink}">Open ScreenQuest</a>
-          <p style="margin-top:24px;font-size:13px;color:#999;">If the app didn't open automatically, tap the button above.</p>
         </div>
-        <script>window.location.href = "${deepLink}";</script>
+        <script>
+          var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          if (isMobile) {
+            document.querySelector('.mobile-only').style.display = 'block';
+            var desktopMsg = document.getElementById('desktop-msg');
+            if (desktopMsg) desktopMsg.style.display = 'none';
+            setTimeout(function() { window.location.href = "${deepLink}"; }, 300);
+          }
+        </script>
       </body>
       </html>
     `);
