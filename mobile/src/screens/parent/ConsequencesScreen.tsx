@@ -77,6 +77,10 @@ export default function ConsequencesScreen() {
     }
   }, [selectedChildId]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   useAutoRefresh({
     fetchData,
     events: [AppEvents.VIOLATION_CHANGED, AppEvents.TIME_BANK_CHANGED],

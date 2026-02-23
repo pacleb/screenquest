@@ -27,7 +27,12 @@ export interface PlaySettings {
 export const playSessionService = {
   // Child endpoints
   requestPlay: (childId: string, requestedSeconds: number) =>
-    api.post<PlaySession>(`/children/${childId}/play`, { requestedSeconds }).then((r) => r.data),
+    api
+      .post<PlaySession>(`/children/${childId}/play`, {
+        requestedSeconds,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
+      .then((r) => r.data),
 
   getActiveSession: (childId: string) =>
     api.get<PlaySession | null>(`/children/${childId}/play/active`).then((r) => r.data),

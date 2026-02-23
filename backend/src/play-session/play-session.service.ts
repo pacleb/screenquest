@@ -27,6 +27,76 @@ export interface PlaySettings {
   weekendPlayHoursEnd: string;
 }
 
+/**
+ * Returns the UTC Date that corresponds to midnight (00:00:00) in the given
+ * IANA timezone. Falls back to server-local midnight if the timezone is
+ * omitted or invalid.
+ */
+function localStartOfDay(timezone?: string): Date {
+  const now = new Date();
+  if (timezone) {
+    try {
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+      const parts = fmt.formatToParts(now);
+      const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? '0');
+      const h = get('hour') % 24;
+      const m = get('minute');
+      const s = get('second');
+      const msFromMidnight = (h * 3600 + m * 60 + s) * 1000 + now.getMilliseconds();
+      return new Date(now.getTime() - msFromMidnight);
+    } catch {
+      // fall through
+    }
+  }
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Returns { hours, minutes, dayOfWeek } in the given IANA timezone (falls back to server local). */
+function localTime(tz: string | undefined): { hours: number; minutes: number; dayOfWeek: number } {
+  const now = new Date();
+  if (tz) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        hour: 'numeric',
+        minute: 'numeric',
+        weekday: 'narrow',
+        hour12: false,
+      }).formatToParts(now);
+      const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '0';
+      // hour12:false gives "24" for midnight in some engines; normalise to 0
+      const hours = parseInt(get('hour')) % 24;
+      const minutes = parseInt(get('minute'));
+      // derive day-of-week (0=Sun…6=Sat) from a locale-aware date string
+      const dateStr = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        weekday: 'short',
+      }).format(now);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayOfWeek = days.findIndex((d) => dateStr.startsWith(d));
+      return { hours, minutes, dayOfWeek: dayOfWeek === -1 ? now.getDay() : dayOfWeek };
+    } catch {
+      // invalid timezone string — fall through to server local
+    }
+  }
+  return { hours: now.getHours(), minutes: now.getMinutes(), dayOfWeek: now.getDay() };
+}
+
+function to12h(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 const DEFAULT_PLAY_SETTINGS: PlaySettings = {
   playApprovalMode: 'notify_only',
   dailyScreenTimeCap: 7200,
@@ -84,10 +154,10 @@ export class PlaySessionService {
     const settings = this.getPlaySettings(child.playSettings);
 
     // Check play hours
-    this.validatePlayHours(settings);
+    this.validatePlayHours(settings, dto.timezone);
 
     // Check daily cap
-    await this.validateDailyCap(childId, dto.requestedSeconds, settings);
+    await this.validateDailyCap(childId, dto.requestedSeconds, settings, dto.timezone);
 
     // Determine if auto-start or requires approval
     const autoStart = settings.playApprovalMode === 'notify_only';
@@ -661,9 +731,8 @@ export class PlaySessionService {
   /**
    * Get daily usage for a child (today's completed + active session minutes)
    */
-  async getDailyUsage(childId: string): Promise<number> {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+  async getDailyUsage(childId: string, timezone?: string): Promise<number> {
+    const startOfDay = localStartOfDay(timezone);
 
     const sessions = await this.prisma.playSession.findMany({
       where: {
@@ -723,34 +792,34 @@ export class PlaySessionService {
     };
   }
 
-  private validatePlayHours(settings: PlaySettings) {
-    const now = new Date();
-    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+  private validatePlayHours(settings: PlaySettings, timezone?: string) {
+    const { hours, minutes, dayOfWeek } = localTime(timezone);
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     const startStr = isWeekend ? settings.weekendPlayHoursStart : settings.allowedPlayHoursStart;
     const endStr = isWeekend ? settings.weekendPlayHoursEnd : settings.allowedPlayHoursEnd;
 
     const [startH, startM] = startStr.split(':').map(Number);
     const [endH, endM] = endStr.split(':').map(Number);
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentMinutes = hours * 60 + minutes;
     const startMinutes = startH * 60 + startM;
     const endMinutes = endH * 60 + endM;
 
     if (currentMinutes < startMinutes || currentMinutes >= endMinutes) {
       throw new BadRequestException(
-        `Play is only allowed between ${startStr} and ${endStr}`,
+        `Play is only allowed between ${to12h(startStr)} and ${to12h(endStr)}`,
       );
     }
   }
 
-  private async validateDailyCap(childId: string, requestedSeconds: number, settings: PlaySettings) {
-    const now = new Date();
-    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+  private async validateDailyCap(childId: string, requestedSeconds: number, settings: PlaySettings, timezone?: string) {
+    const { dayOfWeek } = localTime(timezone);
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const cap = isWeekend ? settings.weekendDailyScreenTimeCap : settings.dailyScreenTimeCap;
 
     if (cap === null) return; // No cap
 
-    const usedToday = await this.getDailyUsage(childId);
+    const usedToday = await this.getDailyUsage(childId, timezone);
 
     if (usedToday + requestedSeconds > cap) {
       const remaining = Math.max(0, cap - usedToday);

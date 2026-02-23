@@ -15,6 +15,11 @@ export class RequestPlayDto {
   @Min(300)
   @Max(14400)
   requestedSeconds: number;
+
+  @ApiPropertyOptional({ example: 'America/New_York', description: 'IANA timezone of the device' })
+  @IsString()
+  @IsOptional()
+  timezone?: string;
 }
 
 export class ExtendSessionDto {
