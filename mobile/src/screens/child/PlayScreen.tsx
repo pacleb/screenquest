@@ -182,7 +182,7 @@ export default function ChildPlay() {
     try {
       const result = await playSessionService.requestPlay(
         user.id,
-        balance.totalSeconds,
+        Math.min(balance.totalSeconds, 14400),
       );
       setSession(result);
       if (result.status === "active") {
@@ -299,7 +299,9 @@ export default function ChildPlay() {
             height={140}
             style={{ marginBottom: spacing.sm }}
           />
-          <Text testID="play-completed-title" style={styles.completedTitle}>Great job!</Text>
+          <Text testID="play-completed-title" style={styles.completedTitle}>
+            Great job!
+          </Text>
           <Text style={styles.completedSubtitle}>
             You managed your screen time well!
           </Text>
@@ -325,7 +327,9 @@ export default function ChildPlay() {
             color={colors.accent}
             style={{ marginVertical: spacing.md }}
           />
-          <Text testID="play-waiting-title" style={styles.waitingTitle}>Request Sent!</Text>
+          <Text testID="play-waiting-title" style={styles.waitingTitle}>
+            Request Sent!
+          </Text>
           <Text style={styles.waitingSubtitle}>
             Waiting for your parent to approve{" "}
             {formatTimeLabel(balance.totalSeconds)}...

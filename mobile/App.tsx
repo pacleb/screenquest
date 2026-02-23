@@ -82,6 +82,7 @@ function App() {
       if (!nav?.isReady()) return;
 
       switch (data.type) {
+        case "quest_completion":
         case "quest_completed":
         case "quest_approved":
         case "quest_denied":

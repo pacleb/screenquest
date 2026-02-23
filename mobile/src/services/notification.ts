@@ -1,5 +1,5 @@
 import api from './api';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { getApp } from '@react-native-firebase/app';
 import { Platform } from 'react-native';
@@ -100,6 +100,11 @@ function handleNotificationData(remoteMessage: FirebaseMessagingTypes.RemoteMess
   navigationCallback(remoteMessage.data as NotificationData);
 }
 
+function handleNotifeeData(data: Record<string, string> | undefined) {
+  if (!data || !navigationCallback) return;
+  navigationCallback(data as NotificationData);
+}
+
 /**
  * Configure notification handlers for foreground display, background/killed-state taps,
  * and token refresh.
@@ -120,6 +125,19 @@ export async function setupNotificationHandler() {
       importance: AndroidImportance.HIGH,
     });
   }
+
+  // Handle taps on local notifications (displayed by poller or foreground FCM handler)
+  notifee.onForegroundEvent(({ type, detail }) => {
+    if (type === EventType.PRESS && detail.notification?.data) {
+      handleNotifeeData(detail.notification.data as Record<string, string>);
+    }
+  });
+
+  notifee.onBackgroundEvent(async ({ type, detail }) => {
+    if (type === EventType.PRESS && detail.notification?.data) {
+      handleNotifeeData(detail.notification.data as Record<string, string>);
+    }
+  });
 
   try {
     // Handle foreground messages — display as local notification

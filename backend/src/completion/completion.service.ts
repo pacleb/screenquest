@@ -211,7 +211,7 @@ export class CompletionService {
       completion.childId,
       {
         title: 'Quest Approved!',
-        body: `+${completion.earnedSeconds} seconds added to your Time Bank!`,
+        body: `+${this.formatFriendlyTime(completion.earnedSeconds)} added to your Time Bank!`,
         data: { type: 'quest_approved', completionId },
       },
       'quest_completions',
@@ -435,6 +435,22 @@ export class CompletionService {
     const d = new Date();
     d.setHours(23, 59, 59, 999);
     return d;
+  }
+
+  /**
+   * Convert seconds to a human-friendly string like "30 minutes", "1 hour 15 minutes", etc.
+   */
+  private formatFriendlyTime(totalSeconds: number): string {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    const parts: string[] = [];
+    if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+    if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+    if (parts.length === 0) parts.push(`${secs} second${secs !== 1 ? 's' : ''}`);
+
+    return parts.join(' ');
   }
 
   private getStartOfWeek(): Date {
