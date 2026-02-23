@@ -80,8 +80,14 @@ api.interceptors.response.use(
       }
     }
 
-    // --- 401 token refresh ---
-    if (error.response?.status === 401 && !config._retry) {
+    // --- 401 token refresh (skip for auth endpoints) ---
+    const isAuthEndpoint = config.url?.includes('/auth/login') ||
+      config.url?.includes('/auth/register') ||
+      config.url?.includes('/auth/child-login') ||
+      config.url?.includes('/auth/forgot-password') ||
+      config.url?.includes('/auth/reset-password');
+
+    if (error.response?.status === 401 && !config._retry && !isAuthEndpoint) {
       config._retry = true;
 
       try {

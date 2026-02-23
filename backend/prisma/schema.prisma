@@ -43,9 +43,11 @@ model User {
   authProvider   String   @default("email") @map("auth_provider") @db.VarChar(20)
   authProviderId String?  @map("auth_provider_id") @db.VarChar(255)
   isAppAdmin     Boolean  @default(false) @map("is_app_admin")
-  emailVerified  Boolean  @default(false) @map("email_verified")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  emailVerified            Boolean   @default(false) @map("email_verified")
+  emailVerificationToken   String?   @map("email_verification_token") @db.VarChar(64)
+  emailVerificationExpiry  DateTime? @map("email_verification_expiry") @db.Timestamptz()
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   guardianPermissions Json?   @map("guardian_permissions") @db.JsonB
   playSettings        Json?   @map("play_settings") @db.JsonB

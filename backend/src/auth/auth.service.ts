@@ -55,8 +55,16 @@ export class AuthService {
       },
     });
 
-    // Generate email verification token
+    // Generate email verification token (stored in DB for persistence + Redis for fast lookup)
     const verificationToken = nanoid(32);
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
+      },
+    });
     await this.redis.set(
       `email-verify:${verificationToken}`,
       user.id,
@@ -155,17 +163,36 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
-    const userId = await this.redis.get(`email-verify:${token}`);
+    // Try Redis first (fast path), fall back to DB (persistent/reliable)
+    let userId = await this.redis.get(`email-verify:${token}`);
+
+    if (!userId) {
+      // Redis miss — look up from database (survives Redis restarts/evictions)
+      const user = await this.prisma.user.findFirst({
+        where: {
+          emailVerificationToken: token,
+          emailVerificationExpiry: { gte: new Date() },
+        },
+      });
+      if (user) {
+        userId = user.id;
+      }
+    }
+
     if (!userId) {
       throw new BadRequestException('Invalid or expired verification token');
     }
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { emailVerified: true },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiry: null,
+      },
     });
 
-    await this.redis.del(`email-verify:${token}`);
+    await this.redis.del(`email-verify:${token}`).catch(() => {});
 
     return { message: 'Email verified successfully' };
   }
@@ -184,6 +211,14 @@ export class AuthService {
     }
 
     const verificationToken = nanoid(32);
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
+      },
+    });
     await this.redis.set(
       `email-verify:${verificationToken}`,
       user.id,
