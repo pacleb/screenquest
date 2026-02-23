@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+// In the browser, use the same-origin proxy to avoid CORS issues.
+// On the server (SSR), call the backend directly.
+const isBrowser = typeof window !== 'undefined';
+const API_BASE = isBrowser
+  ? '/api/proxy'  // Next.js rewrite proxies this to the backend (same-origin, no CORS)
+  : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api');
 
 console.log('[CMS DEBUG] API_BASE =', API_BASE);
-console.log('[CMS DEBUG] NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL);
+console.log('[CMS DEBUG] isBrowser =', isBrowser);
 
 export const api = axios.create({
   baseURL: API_BASE,

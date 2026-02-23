@@ -90,11 +90,12 @@ export class RedisService extends Redis implements OnModuleDestroy {
     return 'OK';
   }
 
-  async del(...keys: string[]): Promise<number> {
+  // @ts-ignore - ioredis overload signatures include callbacks we don't need
+  async del(...keys: (string | Buffer)[]): Promise<number> {
     if (!this.useMemory) return (super.del as any)(...keys);
     let count = 0;
     for (const key of keys) {
-      if (this.memStore.delete(key)) count++;
+      if (this.memStore.delete(String(key))) count++;
     }
     return count;
   }
@@ -125,13 +126,14 @@ export class RedisService extends Redis implements OnModuleDestroy {
     return remaining > 0 ? remaining : -2;
   }
 
-  async ping(): Promise<string> {
+  async ping(): Promise<"PONG"> {
     if (!this.useMemory) return super.ping();
     return 'PONG';
   }
 
-  async info(section?: string): Promise<string> {
-    if (!this.useMemory) return super.info(section);
+  // @ts-ignore - ioredis overload signatures include callbacks we don't need
+  async info(...args: (string | Buffer)[]): Promise<string> {
+    if (!this.useMemory) return (super.info as any)(...args);
     return '# Memory\r\nused_memory:0\r\nused_memory_human:0B\r\n';
   }
 
