@@ -177,22 +177,11 @@ export default function SettingsScreen() {
             <View style={styles.subRow}>
               <Text style={styles.subLabel}>Current Plan</Text>
               <Badge
-                label={
-                  sub.isTrialing ? "Trial" : sub.isActive ? "Premium" : "Free"
-                }
+                label={sub.isActive ? "Premium" : "Free"}
                 variant={sub.isActive ? "success" : "muted"}
               />
             </View>
-            {sub.isTrialing && sub.trialDaysRemaining !== null && (
-              <View style={styles.subRow}>
-                <Text style={styles.subLabel}>Trial Ends</Text>
-                <Text style={styles.subValue}>
-                  {sub.trialDaysRemaining} day
-                  {sub.trialDaysRemaining !== 1 ? "s" : ""} remaining
-                </Text>
-              </View>
-            )}
-            {sub.isActive && !sub.isTrialing && sub.expiresAt && (
+            {sub.isActive && sub.expiresAt && (
               <>
                 <View style={styles.subRow}>
                   <Text style={styles.subLabel}>

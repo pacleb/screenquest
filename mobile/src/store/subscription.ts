@@ -5,9 +5,7 @@ interface SubscriptionState {
   plan: string;
   subscriptionStatus: string | null;
   isActive: boolean;
-  isTrialing: boolean;
   expiresAt: string | null;
-  trialDaysRemaining: number | null;
   gracePeriodEndsAt: string | null;
   activeQuestCount: number;
   questLimit: number | null;
@@ -24,9 +22,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   plan: 'free',
   subscriptionStatus: null,
   isActive: false,
-  isTrialing: false,
   expiresAt: null,
-  trialDaysRemaining: null,
   gracePeriodEndsAt: null,
   activeQuestCount: 0,
   questLimit: 3,
@@ -44,9 +40,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         plan: status.plan,
         subscriptionStatus: status.subscriptionStatus,
         isActive: status.isActive,
-        isTrialing: status.isTrialing,
         expiresAt: status.expiresAt,
-        trialDaysRemaining: status.trialDaysRemaining,
         gracePeriodEndsAt: status.gracePeriodEndsAt,
         activeQuestCount: status.activeQuestCount,
         questLimit: status.questLimit,
@@ -64,9 +58,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       plan: 'free',
       subscriptionStatus: null,
       isActive: false,
-      isTrialing: false,
       expiresAt: null,
-      trialDaysRemaining: null,
       gracePeriodEndsAt: null,
       activeQuestCount: 0,
       questLimit: 3,

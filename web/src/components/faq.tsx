@@ -21,8 +21,8 @@ const faqs = [
     a: "The app shows a gentle reminder that time is up. Parents can set consequences for violations or simply let the timer encourage kids to get back to real-world activities.",
   },
   {
-    q: "Can I try Premium before paying?",
-    a: "Yes! Premium comes with a 7-day free trial. No credit card required to start. You can cancel anytime from your app store account settings.",
+    q: "Can I try ScreenQuest before upgrading?",
+    a: "Absolutely. ScreenQuest is free to use with core features — create a family, add children, manage quests, and use the basic time bank at no cost. Upgrade to Premium anytime for unlimited quests, detailed analytics, and more. No commitment required, cancel anytime.",
   },
   {
     q: "Does it work on both iPhone and Android?",

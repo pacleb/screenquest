@@ -12,6 +12,7 @@ model Family {
   name                  String    @db.VarChar(100)
   familyCode            String    @unique @map("family_code") @db.VarChar(8)
   plan                  String    @default("free") @db.VarChar(20)
+  // Valid values: 'active' | 'cancelled' | 'expired' | 'billing_issue' (null = never subscribed)
   subscriptionStatus    String?   @map("subscription_status") @db.VarChar(20)
   subscriptionExpiresAt DateTime? @map("subscription_expires_at") @db.Timestamptz()
   subscriptionPeriod    String?   @map("subscription_period") @db.VarChar(10)

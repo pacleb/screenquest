@@ -45,18 +45,6 @@ export class SubscriptionService {
       !!family.subscriptionExpiresAt &&
       family.subscriptionExpiresAt > new Date();
 
-    const isTrialing = family.subscriptionStatus === 'trialing' && isActive;
-
-    let trialDaysRemaining: number | null = null;
-    if (isTrialing && family.subscriptionExpiresAt) {
-      trialDaysRemaining = Math.max(
-        0,
-        Math.ceil(
-          (family.subscriptionExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-        ),
-      );
-    }
-
     const activeQuestCount = await this.prisma.quest.count({
       where: { familyId, isArchived: false },
     });
@@ -68,8 +56,6 @@ export class SubscriptionService {
       isActive,
       willRenew: family.subscriptionStatus === 'active',
       period: family.subscriptionPeriod,
-      isTrialing,
-      trialDaysRemaining,
       gracePeriodEndsAt: family.gracePeriodEndsAt?.toISOString() ?? null,
       activeQuestCount,
       questLimit: isActive ? null : FREE_PLAN_QUEST_LIMIT,
@@ -109,18 +95,17 @@ export class SubscriptionService {
     switch (type) {
       case 'INITIAL_PURCHASE':
       case 'NON_RENEWING_PURCHASE': {
-        const isTrialing = event.event.period_type === 'TRIAL';
         await this.prisma.family.update({
           where: { id: family.id },
           data: {
             plan: 'premium',
-            subscriptionStatus: isTrialing ? 'trialing' : 'active',
+            subscriptionStatus: 'active',
             subscriptionExpiresAt: expiresAt,
             subscriptionPeriod: period,
             gracePeriodEndsAt: null,
           },
         });
-        this.logger.log(`Family ${family.id}: initial purchase (${isTrialing ? 'trial' : 'paid'})`);
+        this.logger.log(`Family ${family.id}: initial purchase`);
         break;
       }
 

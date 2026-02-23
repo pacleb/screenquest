@@ -61,8 +61,7 @@ export default function ParentDashboard() {
   const navigation = useNavigation<any>();
   const { user, logout } = useAuthStore();
   const familyId = user?.familyId;
-  const { isTrialing, trialDaysRemaining, gracePeriodEndsAt } =
-    useSubscriptionStore();
+  const { gracePeriodEndsAt } = useSubscriptionStore();
 
   const [childrenData, setChildrenData] = useState<ChildData[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<QuestCompletion[]>(
@@ -169,21 +168,6 @@ export default function ParentDashboard() {
         <Text style={styles.greeting} testID="dashboard-greeting">
           {getGreeting()}, {user?.name}
         </Text>
-
-        {/* Trial Banner */}
-        {isTrialing && trialDaysRemaining !== null && (
-          <TouchableOpacity
-            style={styles.trialBanner}
-            onPress={() => navigation.navigate("Paywall")}
-          >
-            <Icon name="sparkles" size={16} color={colors.accent} />
-            <Text style={styles.trialText}>
-              Free Trial — {trialDaysRemaining} day
-              {trialDaysRemaining !== 1 ? "s" : ""} remaining
-            </Text>
-            <Icon name="chevron-forward" size={14} color={colors.accent} />
-          </TouchableOpacity>
-        )}
 
         {/* Grace Period Banner */}
         {gracePeriodEndsAt && (

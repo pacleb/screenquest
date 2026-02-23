@@ -49,7 +49,7 @@ const FEATURES = [
 export default function PaywallScreen() {
   const navigation = useNavigation<any>();
   const user = useAuthStore((s) => s.user);
-  const { isActive, isTrialing } = useSubscriptionStore();
+  const { isActive } = useSubscriptionStore();
   const fetchStatus = useSubscriptionStore((s) => s.fetchStatus);
 
   const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("yearly");
@@ -149,7 +149,7 @@ export default function PaywallScreen() {
   const monthlyPrice = packages.monthly?.product?.priceString ?? "$4.99";
   const yearlyPrice = packages.yearly?.product?.priceString ?? "$39.99";
 
-  if (isActive && !isTrialing) {
+  if (isActive) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.alreadyPremium}>
@@ -295,13 +295,7 @@ export default function PaywallScreen() {
 
         {/* CTA Button */}
         <Button
-          title={
-            purchasing
-              ? "Processing..."
-              : isTrialing
-                ? "Subscribe Now"
-                : "Start 14-Day Free Trial"
-          }
+          title={purchasing ? "Processing..." : "Upgrade to Premium"}
           onPress={handlePurchase}
           size="lg"
           disabled={purchasing || loading}
@@ -321,11 +315,8 @@ export default function PaywallScreen() {
 
         {/* Fine print */}
         <Text style={styles.finePrint}>
-          {isTrialing
-            ? "Subscription auto-renews. Cancel anytime."
-            : "Free trial for 14 days, then auto-renews. Cancel anytime."}{" "}
-          Payment will be charged to your{" "}
-          {Platform.OS === "ios" ? "Apple ID" : "Google Play"} account. By
+          Auto-renews monthly/yearly. Cancel anytime. Payment will be charged to
+          your {Platform.OS === "ios" ? "Apple ID" : "Google Play"} account. By
           subscribing, you agree to our Terms of Service and Privacy Policy.
         </Text>
       </ScrollView>

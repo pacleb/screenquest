@@ -30,7 +30,7 @@ const plans = [
       "Priority support",
       "Custom quest categories",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Premium",
     highlighted: true,
   },
 ];

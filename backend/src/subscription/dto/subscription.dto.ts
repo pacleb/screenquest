@@ -5,8 +5,6 @@ export class SubscriptionStatusDto {
   isActive: boolean;
   willRenew: boolean;
   period: string | null;
-  isTrialing: boolean;
-  trialDaysRemaining: number | null;
   gracePeriodEndsAt: string | null;
   activeQuestCount: number;
   questLimit: number | null;

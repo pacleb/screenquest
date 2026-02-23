@@ -4,8 +4,6 @@ import { useSubscriptionStore } from '../store/subscription';
 export function usePremium() {
   const navigation = useNavigation<any>();
   const isActive = useSubscriptionStore((s) => s.isActive);
-  const isTrialing = useSubscriptionStore((s) => s.isTrialing);
-  const trialDaysRemaining = useSubscriptionStore((s) => s.trialDaysRemaining);
   const gracePeriodEndsAt = useSubscriptionStore((s) => s.gracePeriodEndsAt);
 
   const isPremium = isActive;
@@ -21,8 +19,6 @@ export function usePremium() {
 
   return {
     isPremium,
-    isTrialing,
-    trialDaysRemaining,
     gracePeriodEndsAt,
     requirePremium,
   };
