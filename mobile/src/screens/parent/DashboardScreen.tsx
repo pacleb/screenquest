@@ -259,7 +259,7 @@ export default function ParentDashboard() {
                         <View style={styles.weekDotsContainer}>
                           <Text style={styles.weekDotsLabel}>This week</Text>
                           <View style={styles.weekDotsRow}>
-                            {weeklyStats.dailyStats.map((d, i) => (
+                            {weeklyStats.dailyStats.slice(-7).map((d, i) => (
                               <View
                                 key={i}
                                 style={[
