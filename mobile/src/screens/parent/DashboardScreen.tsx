@@ -34,11 +34,7 @@ import {
   StreakFire,
   ProgressBar,
 } from "../../components";
-import {
-  WeeklyCompletionChart,
-  ScreenTimeTrend,
-  StreakCalendar,
-} from "../../components/ParentCharts";
+import { WeeklyCompletionChart } from "../../components/ParentCharts";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
 
@@ -206,7 +202,7 @@ export default function ParentDashboard() {
                 contentContainerStyle={styles.childScroll}
               >
                 {childrenData.map(
-                  ({ member, balance, activeSession, progress }) => (
+                  ({ member, balance, activeSession, progress, weeklyStats }, idx) => (
                     <Card key={member.id} style={styles.childCard}>
                       <Avatar
                         name={member.name}
@@ -255,6 +251,29 @@ export default function ParentDashboard() {
                           <Text style={styles.childXpText}>
                             {progress.weeklyXp} XP
                           </Text>
+                        </View>
+                      )}
+
+                      {/* This Week dots */}
+                      {weeklyStats && weeklyStats.dailyStats.length > 0 && (
+                        <View style={styles.weekDotsContainer}>
+                          <Text style={styles.weekDotsLabel}>This week</Text>
+                          <View style={styles.weekDotsRow}>
+                            {weeklyStats.dailyStats.map((d, i) => (
+                              <View
+                                key={i}
+                                style={[
+                                  styles.weekDot,
+                                  d.quests > 0 && {
+                                    backgroundColor:
+                                      CHILD_CHART_COLORS[
+                                        idx % CHILD_CHART_COLORS.length
+                                      ],
+                                  },
+                                ]}
+                              />
+                            ))}
+                          </View>
                         </View>
                       )}
 
@@ -459,39 +478,6 @@ export default function ParentDashboard() {
                     }))}
                 />
 
-                {/* Screen time trend per child */}
-                {childrenData.map((c, idx) =>
-                  c.weeklyStats && c.weeklyStats.dailyStats.length > 0 ? (
-                    <ScreenTimeTrend
-                      key={c.member.id}
-                      data={c.weeklyStats.dailyStats.map((d) => ({
-                        date: d.date,
-                        minutesUsed: Math.ceil(d.playSeconds / 60),
-                      }))}
-                      label={`${c.member.name}'s Screen Time`}
-                      accentColor={
-                        CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length]
-                      }
-                    />
-                  ) : null,
-                )}
-
-                {/* Streak calendar per child */}
-                {childrenData.map((c, idx) =>
-                  c.weeklyStats && c.weeklyStats.dailyStats.length > 0 ? (
-                    <StreakCalendar
-                      key={c.member.id}
-                      childName={c.member.name}
-                      streakColor={
-                        CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length]
-                      }
-                      days={c.weeklyStats.dailyStats.map((d) => ({
-                        date: d.date,
-                        completed: d.quests > 0,
-                      }))}
-                    />
-                  ) : null,
-                )}
               </View>
             )}
 
@@ -777,5 +763,27 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     marginTop: 2,
+  },
+  weekDotsContainer: {
+    width: "100%",
+    marginBottom: spacing.xs,
+  },
+  weekDotsLabel: {
+    fontFamily: fonts.parent.regular,
+    fontSize: 10,
+    color: colors.textSecondary,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  weekDotsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 4,
+  },
+  weekDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.border,
   },
 });

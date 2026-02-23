@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -23,6 +22,7 @@ import {
 import { Animations } from "../../../assets/animations";
 import { SoundEffects } from "../../services/soundEffects";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { formatTimeLabel } from "../../utils/formatTime";
 import { eventBus, AppEvents } from "../../utils/eventBus";
 
@@ -50,7 +50,6 @@ export default function ChildPlay() {
   const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const syncRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const appStateRef = useRef(AppState.currentState);
 
   const init = useCallback(async () => {
     if (!user?.id) return;
@@ -80,22 +79,16 @@ export default function ChildPlay() {
     }
   }, [user?.id]);
 
-  useEffect(() => {
-    init();
-  }, [init]);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (nextState) => {
-      if (
-        appStateRef.current.match(/inactive|background/) &&
-        nextState === "active"
-      ) {
-        syncWithServer();
-      }
-      appStateRef.current = nextState;
-    });
-    return () => sub.remove();
-  }, [session?.id]);
+  // Keep balance and session state fresh via focus, events, and polling
+  useAutoRefresh({
+    fetchData: init,
+    events: [
+      AppEvents.TIME_BANK_CHANGED,
+      AppEvents.PLAY_SESSION_CHANGED,
+      AppEvents.COMPLETION_CHANGED,
+    ],
+    intervalMs: 30_000,
+  });
 
   useEffect(() => {
     if (screenState === "active" && remainingSeconds > 0) {
@@ -431,7 +424,7 @@ export default function ChildPlay() {
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}
-          disabled={balance.totalSeconds < 5}
+          disabled={balance.totalSeconds < 300}
           variant="success"
           size="lg"
           childFont
