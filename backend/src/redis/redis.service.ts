@@ -1,9 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 /**
- * Redis service with in-memory fallback.
+ * Redis service with in-memory fallback (composition-based).
  *
  * When REDIS_URL is not set, all commands are handled by a simple
  * in-memory Map. This keeps the app functional on hosts that don't
@@ -11,24 +11,23 @@ import Redis from 'ioredis';
  * working identically when a real Redis is available.
  */
 @Injectable()
-export class RedisService extends Redis implements OnModuleDestroy {
+export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private readonly memStore = new Map<string, { value: string; expiresAt?: number }>();
-  private readonly useMemory: boolean;
+  private useMemory: boolean;
+  private client: Redis | null = null;
 
   constructor(private configService: ConfigService) {
     const url = configService.get<string>('REDIS_URL');
 
     if (url) {
-      super(url, {
+      this.client = new Redis(url, {
         maxRetriesPerRequest: 3,
         retryStrategy: (times) => (times > 5 ? null : Math.min(times * 200, 2000)),
         lazyConnect: true,
       });
       this.useMemory = false;
     } else {
-      // Create a dummy Redis instance that never connects
-      super({ lazyConnect: true });
       this.useMemory = true;
       this.logger.warn(
         'REDIS_URL not set — using in-memory fallback. ' +
@@ -38,18 +37,18 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async onModuleInit() {
-    if (!this.useMemory) {
+    if (!this.useMemory && this.client) {
       try {
-        await this.connect();
+        await this.client.connect();
         this.logger.log('Connected to Redis');
       } catch (err) {
         this.logger.warn(`Could not connect to Redis, falling back to in-memory: ${err.message}`);
-        (this as any).useMemory = true;
+        this.useMemory = true;
       }
     }
   }
 
-  // ── In-memory overrides ──────────────────────────────────────────
+  // ── In-memory helpers ────────────────────────────────────────────
 
   private isExpired(key: string): boolean {
     const entry = this.memStore.get(key);
@@ -62,13 +61,13 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async get(key: string): Promise<string | null> {
-    if (!this.useMemory) return super.get(key);
+    if (!this.useMemory && this.client) return this.client.get(key);
     if (this.isExpired(key)) return null;
     return this.memStore.get(key)?.value ?? null;
   }
 
   async set(key: string, value: string, ...args: any[]): Promise<any> {
-    if (!this.useMemory) return (super.set as any)(key, value, ...args);
+    if (!this.useMemory && this.client) return (this.client.set as any)(key, value, ...args);
     let ttlMs: number | undefined;
     // Handle set(key, value, 'EX', seconds) pattern
     if (args[0] === 'EX' && typeof args[1] === 'number') {
@@ -82,7 +81,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async setex(key: string, seconds: number, value: string): Promise<any> {
-    if (!this.useMemory) return super.setex(key, seconds, value);
+    if (!this.useMemory && this.client) return this.client.setex(key, seconds, value);
     this.memStore.set(key, {
       value,
       expiresAt: Date.now() + seconds * 1000,
@@ -90,9 +89,8 @@ export class RedisService extends Redis implements OnModuleDestroy {
     return 'OK';
   }
 
-  // @ts-ignore - ioredis overload signatures include callbacks we don't need
   async del(...keys: (string | Buffer)[]): Promise<number> {
-    if (!this.useMemory) return (super.del as any)(...keys);
+    if (!this.useMemory && this.client) return this.client.del(...keys.map(String));
     let count = 0;
     for (const key of keys) {
       if (this.memStore.delete(String(key))) count++;
@@ -101,7 +99,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async incr(key: string): Promise<number> {
-    if (!this.useMemory) return super.incr(key);
+    if (!this.useMemory && this.client) return this.client.incr(key);
     const current = await this.get(key);
     const next = (parseInt(current || '0', 10) + 1).toString();
     const entry = this.memStore.get(key);
@@ -110,7 +108,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async expire(key: string, seconds: number): Promise<number> {
-    if (!this.useMemory) return super.expire(key, seconds);
+    if (!this.useMemory && this.client) return this.client.expire(key, seconds);
     const entry = this.memStore.get(key);
     if (!entry) return 0;
     entry.expiresAt = Date.now() + seconds * 1000;
@@ -118,7 +116,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async ttl(key: string): Promise<number> {
-    if (!this.useMemory) return super.ttl(key);
+    if (!this.useMemory && this.client) return this.client.ttl(key);
     const entry = this.memStore.get(key);
     if (!entry) return -2;
     if (!entry.expiresAt) return -1;
@@ -127,19 +125,18 @@ export class RedisService extends Redis implements OnModuleDestroy {
   }
 
   async ping(): Promise<"PONG"> {
-    if (!this.useMemory) return super.ping();
+    if (!this.useMemory && this.client) return this.client.ping();
     return 'PONG';
   }
 
-  // @ts-ignore - ioredis overload signatures include callbacks we don't need
-  async info(...args: (string | Buffer)[]): Promise<string> {
-    if (!this.useMemory) return (super.info as any)(...args);
+  async info(...args: string[]): Promise<string> {
+    if (!this.useMemory && this.client) return this.client.info(...args);
     return '# Memory\r\nused_memory:0\r\nused_memory_human:0B\r\n';
   }
 
   async onModuleDestroy() {
-    if (!this.useMemory) {
-      await this.quit();
+    if (!this.useMemory && this.client) {
+      await this.client.quit();
     }
   }
 }

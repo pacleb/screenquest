@@ -38,8 +38,11 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      Alert.alert("[DEBUG] API URL", ENV.apiUrl);
       await register(email.trim(), password, name.trim());
+      Alert.alert(
+        "[DEBUG] Registration Success",
+        `User registered and authenticated. API: ${ENV.apiUrl}`,
+      );
       // RootNavigator will detect familyId is null and show the Setup flow
     } catch (error: any) {
       const debugInfo = [

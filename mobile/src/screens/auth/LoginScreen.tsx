@@ -43,8 +43,8 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      Alert.alert("[DEBUG] API URL", ENV.apiUrl);
       await login(email.trim(), password);
+      Alert.alert("[DEBUG] Login Success", `Authenticated. API: ${ENV.apiUrl}`);
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
       const debugInfo = [

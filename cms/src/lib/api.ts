@@ -45,9 +45,13 @@ api.interceptors.response.use(
       code: error.code,
     });
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      console.warn('[CMS DEBUG] 401 detected — clearing token, redirecting to /login');
-      localStorage.removeItem('sq_admin_token');
-      window.location.href = '/login';
+      // Don't redirect on login endpoint — let the login page handle its own 401
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest) {
+        console.warn('[CMS DEBUG] 401 detected — clearing token, redirecting to /login');
+        localStorage.removeItem('sq_admin_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   },
