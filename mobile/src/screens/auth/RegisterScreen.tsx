@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthStore } from "../../store/auth";
+import { ENV } from "../../config/env";
 import { colors, spacing, borderRadius } from "../../theme";
 
 export default function RegisterScreen() {
@@ -37,13 +38,18 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
+      Alert.alert("[DEBUG] API URL", ENV.apiUrl);
       await register(email.trim(), password, name.trim());
       // RootNavigator will detect familyId is null and show the Setup flow
     } catch (error: any) {
-      Alert.alert(
-        "Registration Failed",
-        error.response?.data?.message || "Something went wrong",
-      );
+      const debugInfo = [
+        `URL: ${ENV.apiUrl}`,
+        `Status: ${error.response?.status ?? 'N/A'}`,
+        `Code: ${error.code ?? 'N/A'}`,
+        `Message: ${error.message}`,
+        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
+      ].join('\n');
+      Alert.alert("[DEBUG] Registration Failed", debugInfo);
     } finally {
       setLoading(false);
     }

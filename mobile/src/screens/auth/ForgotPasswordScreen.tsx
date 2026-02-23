@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { authService } from "../../services/auth";
+import { ENV } from "../../config/env";
 import { colors, spacing, borderRadius } from "../../theme";
 
 export default function ForgotPasswordScreen() {
@@ -29,10 +30,18 @@ export default function ForgotPasswordScreen() {
 
     setLoading(true);
     try {
+      Alert.alert("[DEBUG] API URL", ENV.apiUrl);
       await authService.forgotPassword(email.trim());
       setSent(true);
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+    } catch (error: any) {
+      const debugInfo = [
+        `URL: ${ENV.apiUrl}`,
+        `Status: ${error.response?.status ?? 'N/A'}`,
+        `Code: ${error.code ?? 'N/A'}`,
+        `Message: ${error.message}`,
+        `Server: ${JSON.stringify(error.response?.data ?? 'no response')}`,
+      ].join('\n');
+      Alert.alert("[DEBUG] Forgot Password Failed", debugInfo);
     } finally {
       setLoading(false);
     }

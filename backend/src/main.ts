@@ -17,10 +17,11 @@ async function bootstrap() {
   // Use pino logger for all NestJS logging (structured JSON in prod, pretty in dev)
   app.useLogger(app.get(Logger));
 
-  app.use(helmet());
-
   // Build CORS allowed origins
-  const allowedOrigins: string[] = [];
+  const allowedOrigins: string[] = [
+    // Hardcoded production CMS domain (always allowed)
+    'https://sqcms.restdayapps.com',
+  ];
   if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
   if (process.env.CMS_URL) allowedOrigins.push(process.env.CMS_URL);
   if (process.env.ALLOWED_ORIGINS) {
@@ -30,15 +31,17 @@ async function bootstrap() {
   if (process.env.NODE_ENV !== 'production') {
     allowedOrigins.push('http://localhost:3001', 'http://localhost:8081');
   }
+  // De-duplicate
+  const uniqueOrigins = [...new Set(allowedOrigins)];
   console.log('[CORS DEBUG] NODE_ENV:', process.env.NODE_ENV);
   console.log('[CORS DEBUG] FRONTEND_URL:', process.env.FRONTEND_URL);
   console.log('[CORS DEBUG] CMS_URL:', process.env.CMS_URL);
   console.log('[CORS DEBUG] ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
-  console.log('[CORS DEBUG] Allowed origins:', allowedOrigins);
+  console.log('[CORS DEBUG] Allowed origins:', uniqueOrigins);
 
   // Check if an origin matches an allowed pattern (exact match or Vercel preview subdomain)
   const isOriginAllowed = (origin: string): boolean => {
-    if (allowedOrigins.includes(origin)) return true;
+    if (uniqueOrigins.includes(origin)) return true;
     // Allow Vercel preview deployments for configured Vercel domains
     // e.g. if CMS_URL is https://screenquest-cms.vercel.app, also allow
     //       https://screenquest-cms-*.vercel.app (preview deploys)
@@ -63,14 +66,14 @@ async function bootstrap() {
   };
 
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' && allowedOrigins.length > 0
+    origin: process.env.NODE_ENV === 'production' && uniqueOrigins.length > 0
       ? (origin, callback) => {
           // Allow requests with no origin (mobile apps, curl, etc.)
           if (!origin) return callback(null, true);
           if (isOriginAllowed(origin)) {
             return callback(null, true);
           }
-          console.warn('[CORS DEBUG] Blocked origin:', origin, '| Allowed:', allowedOrigins);
+          console.warn('[CORS DEBUG] Blocked origin:', origin, '| Allowed:', uniqueOrigins);
           callback(new Error(`Origin ${origin} not allowed by CORS`));
         }
       : true, // Allow all origins in development or if no origins configured
@@ -78,6 +81,11 @@ async function bootstrap() {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   });
+
+  // Apply helmet AFTER CORS so it doesn't interfere with preflight responses
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
 
   app.setGlobalPrefix('api');
 
