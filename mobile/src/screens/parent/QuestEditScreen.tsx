@@ -393,11 +393,7 @@ export default function QuestEditScreen() {
 
           {/* Library Category Filter */}
           <Text style={styles.sectionLabel}>Browse by Category</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.catScroll}
-          >
+          <View style={styles.catWrap}>
             <TouchableOpacity
               style={[styles.catChip, !libraryCategory && styles.catChipActive]}
               onPress={() => setLibraryCategory(undefined)}
@@ -430,7 +426,7 @@ export default function QuestEditScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
 
           {/* Library List */}
           {loadingLibrary ? (
@@ -928,7 +924,7 @@ const styles = StyleSheet.create({
   toggleLabel: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
   toggleDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   // Library styles
-  catScroll: { marginBottom: spacing.md },
+  catWrap: { flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.md },
   catChip: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
