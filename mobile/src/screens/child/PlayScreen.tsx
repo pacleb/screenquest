@@ -173,10 +173,12 @@ export default function ChildPlay() {
     }
     setActionLoading(true);
     try {
-      const result = await playSessionService.requestPlay(
-        user.id,
-        Math.min(balance.totalSeconds, 14400),
-      );
+      const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
+      if (requestedSecs < 300) {
+        Alert.alert("Not Enough Time", "You need at least 5 minutes to start playing.");
+        return;
+      }
+      const result = await playSessionService.requestPlay(user.id, requestedSecs);
       setSession(result);
       if (result.status === "active") {
         setRemainingSeconds(result.remainingSeconds);

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, ActivityIndicator, StatusBar } from "react-native";
+import { View, ActivityIndicator, StatusBar, Image } from "react-native";
 import {
   NavigationContainer,
   LinkingOptions,
@@ -66,6 +66,7 @@ function App() {
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const initialize = useAuthStore((s) => s.initialize);
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
   const user = useAuthStore((s) => s.user);
   const [fontsReady, setFontsReady] = useState(true); // Fonts are linked natively now
 
@@ -148,17 +149,14 @@ function App() {
     };
   }, [user?.id, user?.familyId]);
 
-  if (!fontsReady) {
+  if (!fontsReady || isAuthLoading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: "#4A90D9" }}>
+        <Image
+          source={require("./assets/splash.png")}
+          style={{ flex: 1, width: "100%" }}
+          resizeMode="contain"
+        />
       </View>
     );
   }

@@ -10,11 +10,7 @@ import type { RootStackParamList } from "./types";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const { isLoading, isAuthenticated, user } = useAuthStore();
-
-  if (isLoading) {
-    return null;
-  }
+  const { isAuthenticated, user } = useAuthStore();
 
   const needsEmailVerification =
     isAuthenticated && user?.role !== "child" && !user?.emailVerified;
