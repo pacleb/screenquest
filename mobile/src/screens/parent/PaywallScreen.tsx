@@ -42,7 +42,7 @@ const FEATURES = [
     premium: "Detailed",
     icon: "bar-chart-outline",
   },
-  { name: "Avatar Packs", free: false, premium: true, icon: "shirt-outline" },
+  { name: "Avatar Packs", free: true, premium: true, icon: "shirt-outline" },
   { name: "Data Export", free: false, premium: true, icon: "download-outline" },
 ];
 

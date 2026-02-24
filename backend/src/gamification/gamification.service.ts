@@ -8,7 +8,6 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
-import { SubscriptionService } from '../subscription/subscription.service';
 import { getLevelForXp, getNextLevel, LEVEL_THRESHOLDS } from './constants/levels';
 import {
   AchievementEarnedEvent,
@@ -32,7 +31,6 @@ export class GamificationService {
     private prisma: PrismaService,
     private notificationService: NotificationService,
     private eventEmitter: EventEmitter2,
-    private subscriptionService: SubscriptionService,
   ) {}
 
   // ─── Core: Process Completion ───────────────────────────────
@@ -385,21 +383,14 @@ export class GamificationService {
   // ─── Avatar Methods ─────────────────────────────────────────
 
   async getAvailableAvatarItems(childId: string) {
-    const [allItems, child] = await Promise.all([
-      this.prisma.avatarItem.findMany({ orderBy: [{ slot: 'asc' }, { sortOrder: 'asc' }] }),
-      this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } }),
-    ]);
+    const allItems = await this.prisma.avatarItem.findMany({
+      orderBy: [{ slot: 'asc' }, { sortOrder: 'asc' }],
+    });
 
-    const isPremium = child?.familyId
-      ? await this.subscriptionService.isPremium(child.familyId)
-      : false;
-
-    const equippedItems = isPremium
-      ? await this.prisma.childEquippedItem.findMany({
-          where: { childId },
-          select: { avatarItemId: true, slot: true },
-        })
-      : [];
+    const equippedItems = await this.prisma.childEquippedItem.findMany({
+      where: { childId },
+      select: { avatarItemId: true, slot: true },
+    });
 
     const equippedMap = new Map(equippedItems.map((e) => [e.avatarItemId, true]));
 
@@ -411,8 +402,8 @@ export class GamificationService {
       slot: item.slot,
       unlockType: item.unlockType,
       unlockValue: item.unlockValue,
-      isUnlocked: isPremium,
-      isEquipped: isPremium && equippedMap.has(item.id),
+      isUnlocked: true,
+      isEquipped: equippedMap.has(item.id),
     }));
   }
 
