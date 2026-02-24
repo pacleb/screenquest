@@ -24,7 +24,7 @@ const Stack = createNativeStackNavigator<ParentStackParamList>();
 
 function ParentTabs() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Math.max(insets.bottom, 8);
+  const bottomPadding = Math.max(insets.bottom - 10, 4);
 
   return (
     <Tab.Navigator
@@ -35,14 +35,17 @@ function ParentTabs() {
         tabBarStyle: {
           backgroundColor: colors.primaryDark,
           borderTopColor: colors.primaryDark,
-          height: 56 + bottomPadding,
+          height: 50 + bottomPadding,
           paddingBottom: bottomPadding,
-          paddingTop: 4,
-          paddingHorizontal: 4,
+          paddingTop: 2,
+          paddingHorizontal: 2,
         },
         tabBarLabelStyle: {
           fontFamily: fonts.parent.medium,
-          fontSize: 11,
+          fontSize: 10,
+        },
+        tabBarIconStyle: {
+          marginBottom: -2,
         },
       }}
     >

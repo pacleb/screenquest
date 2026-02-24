@@ -152,71 +152,65 @@ export default function AvatarCustomize() {
         </View>
       </View>
 
-          {/* Slot Tabs */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabsScroll}
+      {/* Slot Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabsScroll}
+      >
+        {SLOTS.map((slot) => (
+          <TouchableOpacity
+            key={slot}
+            style={[styles.tab, activeSlot === slot && styles.tabActive]}
+            onPress={() => setActiveSlot(slot)}
           >
-            {SLOTS.map((slot) => (
-              <TouchableOpacity
-                key={slot}
-                style={[styles.tab, activeSlot === slot && styles.tabActive]}
-                onPress={() => setActiveSlot(slot)}
-              >
-                <Text style={styles.tabIcon}>{SLOT_ICONS[slot]}</Text>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeSlot === slot && styles.tabLabelActive,
-                  ]}
-                >
-                  {SLOT_LABELS[slot]}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            <Text style={styles.tabIcon}>{SLOT_ICONS[slot]}</Text>
+            <Text
+              style={[
+                styles.tabLabel,
+                activeSlot === slot && styles.tabLabelActive,
+              ]}
+            >
+              {SLOT_LABELS[slot]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-          {/* Items Grid */}
-          <ScrollView contentContainerStyle={styles.itemsGrid}>
-            {slotItems.map((item) => {
-              const isEquipped = item.isEquipped;
-              const isActing = acting === item.id;
+      {/* Items Grid */}
+      <ScrollView contentContainerStyle={styles.itemsGrid}>
+        {slotItems.map((item) => {
+          const isEquipped = item.isEquipped;
+          const isActing = acting === item.id;
 
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.itemCard,
-                    isEquipped && styles.itemCardEquipped,
-                  ]}
-                  onPress={() => handleEquip(item)}
-                  disabled={isActing}
-                  activeOpacity={0.7}
-                >
-                  {isActing ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={themeColors.primary}
-                    />
-                  ) : (
-                    <Text style={styles.itemIcon}>{item.icon}</Text>
-                  )}
-                  <Text style={styles.itemName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  {isEquipped && (
-                    <View style={styles.equippedBadge}>
-                      <Text style={styles.equippedBadgeText}>Equipped</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-            {slotItems.length === 0 && (
-              <Text style={styles.emptyText}>No items in this slot yet</Text>
-            )}
-          </ScrollView>
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.itemCard, isEquipped && styles.itemCardEquipped]}
+              onPress={() => handleEquip(item)}
+              disabled={isActing}
+              activeOpacity={0.7}
+            >
+              {isActing ? (
+                <ActivityIndicator size="small" color={themeColors.primary} />
+              ) : (
+                <Text style={styles.itemIcon}>{item.icon}</Text>
+              )}
+              <Text style={styles.itemName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {isEquipped && (
+                <View style={styles.equippedBadge}>
+                  <Text style={styles.equippedBadgeText}>Equipped</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+        {slotItems.length === 0 && (
+          <Text style={styles.emptyText}>No items in this slot yet</Text>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -365,5 +359,4 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingVertical: spacing.xl,
   },
-
 });
