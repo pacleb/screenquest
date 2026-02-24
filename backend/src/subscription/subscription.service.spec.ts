@@ -100,7 +100,7 @@ describe('SubscriptionService', () => {
       );
     });
 
-    it('handles trial purchase with period_type=TRIAL', async () => {
+    it('handles trial purchase with period_type=TRIAL — treated as active (Phase 17)', async () => {
       prisma.family.update.mockResolvedValue({});
 
       await service.handleWebhookEvent(
@@ -110,7 +110,7 @@ describe('SubscriptionService', () => {
       expect(prisma.family.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            subscriptionStatus: 'trialing',
+            subscriptionStatus: 'active',
           }),
         }),
       );

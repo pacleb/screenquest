@@ -92,7 +92,7 @@ function App() {
           // Navigate parent to Approvals tab
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "Approvals" },
+            params: { screen: "ParentTabsInner", params: { screen: "Approvals" } },
           });
           break;
         case "play_request":
@@ -102,27 +102,27 @@ function App() {
           // Navigate parent to Approvals tab for play requests too
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "Approvals" },
+            params: { screen: "ParentTabsInner", params: { screen: "Approvals" } },
           });
           break;
         case "violation":
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "Consequences" },
+            params: { screen: "ParentTabsInner", params: { screen: "Consequences" } },
           });
           break;
         case "achievement":
         case "level_up":
           nav.navigate("App" as any, {
             screen: "ChildTabs",
-            params: { screen: "Trophies" },
+            params: { screen: "ChildTabsInner", params: { screen: "Trophies" } },
           });
           break;
         default:
           // Navigate to dashboard/home as fallback
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "Dashboard" },
+            params: { screen: "ParentTabsInner", params: { screen: "Dashboard" } },
           });
           break;
       }

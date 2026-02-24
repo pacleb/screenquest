@@ -51,8 +51,9 @@ export default function ApprovalsScreen() {
       ]);
       setCompletions(data);
       setPlayRequests(requests);
-    } catch {
-      Alert.alert("Error", "Failed to load approvals");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || "Failed to load approvals";
+      Alert.alert("Error", msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
