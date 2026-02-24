@@ -64,10 +64,16 @@ export default function ChildQuests() {
   const availableCount = quests.filter((q) => q.availableToComplete).length;
 
   return (
-    <SafeAreaView testID="child-quests-screen" style={styles.container}>
+    <SafeAreaView
+      testID="child-quests-screen"
+      style={styles.container}
+      edges={["top", "left", "right"]}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text testID="child-quests-title" style={styles.title}>Quest Board</Text>
+        <Text testID="child-quests-title" style={styles.title}>
+          Quest Board
+        </Text>
         <Text style={styles.subtitle}>
           {availableCount} quest{availableCount !== 1 ? "s" : ""} available
         </Text>

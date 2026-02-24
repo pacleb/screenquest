@@ -119,6 +119,7 @@ export default function ChildTrophies() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: themeColors.background }]}
+      edges={["top", "left", "right"]}
     >
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -138,7 +139,11 @@ export default function ChildTrophies() {
         {progress && (
           <Card style={styles.streakCard}>
             <View style={styles.streakRow}>
-              <StreakFire streak={progress.currentStreak} size="md" showLabel={false} />
+              <StreakFire
+                streak={progress.currentStreak}
+                size="md"
+                showLabel={false}
+              />
               <View style={{ flex: 1 }}>
                 <Text
                   style={[

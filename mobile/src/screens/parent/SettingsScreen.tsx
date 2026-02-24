@@ -149,7 +149,11 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} testID="parent-settings-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={["top", "left", "right"]}
+      testID="parent-settings-screen"
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Settings</Text>
 
@@ -621,7 +625,11 @@ export default function SettingsScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout} testID="settings-logout-btn">
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={logout}
+          testID="settings-logout-btn"
+        >
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 

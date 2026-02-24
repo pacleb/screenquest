@@ -155,7 +155,11 @@ export default function ParentDashboard() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} testID="parent-dashboard-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={["top", "left", "right"]}
+      testID="parent-dashboard-screen"
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -225,7 +229,7 @@ export default function ParentDashboard() {
                         {member.name}
                       </Text>
 
-                      {/* Level + Streak pills */}
+                      {/* Level pill */}
                       {progress && (
                         <View style={styles.childStatsRow}>
                           <View style={styles.childLevelPill}>
@@ -233,13 +237,12 @@ export default function ParentDashboard() {
                               Lv.{progress.level}
                             </Text>
                           </View>
-                          {progress.currentStreak > 0 && (
-                            <StreakFire
-                              streak={progress.currentStreak}
-                              size="sm"
-                            />
-                          )}
                         </View>
+                      )}
+
+                      {/* Streak row */}
+                      {progress && progress.currentStreak > 0 && (
+                        <StreakFire streak={progress.currentStreak} size="sm" />
                       )}
 
                       {/* XP Progress Bar */}

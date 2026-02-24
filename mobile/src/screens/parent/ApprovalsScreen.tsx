@@ -52,7 +52,10 @@ export default function ApprovalsScreen() {
       setCompletions(data);
       setPlayRequests(requests);
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.message || "Failed to load approvals";
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to load approvals";
       Alert.alert("Error", msg);
     } finally {
       setLoading(false);
@@ -147,7 +150,11 @@ export default function ApprovalsScreen() {
     playRequests.length;
 
   return (
-    <SafeAreaView style={styles.container} testID="parent-approvals-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={["top", "left", "right"]}
+      testID="parent-approvals-screen"
+    >
       <View style={styles.headerRow}>
         <Text style={styles.title}>Approvals</Text>
         {filter === "pending" && pendingCount > 0 && (
@@ -218,7 +225,9 @@ export default function ApprovalsScreen() {
                       </View>
                     </View>
                     <View style={[styles.statusBadge, styles.statusPending]}>
-                      <Text style={[styles.statusText, { color: colors.accent }]}>
+                      <Text
+                        style={[styles.statusText, { color: colors.accent }]}
+                      >
                         Pending
                       </Text>
                     </View>

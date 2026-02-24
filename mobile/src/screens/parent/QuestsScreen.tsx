@@ -165,7 +165,11 @@ export default function QuestsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} testID="parent-quests-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={["top", "left", "right"]}
+      testID="parent-quests-screen"
+    >
       <View style={styles.headerRow}>
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>

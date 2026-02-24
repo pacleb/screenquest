@@ -177,7 +177,11 @@ export default function ConsequencesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} testID="parent-consequences-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={["top", "left", "right"]}
+      testID="parent-consequences-screen"
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -230,7 +234,10 @@ export default function ConsequencesScreen() {
               <View style={styles.statusCard}>
                 <View style={styles.statusRow}>
                   <View style={styles.statusItem}>
-                    <Text style={styles.statusValue} testID="consequences-violation-count">
+                    <Text
+                      style={styles.statusValue}
+                      testID="consequences-violation-count"
+                    >
                       {status.currentCount}
                     </Text>
                     <Text style={styles.statusLabel}>Violations</Text>

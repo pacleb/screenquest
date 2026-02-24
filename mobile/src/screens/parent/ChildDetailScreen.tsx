@@ -81,6 +81,16 @@ function statusColor(status: string): string {
   }
 }
 
+function formatTime12h(time24: string): string {
+  const [hourStr, minuteStr] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+  const minute = minuteStr || "00";
+  const ampm = hour >= 12 ? "PM" : "AM";
+  if (hour === 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
 /* ───────── types ───────── */
 
 interface ChildWeeklyStats {
@@ -263,10 +273,7 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
-  const xpProgress =
-    progress && progress.xpToNextLevel > 0
-      ? progress.xpProgressInLevel / progress.xpToNextLevel
-      : 0;
+  const xpProgress = progress ? progress.xpProgressInLevel : 0;
 
   return (
     <SafeAreaView
@@ -473,7 +480,8 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
                 />
               </View>
               <Text style={styles.xpBarSubtext}>
-                {progress.xpProgressInLevel} / {progress.xpToNextLevel} XP
+                {progress.totalXp} / {progress.totalXp + progress.xpToNextLevel}{" "}
+                XP
               </Text>
             </View>
           </View>
@@ -516,39 +524,6 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
                 <Text style={styles.weeklyLabel}>XP</Text>
               </View>
             </View>
-
-            {/* Mini daily bar chart */}
-            {weeklyStats.dailyStats.length > 0 && (
-              <View style={styles.dailyChart}>
-                {weeklyStats.dailyStats.map((day, i) => {
-                  const maxQ = Math.max(
-                    ...weeklyStats.dailyStats.map((d) => d.quests),
-                    1,
-                  );
-                  const barH = Math.max((day.quests / maxQ) * 40, 4);
-                  const dayLabel = new Date(day.date).toLocaleDateString("en", {
-                    weekday: "short",
-                  });
-                  return (
-                    <View key={i} style={styles.dailyBar}>
-                      <View
-                        style={[
-                          styles.dailyBarFill,
-                          {
-                            height: barH,
-                            backgroundColor:
-                              day.quests > 0 ? colors.primary : colors.border,
-                          },
-                        ]}
-                      />
-                      <Text style={styles.dailyBarLabel}>
-                        {dayLabel.slice(0, 2)}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
           </View>
         )}
 
@@ -580,6 +555,84 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
             )}
           </View>
         )}
+
+        {/* ───── Quest Completion History ───── */}
+        <View style={styles.card}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <Icon
+                name="checkmark-done-outline"
+                size={20}
+                color={colors.secondary}
+              />
+              <Text style={styles.sectionTitle}>
+                Quest Activity ({completions.length})
+              </Text>
+            </View>
+          </View>
+
+          {sortedCompletions.length === 0 ? (
+            <View style={styles.emptySection}>
+              <Icon
+                name="document-text-outline"
+                size={32}
+                color={colors.border}
+              />
+              <Text style={styles.emptyText}>No quest completions yet</Text>
+            </View>
+          ) : (
+            sortedCompletions.slice(0, 15).map((c) => (
+              <View key={c.id} style={styles.historyItem}>
+                <View style={styles.historyDot}>
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: statusColor(c.status) },
+                    ]}
+                  />
+                </View>
+                <View style={styles.historyContent}>
+                  <View style={styles.historyRow}>
+                    <Text style={styles.historyTitle} numberOfLines={1}>
+                      {c.quest.icon} {c.quest.name}
+                    </Text>
+                    <Text style={styles.historyTime}>
+                      {relativeTime(c.completedAt)}
+                    </Text>
+                  </View>
+                  <View style={styles.completionMeta}>
+                    <View
+                      style={[
+                        styles.statusChip,
+                        { backgroundColor: statusColor(c.status) + "20" },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusChipText,
+                          { color: statusColor(c.status) },
+                        ]}
+                      >
+                        {c.status}
+                      </Text>
+                    </View>
+                    <Text style={styles.historySubtext}>
+                      +{formatSeconds(c.earnedSeconds)}
+                    </Text>
+                  </View>
+                  {c.parentNote && (
+                    <Text style={styles.parentNote}>Note: {c.parentNote}</Text>
+                  )}
+                </View>
+              </View>
+            ))
+          )}
+          {sortedCompletions.length > 15 && (
+            <Text style={styles.showMore}>
+              +{sortedCompletions.length - 15} more completions
+            </Text>
+          )}
+        </View>
 
         {/* ───── Play Settings ───── */}
         {playSettings && (
@@ -614,8 +667,8 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Allowed Hours (Weekday)</Text>
                 <Text style={styles.settingValue}>
-                  {playSettings.allowedPlayHoursStart} –{" "}
-                  {playSettings.allowedPlayHoursEnd}
+                  {formatTime12h(playSettings.allowedPlayHoursStart)} –{" "}
+                  {formatTime12h(playSettings.allowedPlayHoursEnd)}
                 </Text>
               </View>
               <View style={styles.settingRow}>
@@ -629,8 +682,8 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Allowed Hours (Weekend)</Text>
                 <Text style={styles.settingValue}>
-                  {playSettings.weekendPlayHoursStart} –{" "}
-                  {playSettings.weekendPlayHoursEnd}
+                  {formatTime12h(playSettings.weekendPlayHoursStart)} –{" "}
+                  {formatTime12h(playSettings.weekendPlayHoursEnd)}
                 </Text>
               </View>
             </View>
@@ -747,84 +800,6 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
           {sortedViolations.length > 10 && (
             <Text style={styles.showMore}>
               +{sortedViolations.length - 10} more violations
-            </Text>
-          )}
-        </View>
-
-        {/* ───── Quest Completion History ───── */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Icon
-                name="checkmark-done-outline"
-                size={20}
-                color={colors.secondary}
-              />
-              <Text style={styles.sectionTitle}>
-                Quest Activity ({completions.length})
-              </Text>
-            </View>
-          </View>
-
-          {sortedCompletions.length === 0 ? (
-            <View style={styles.emptySection}>
-              <Icon
-                name="document-text-outline"
-                size={32}
-                color={colors.border}
-              />
-              <Text style={styles.emptyText}>No quest completions yet</Text>
-            </View>
-          ) : (
-            sortedCompletions.slice(0, 15).map((c) => (
-              <View key={c.id} style={styles.historyItem}>
-                <View style={styles.historyDot}>
-                  <View
-                    style={[
-                      styles.dot,
-                      { backgroundColor: statusColor(c.status) },
-                    ]}
-                  />
-                </View>
-                <View style={styles.historyContent}>
-                  <View style={styles.historyRow}>
-                    <Text style={styles.historyTitle} numberOfLines={1}>
-                      {c.quest.icon} {c.quest.name}
-                    </Text>
-                    <Text style={styles.historyTime}>
-                      {relativeTime(c.completedAt)}
-                    </Text>
-                  </View>
-                  <View style={styles.completionMeta}>
-                    <View
-                      style={[
-                        styles.statusChip,
-                        { backgroundColor: statusColor(c.status) + "20" },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusChipText,
-                          { color: statusColor(c.status) },
-                        ]}
-                      >
-                        {c.status}
-                      </Text>
-                    </View>
-                    <Text style={styles.historySubtext}>
-                      +{formatSeconds(c.earnedSeconds)}
-                    </Text>
-                  </View>
-                  {c.parentNote && (
-                    <Text style={styles.parentNote}>Note: {c.parentNote}</Text>
-                  )}
-                </View>
-              </View>
-            ))
-          )}
-          {sortedCompletions.length > 15 && (
-            <Text style={styles.showMore}>
-              +{sortedCompletions.length - 15} more completions
             </Text>
           )}
         </View>
@@ -1085,30 +1060,6 @@ const styles = StyleSheet.create({
     ...typography.parentSmall,
     color: colors.textSecondary,
     marginTop: 2,
-  },
-
-  /* Daily chart */
-  dailyChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around",
-    height: 60,
-    marginTop: spacing.sm,
-  },
-  dailyBar: {
-    alignItems: "center",
-    flex: 1,
-  },
-  dailyBarFill: {
-    width: 20,
-    borderRadius: 4,
-    minHeight: 4,
-  },
-  dailyBarLabel: {
-    ...typography.parentSmall,
-    color: colors.textSecondary,
-    marginTop: 4,
-    fontSize: 10,
   },
 
   /* Achievements */

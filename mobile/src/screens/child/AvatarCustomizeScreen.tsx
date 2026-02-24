@@ -309,9 +309,9 @@ const styles = StyleSheet.create({
   },
   equippedSlot: {
     alignItems: "center",
-    width: 52,
+    width: 56,
   },
-  equippedSlotIcon: { fontSize: 20 },
+  equippedSlotIcon: { fontSize: 28 },
   equippedSlotLabel: {
     fontFamily: fonts.child.regular,
     fontSize: 9,
@@ -327,10 +327,10 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
     backgroundColor: colors.card,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.border,
@@ -339,10 +339,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3E8FF",
     borderColor: colors.purple,
   },
-  tabIcon: { fontSize: 22 },
+  tabIcon: { fontSize: 30 },
   tabLabel: {
     fontFamily: fonts.child.semiBold,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   tabLabelActive: { color: colors.purple },

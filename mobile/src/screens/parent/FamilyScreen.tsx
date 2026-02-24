@@ -182,7 +182,7 @@ export default function FamilyScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         <ActivityIndicator
           size="large"
           color={colors.primary}
@@ -194,7 +194,7 @@ export default function FamilyScreen() {
 
   if (!familyId || !family) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         <View style={styles.emptyChildren}>
           <Text style={styles.emptyText}>No Family Set Up</Text>
           <Text style={styles.emptyHint}>
@@ -206,7 +206,7 @@ export default function FamilyScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={

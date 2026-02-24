@@ -24,7 +24,6 @@ interface AnimatedHeaderProps {
   streak?: number;
   weeklyXp?: number;
   avatarEmoji?: string;
-  onThemePress?: () => void;
   onAvatarPress?: () => void;
 }
 
@@ -56,7 +55,6 @@ export function AnimatedHeader({
   streak = 0,
   weeklyXp = 0,
   avatarEmoji = "😊",
-  onThemePress,
   onAvatarPress,
 }: AnimatedHeaderProps) {
   const { colors: themeColors, gradients, isAnimated } = useTheme();
@@ -98,22 +96,13 @@ export function AnimatedHeader({
       />
       {isAnimated && <Animated.View style={shimmerStyle} />}
 
-      {/* Top Row: Greeting + Theme button */}
+      {/* Top Row: Greeting */}
       <View style={styles.topRow}>
         <View style={styles.greetingCol}>
           <Text style={styles.greetingText}>
             {getGreetingIcon()} {getGreetingText()}, {name ?? "adventurer"}!
           </Text>
         </View>
-        {onThemePress && (
-          <TouchableOpacity
-            style={styles.themeBtn}
-            onPress={onThemePress}
-            activeOpacity={0.7}
-          >
-            <Text style={{ fontSize: 14 }}>🎨</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Avatar + Level Info Row */}
@@ -143,7 +132,9 @@ export function AnimatedHeader({
               height={8}
             />
             <Text style={styles.xpText}>
-              {xpToNext > 0 ? `${xpToNext} XP to next level` : "Max level!"}
+              {xpToNext > 0
+                ? `${totalXp} / ${totalXp + xpToNext} XP  ·  ${xpToNext} XP to next level`
+                : "Max level!"}
             </Text>
           </View>
         </View>
@@ -179,14 +170,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.bold,
     fontSize: 18,
     color: "#FFF",
-  },
-  themeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   infoRow: {
     flexDirection: "row",

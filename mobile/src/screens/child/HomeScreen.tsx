@@ -353,6 +353,7 @@ export default function ChildHome() {
     <SafeAreaView
       testID="child-home-screen"
       style={[styles.container, { backgroundColor: themeColors.background }]}
+      edges={['top', 'left', 'right']}
     >
       {/* Confetti overlay for play completion */}
       <ConfettiOverlay
@@ -383,7 +384,6 @@ export default function ChildHome() {
           totalXp={progress?.totalXp ?? 0}
           streak={progress?.currentStreak ?? 0}
           weeklyXp={progress?.weeklyXp ?? 0}
-          onThemePress={() => navigation.navigate("Themes")}
           onAvatarPress={() => navigation.navigate("AvatarCustomize")}
         />
 
@@ -423,12 +423,16 @@ export default function ChildHome() {
               </View>
             )}
 
-            {/* Time Bank Display */}
-            <TimeBankDisplay
-              stackableSeconds={balance.stackableSeconds}
-              nonStackableSeconds={balance.nonStackableSeconds}
-              totalSeconds={balance.totalSeconds}
-            />
+            {/* Time Bank Display — hidden during active play to avoid duplicate timers */}
+            {playState !== "active" &&
+              playState !== "paused" &&
+              playState !== "waiting" && (
+                <TimeBankDisplay
+                  stackableSeconds={balance.stackableSeconds}
+                  nonStackableSeconds={balance.nonStackableSeconds}
+                  totalSeconds={balance.totalSeconds}
+                />
+              )}
 
             {/* ─── Inline Play Controls ─── */}
             {playState === "completed" ? (
