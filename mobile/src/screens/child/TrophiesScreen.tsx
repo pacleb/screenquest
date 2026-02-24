@@ -138,7 +138,7 @@ export default function ChildTrophies() {
         {progress && (
           <Card style={styles.streakCard}>
             <View style={styles.streakRow}>
-              <StreakFire streak={progress.currentStreak} size="md" />
+              <StreakFire streak={progress.currentStreak} size="md" showLabel={false} />
               <View style={{ flex: 1 }}>
                 <Text
                   style={[

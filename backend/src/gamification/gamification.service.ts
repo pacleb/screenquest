@@ -8,6 +8,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { getLevelForXp, getNextLevel, LEVEL_THRESHOLDS } from './constants/levels';
 import {
   AchievementEarnedEvent,
@@ -31,6 +32,7 @@ export class GamificationService {
     private prisma: PrismaService,
     private notificationService: NotificationService,
     private eventEmitter: EventEmitter2,
+    private subscriptionService: SubscriptionService,
   ) {}
 
   // ─── Core: Process Completion ───────────────────────────────
@@ -383,59 +385,35 @@ export class GamificationService {
   // ─── Avatar Methods ─────────────────────────────────────────
 
   async getAvailableAvatarItems(childId: string) {
-    const [allItems, progress, earnedAchievements, ownedPacks] =
-      await Promise.all([
-        this.prisma.avatarItem.findMany({ orderBy: [{ slot: 'asc' }, { sortOrder: 'asc' }] }),
-        this.ensureProgress(childId),
-        this.prisma.childAchievement.findMany({
+    const [allItems, child] = await Promise.all([
+      this.prisma.avatarItem.findMany({ orderBy: [{ slot: 'asc' }, { sortOrder: 'asc' }] }),
+      this.prisma.user.findUnique({ where: { id: childId }, select: { familyId: true } }),
+    ]);
+
+    const isPremium = child?.familyId
+      ? await this.subscriptionService.isPremium(child.familyId)
+      : false;
+
+    const equippedItems = isPremium
+      ? await this.prisma.childEquippedItem.findMany({
           where: { childId },
-          include: { achievement: { select: { key: true } } },
-        }),
-        this.prisma.avatarPackPurchase.findMany({
-          where: { userId: childId },
-          select: { packId: true },
-        }),
-      ]);
+          select: { avatarItemId: true, slot: true },
+        })
+      : [];
 
-    const equippedItems = await this.prisma.childEquippedItem.findMany({
-      where: { childId },
-      select: { avatarItemId: true, slot: true },
-    });
-
-    const achievementKeys = new Set(earnedAchievements.map((a) => a.achievement.key));
-    const packIds = new Set(ownedPacks.map((p) => p.packId));
     const equippedMap = new Map(equippedItems.map((e) => [e.avatarItemId, true]));
 
-    return allItems.map((item) => {
-      let isUnlocked = false;
-
-      switch (item.unlockType) {
-        case 'free':
-          isUnlocked = true;
-          break;
-        case 'level':
-          isUnlocked = progress.level >= parseInt(item.unlockValue || '999');
-          break;
-        case 'achievement':
-          isUnlocked = achievementKeys.has(item.unlockValue || '');
-          break;
-        case 'purchase':
-          isUnlocked = packIds.has(item.unlockValue || '');
-          break;
-      }
-
-      return {
-        id: item.id,
-        key: item.key,
-        name: item.name,
-        icon: item.icon,
-        slot: item.slot,
-        unlockType: item.unlockType,
-        unlockValue: item.unlockValue,
-        isUnlocked,
-        isEquipped: equippedMap.has(item.id),
-      };
-    });
+    return allItems.map((item) => ({
+      id: item.id,
+      key: item.key,
+      name: item.name,
+      icon: item.icon,
+      slot: item.slot,
+      unlockType: item.unlockType,
+      unlockValue: item.unlockValue,
+      isUnlocked: isPremium,
+      isEquipped: isPremium && equippedMap.has(item.id),
+    }));
   }
 
   async getEquippedItems(childId: string) {

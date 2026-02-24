@@ -14,6 +14,10 @@ export interface PlaySession {
   createdAt: string;
 }
 
+export interface PendingPlayRequest extends PlaySession {
+  child: { id: string; name: string; avatarUrl: string | null };
+}
+
 export interface PlaySettings {
   playApprovalMode: 'require_approval' | 'notify_only';
   dailyScreenTimeCap: number | null;
@@ -55,6 +59,10 @@ export const playSessionService = {
 
   stop: (sessionId: string) =>
     api.post<PlaySession>(`/play-sessions/${sessionId}/stop`).then((r) => r.data),
+
+  // Parent: list all pending play requests for a family
+  listPendingRequests: (familyId: string) =>
+    api.get<PendingPlayRequest[]>(`/families/${familyId}/play-sessions/pending`).then((r) => r.data),
 
   // Parent actions
   approve: (sessionId: string) =>

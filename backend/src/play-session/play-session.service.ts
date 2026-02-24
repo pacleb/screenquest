@@ -189,7 +189,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Session Started',
-            body: `${child.name} started playing (${Math.ceil(dto.requestedSeconds / 60)} minutes)`,
+            body: `${child.name} started playing (${Math.ceil(dto.requestedSeconds / 60)} minutes left)`,
             data: { type: 'play_started', sessionId: session.id },
           },
           'play_state_changes',
@@ -643,6 +643,32 @@ export class PlaySessionService {
     });
 
     return updated;
+  }
+
+  /**
+   * List all pending play requests for a family (parent view)
+   */
+  async listFamilyPendingPlayRequests(familyId: string, userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.familyId !== familyId || !['parent', 'guardian'].includes(user.role)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const sessions = await this.prisma.playSession.findMany({
+      where: {
+        status: 'requested',
+        child: { familyId },
+      },
+      include: {
+        child: { select: { id: true, name: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return sessions.map((s) => ({
+      ...this.enrichSession(s),
+      child: s.child,
+    }));
   }
 
   /**

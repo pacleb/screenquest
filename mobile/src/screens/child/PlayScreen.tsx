@@ -50,6 +50,47 @@ export default function ChildPlay() {
   const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const syncRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Refs so that memoized callbacks always see the latest values without re-creating
+  const sessionRef = useRef<PlaySession | null>(null);
+  const screenStateRef = useRef<ScreenState>("select");
+
+  useEffect(() => { sessionRef.current = session; }, [session]);
+  useEffect(() => { screenStateRef.current = screenState; }, [screenState]);
+
+  const syncWithServer = useCallback(async () => {
+    const currentSession = sessionRef.current;
+    if (!currentSession?.id) return;
+    try {
+      const updated = await playSessionService.getSession(currentSession.id);
+      setSession(updated);
+      if (updated.status === "active") {
+        setRemainingSeconds(updated.remainingSeconds);
+        setScreenState("active");
+      } else if (updated.status === "paused") {
+        setRemainingSeconds(updated.remainingSeconds);
+        setScreenState("paused");
+      } else if (
+        updated.status === "completed" ||
+        updated.status === "stopped"
+      ) {
+        setScreenState("completed");
+        setRemainingSeconds(0);
+        eventBus.emit(AppEvents.TIME_BANK_CHANGED);
+        eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+      } else if (updated.status === "denied") {
+        setScreenState("select");
+        setSession(null);
+        Alert.alert(
+          "Request Denied",
+          "Your play request was denied by a parent.",
+        );
+      } else if (updated.status === "requested") {
+        setScreenState("waiting");
+      }
+    } catch {
+      // silent
+    }
+  }, []);
 
   const init = useCallback(async () => {
     if (!user?.id) return;
@@ -71,13 +112,20 @@ export default function ChildPlay() {
         } else if (activeSession.status === "requested") {
           setScreenState("waiting");
         }
+      } else if (
+        sessionRef.current &&
+        ["active", "paused", "waiting"].includes(screenStateRef.current)
+      ) {
+        // We were in a session but the server says there's no active one —
+        // a parent likely force-ended it. Fetch the session directly to confirm.
+        syncWithServer();
       }
     } catch {
       // silent
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, syncWithServer]);
 
   // Keep balance and session state fresh via focus, events, and polling
   useAutoRefresh({
@@ -122,45 +170,14 @@ export default function ChildPlay() {
       (screenState === "active" || screenState === "waiting") &&
       session?.id
     ) {
-      syncRef.current = setInterval(syncWithServer, 60000);
+      // Sync every 15 s as a fallback so a parent force-stop is caught quickly
+      // even if push notifications are delayed or unavailable.
+      syncRef.current = setInterval(syncWithServer, 15_000);
     }
     return () => {
       if (syncRef.current) clearInterval(syncRef.current);
     };
-  }, [screenState, session?.id]);
-
-  const syncWithServer = async () => {
-    if (!session?.id) return;
-    try {
-      const updated = await playSessionService.getSession(session.id);
-      setSession(updated);
-
-      if (updated.status === "active") {
-        setRemainingSeconds(updated.remainingSeconds);
-        setScreenState("active");
-      } else if (updated.status === "paused") {
-        setRemainingSeconds(updated.remainingSeconds);
-        setScreenState("paused");
-      } else if (
-        updated.status === "completed" ||
-        updated.status === "stopped"
-      ) {
-        setScreenState("completed");
-        setRemainingSeconds(0);
-      } else if (updated.status === "denied") {
-        setScreenState("select");
-        setSession(null);
-        Alert.alert(
-          "Request Denied",
-          "Your play request was denied by a parent.",
-        );
-      } else if (updated.status === "requested") {
-        setScreenState("waiting");
-      }
-    } catch {
-      // silent
-    }
-  };
+  }, [screenState, session?.id, syncWithServer]);
 
   const handleRequestPlay = async () => {
     if (!user?.id) return;

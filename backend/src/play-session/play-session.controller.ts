@@ -20,6 +20,26 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/guards/roles.guard';
 import { RequestPlayDto, ExtendSessionDto, UpdatePlaySettingsDto } from './dto/play-session.dto';
 
+// --- Family-level endpoints (parent only) ---
+
+@ApiTags('Play Sessions')
+@Controller('families/:familyId/play-sessions')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('parent', 'guardian')
+@ApiBearerAuth()
+export class FamilyPlayController {
+  constructor(private playSessionService: PlaySessionService) {}
+
+  @Get('pending')
+  @ApiOperation({ summary: 'List pending play requests for a family (parent only)' })
+  async listPending(
+    @Param('familyId') familyId: string,
+    @Request() req: any,
+  ) {
+    return this.playSessionService.listFamilyPendingPlayRequests(familyId, req.user.id);
+  }
+}
+
 // --- Child-facing endpoints ---
 
 @ApiTags('Play Sessions')

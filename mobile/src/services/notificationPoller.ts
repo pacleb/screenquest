@@ -8,6 +8,7 @@
 import { AppState, Platform } from 'react-native';
 import notifee, { AndroidImportance, AuthorizationStatus } from '@notifee/react-native';
 import api from './api';
+import { emitEventsForNotificationType } from '../utils/eventBus';
 
 export interface InAppNotification {
   id: string;
@@ -129,6 +130,9 @@ async function pollForNotifications() {
     for (const notification of notifications) {
       if (!SEEN_NOTIFICATION_IDS.has(notification.id)) {
         SEEN_NOTIFICATION_IDS.add(notification.id);
+        // Trigger immediate UI refresh on the correct screen based on notification type
+        const notifType = notification.type || (notification.data?.type as string | undefined);
+        emitEventsForNotificationType(notifType);
         await showLocalNotification(notification);
         displayedCount++;
       }

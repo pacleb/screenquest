@@ -52,3 +52,30 @@ export const AppEvents = {
   /** Fired when gamification data changes (XP, level, badges) */
   GAMIFICATION_CHANGED: 'gamification:changed',
 } as const;
+
+/**
+ * Emit the appropriate EventBus events based on a backend notification `type` string.
+ * Call this whenever a new push/in-app notification arrives so subscribed screens
+ * refresh immediately instead of waiting for the next polling cycle.
+ */
+export function emitEventsForNotificationType(type: string | undefined) {
+  if (!type) return;
+  switch (type) {
+    case 'play_started':
+    case 'play_request':
+    case 'play_approved':
+    case 'play_denied':
+    case 'play_paused':
+    case 'play_resumed':
+    case 'play_stopped':
+    case 'play_ended_by_parent':
+      eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+      break;
+    case 'quest_completion':
+    case 'completion_approved':
+    case 'completion_denied':
+      eventBus.emit(AppEvents.COMPLETION_CHANGED);
+      eventBus.emit(AppEvents.TIME_BANK_CHANGED);
+      break;
+  }
+}

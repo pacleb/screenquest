@@ -16,7 +16,11 @@ import { useSubscriptionStore } from "../../store/subscription";
 import { familyService, FamilyMember } from "../../services/family";
 import { timeBankService, TimeBankBalance } from "../../services/timeBank";
 import { completionService, QuestCompletion } from "../../services/completion";
-import { playSessionService, PlaySession } from "../../services/playSession";
+import {
+  playSessionService,
+  PlaySession,
+  PendingPlayRequest,
+} from "../../services/playSession";
 import {
   gamificationService,
   ChildProgressData,
@@ -63,6 +67,9 @@ export default function ParentDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState<QuestCompletion[]>(
     [],
   );
+  const [pendingPlayRequests, setPendingPlayRequests] = useState<
+    PendingPlayRequest[]
+  >([]);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -95,16 +102,18 @@ export default function ParentDashboard() {
       const childData = await Promise.all(childDataPromises);
       setChildrenData(childData);
 
-      // Fetch pending approvals + activity feed
-      const [completions, feed] = await Promise.all([
+      // Fetch pending approvals, play requests + activity feed
+      const [completions, playRequests, feed] = await Promise.all([
         completionService
           .listFamilyCompletions(familyId, "pending")
           .catch(() => []),
+        playSessionService.listPendingRequests(familyId).catch(() => []),
         themeService
           .getActivityFeed(familyId, 1, 5)
           .catch(() => ({ items: [], page: 1, hasMore: false })),
       ]);
       setPendingApprovals(completions.slice(0, 3));
+      setPendingPlayRequests(playRequests);
       setActivityFeed(feed.items);
     } catch {
       // silent
@@ -135,7 +144,7 @@ export default function ParentDashboard() {
     return "Good evening";
   };
 
-  const pendingCount = pendingApprovals.length;
+  const pendingCount = pendingApprovals.length + pendingPlayRequests.length;
   const CHILD_CHART_COLORS = [
     colors.primary,
     colors.secondary,
@@ -254,25 +263,30 @@ export default function ParentDashboard() {
                         </View>
                       )}
 
-                      {/* This Week dots */}
+                      {/* Daily activity dots with day labels */}
                       {weeklyStats && weeklyStats.dailyStats.length > 0 && (
                         <View style={styles.weekDotsContainer}>
-                          <Text style={styles.weekDotsLabel}>This week</Text>
                           <View style={styles.weekDotsRow}>
-                            {weeklyStats.dailyStats.slice(-7).map((d, i) => (
-                              <View
-                                key={i}
-                                style={[
-                                  styles.weekDot,
-                                  d.quests > 0 && {
-                                    backgroundColor:
-                                      CHILD_CHART_COLORS[
-                                        idx % CHILD_CHART_COLORS.length
-                                      ],
-                                  },
-                                ]}
-                              />
-                            ))}
+                            {weeklyStats.dailyStats.slice(-7).map((d, i) => {
+                              const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+                              const dayLabel = DAY_LABELS[new Date(d.date).getDay()];
+                              return (
+                                <View key={i} style={styles.weekDayItem}>
+                                  <View
+                                    style={[
+                                      styles.weekDot,
+                                      d.quests > 0 && {
+                                        backgroundColor:
+                                          CHILD_CHART_COLORS[
+                                            idx % CHILD_CHART_COLORS.length
+                                          ],
+                                      },
+                                    ]}
+                                  />
+                                  <Text style={styles.weekDayLabel}>{dayLabel}</Text>
+                                </View>
+                              );
+                            })}
                           </View>
                         </View>
                       )}
@@ -311,11 +325,77 @@ export default function ParentDashboard() {
               </ScrollView>
             )}
 
-            {/* Pending Approvals */}
-            {pendingCount > 0 && (
+            {/* Pending Play Requests */}
+            {pendingPlayRequests.length > 0 && (
               <View style={styles.approvalSection}>
                 <SectionHeader
-                  title={`Pending Approvals (${pendingCount})`}
+                  title={`Play Requests (${pendingPlayRequests.length})`}
+                  action="See all"
+                  onAction={() => navigation.navigate("Approvals")}
+                />
+                {pendingPlayRequests.map((req) => (
+                  <Card key={req.id} style={styles.approvalCard}>
+                    <View style={styles.approvalTop}>
+                      <Avatar
+                        name={req.child.name}
+                        size={32}
+                        bgColor={colors.accent + "30"}
+                      />
+                      <View style={styles.approvalInfo}>
+                        <Text style={styles.approvalChild}>
+                          {req.child.name}
+                        </Text>
+                        <Text style={styles.approvalQuest}>
+                          🎮 Wants to play for{" "}
+                          {formatTimeLabel(req.requestedSeconds)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.approvalActions}>
+                      <TouchableOpacity
+                        style={styles.denyBtn}
+                        onPress={async () => {
+                          try {
+                            await playSessionService.deny(req.id);
+                            eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+                            fetchData();
+                          } catch {
+                            /* silent */
+                          }
+                        }}
+                        accessibilityLabel="Deny play request"
+                        accessibilityRole="button"
+                      >
+                        <Icon name="close" size={18} color={colors.error} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.approveBtn}
+                        onPress={async () => {
+                          try {
+                            await playSessionService.approve(req.id);
+                            eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+                            fetchData();
+                          } catch {
+                            /* silent */
+                          }
+                        }}
+                        accessibilityLabel="Approve play request"
+                        accessibilityRole="button"
+                      >
+                        <Icon name="checkmark" size={18} color="#FFF" />
+                        <Text style={styles.approveBtnText}>Approve</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+            )}
+
+            {/* Pending Approvals (quest completions) */}
+            {pendingApprovals.length > 0 && (
+              <View style={styles.approvalSection}>
+                <SectionHeader
+                  title={`Pending Approvals (${pendingApprovals.length})`}
                   action="See all"
                   onAction={() => navigation.navigate("Approvals")}
                 />
@@ -567,14 +647,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   childXpRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
     width: "100%",
+    alignItems: "center",
     marginBottom: spacing.xs,
+    gap: 3,
   },
   childXpBar: {
-    flex: 1,
+    width: "100%",
     height: 4,
     backgroundColor: colors.border,
     borderRadius: 2,
@@ -589,6 +668,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.parent.medium,
     fontSize: 10,
     color: colors.textSecondary,
+    textAlign: "center",
   },
   activeIndicator: {
     flexDirection: "row",
@@ -768,22 +848,24 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: spacing.xs,
   },
-  weekDotsLabel: {
-    fontFamily: fonts.parent.regular,
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    textAlign: "center",
-  },
   weekDotsRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 4,
+    gap: 3,
+  },
+  weekDayItem: {
+    alignItems: "center",
+    gap: 2,
   },
   weekDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: colors.border,
+  },
+  weekDayLabel: {
+    fontFamily: fonts.parent.regular,
+    fontSize: 8,
+    color: colors.textSecondary,
   },
 });

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,14 +12,8 @@ import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { useGamificationStore } from "../../store/gamification";
-import {
-  AVATAR_PACKS,
-  AvatarPack,
-  avatarPackService,
-} from "../../services/avatarPacks";
 import { colors, spacing, borderRadius, fonts } from "../../theme";
-import { typography } from "../../theme/typography";
-import { Card, Badge, ProgressBar } from "../../components";
+import { ProgressBar } from "../../components";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents } from "../../utils/eventBus";
 
@@ -29,20 +22,11 @@ export default function ChildProfile() {
   const { user, logout } = useAuthStore();
   const { progress, achievements, fetchProgress, fetchAchievements } =
     useGamificationStore();
-  const [ownedPacks, setOwnedPacks] = useState<string[]>([]);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
-    await Promise.all([
-      fetchProgress(user.id),
-      fetchAchievements(user.id),
-      avatarPackService
-        .getOwnedPacks(user.id)
-        .then(setOwnedPacks)
-        .catch(() => {}),
-    ]);
+    await Promise.all([fetchProgress(user.id), fetchAchievements(user.id)]);
   }, [user?.id]);
 
   useAutoRefresh({
@@ -55,22 +39,6 @@ export default function ChildProfile() {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
-  };
-
-  const handleBuyPack = async (pack: AvatarPack) => {
-    if (!user?.id) return;
-    setPurchasing(pack.id);
-    try {
-      const success = await avatarPackService.purchasePack(user.id, pack.id);
-      if (success) {
-        setOwnedPacks((prev) => [...prev, pack.id]);
-        Alert.alert("Purchased!", `You now own the ${pack.name} pack!`);
-      }
-    } catch {
-      Alert.alert("Error", "Could not complete the purchase. Try again later.");
-    } finally {
-      setPurchasing(null);
-    }
   };
 
   const recentBadges = achievements
@@ -164,42 +132,6 @@ export default function ChildProfile() {
           </View>
           <Icon name="chevron-forward" size={20} color={colors.purple} />
         </TouchableOpacity>
-
-        {/* Avatar Shop */}
-        <Text style={styles.shopTitle}>Avatar Shop</Text>
-        <Text style={styles.shopDesc}>Unlock fun avatar packs!</Text>
-
-        <View style={styles.packsGrid}>
-          {AVATAR_PACKS.map((pack) => {
-            const owned = ownedPacks.includes(pack.id);
-            return (
-              <Card key={pack.id} style={styles.packCard}>
-                <Text style={styles.packIcon}>{pack.icon}</Text>
-                <Text style={styles.packName}>{pack.name}</Text>
-                <View style={styles.packItems}>
-                  {pack.items.slice(0, 4).map((item, i) => (
-                    <Text key={i} style={styles.packItemEmoji}>
-                      {item}
-                    </Text>
-                  ))}
-                </View>
-                {owned ? (
-                  <Badge label="Owned" variant="success" />
-                ) : (
-                  <TouchableOpacity
-                    style={styles.buyBtn}
-                    onPress={() => handleBuyPack(pack)}
-                    disabled={purchasing === pack.id}
-                  >
-                    <Text style={styles.buyBtnText}>
-                      {purchasing === pack.id ? "..." : pack.priceString}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </Card>
-            );
-          })}
-        </View>
 
         {/* Sign Out */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
@@ -328,54 +260,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.child.regular,
     fontSize: 12,
     color: colors.textSecondary,
-  },
-  shopTitle: {
-    fontFamily: fonts.child.bold,
-    fontSize: 20,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  shopDesc: {
-    fontFamily: fonts.child.regular,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  packsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  packCard: {
-    width: "47%" as any,
-    alignItems: "center",
-    paddingVertical: spacing.md,
-  },
-  packIcon: { fontSize: 36, marginBottom: spacing.xs },
-  packName: {
-    fontFamily: fonts.child.bold,
-    fontSize: 13,
-    color: colors.textPrimary,
-    textAlign: "center",
-    marginBottom: spacing.sm,
-  },
-  packItems: {
-    flexDirection: "row",
-    gap: 4,
-    marginBottom: spacing.sm,
-  },
-  packItemEmoji: { fontSize: 20 },
-  buyBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  buyBtnText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 13,
-    color: "#FFF",
   },
   logoutButton: {
     flexDirection: "row",

@@ -14,15 +14,16 @@ import { fonts } from "../theme";
 interface StreakFireProps {
   streak: number;
   size?: "sm" | "md" | "lg";
+  showLabel?: boolean;
 }
 
 const sizeMap = {
-  sm: { fire: 20, text: 13, container: 28 },
-  md: { fire: 32, text: 16, container: 44 },
-  lg: { fire: 56, text: 24, container: 72 },
+  sm: { fire: 20, text: 13, label: 9, glow: 40, gap: 4 },
+  md: { fire: 32, text: 16, label: 11, glow: 64, gap: 6 },
+  lg: { fire: 56, text: 24, label: 14, glow: 108, gap: 8 },
 };
 
-export function StreakFire({ streak, size = "md" }: StreakFireProps) {
+export function StreakFire({ streak, size = "md", showLabel = true }: StreakFireProps) {
   const dims = sizeMap[size];
   const pulse = useSharedValue(0);
   const glow = useSharedValue(0);
@@ -83,55 +84,75 @@ export function StreakFire({ streak, size = "md" }: StreakFireProps) {
 
   return (
     <View
-      style={[
-        styles.container,
-        { width: dims.container, height: dims.container },
-      ]}
+      style={[styles.container, { gap: dims.gap }]}
       accessibilityRole="text"
       accessibilityLabel={`${streak} day streak`}
     >
-      {/* Glow background for high streaks */}
-      {streak >= 7 && (
-        <Animated.View
+      {/* Fire emoji with optional glow */}
+      <View style={styles.fireWrapper}>
+        {streak >= 7 && (
+          <Animated.View
+            style={[
+              styles.glowCircle,
+              glowStyle,
+              {
+                backgroundColor: getStreakColor(),
+                width: dims.glow,
+                height: dims.glow,
+                borderRadius: dims.glow / 2,
+              },
+            ]}
+          />
+        )}
+        <Animated.View style={fireStyle}>
+          <Text style={{ fontSize: dims.fire }}>{getFireEmoji()}</Text>
+        </Animated.View>
+      </View>
+
+      {/* Number + label */}
+      <View style={styles.textGroup}>
+        <Text
           style={[
-            styles.glowCircle,
-            glowStyle,
-            {
-              backgroundColor: getStreakColor(),
-              width: dims.container * 1.5,
-              height: dims.container * 1.5,
-              borderRadius: dims.container,
-            },
+            styles.streakCount,
+            { fontSize: dims.text, color: getStreakColor() },
           ]}
-        />
-      )}
-      <Animated.View style={fireStyle}>
-        <Text style={{ fontSize: dims.fire }}>{getFireEmoji()}</Text>
-      </Animated.View>
-      <Text
-        style={[
-          styles.streakCount,
-          { fontSize: dims.text, color: getStreakColor() },
-        ]}
-      >
-        {streak}
-      </Text>
+        >
+          {streak}
+        </Text>
+        {showLabel && (
+          <Text style={[styles.streakLabel, { fontSize: dims.label }]}>
+            streak
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fireWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
   glowCircle: {
     position: "absolute",
     opacity: 0.2,
   },
+  textGroup: {
+    alignItems: "flex-start",
+  },
   streakCount: {
     fontFamily: fonts.child.extraBold,
-    marginTop: -4,
+    lineHeight: undefined,
+  },
+  streakLabel: {
+    fontFamily: fonts.child.regular,
+    color: "#999",
+    letterSpacing: 0.3,
+    marginTop: -1,
   },
 });

@@ -3,6 +3,7 @@ import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { getApp } from '@react-native-firebase/app';
 import { Platform } from 'react-native';
+import { emitEventsForNotificationType } from '../utils/eventBus';
 
 export interface NotificationPreferences {
   userId: string;
@@ -140,7 +141,7 @@ export async function setupNotificationHandler() {
   });
 
   try {
-    // Handle foreground messages — display as local notification
+    // Handle foreground messages — display as local notification and trigger UI refresh
     messaging().onMessage(async (remoteMessage) => {
       await notifee.displayNotification({
         title: remoteMessage.notification?.title ?? 'ScreenQuest',
@@ -152,6 +153,8 @@ export async function setupNotificationHandler() {
           pressAction: { id: 'default' },
         },
       });
+      // Immediately refresh the relevant screen via EventBus
+      emitEventsForNotificationType(remoteMessage.data?.type as string | undefined);
     });
 
     // Handle notification tap when app is in background

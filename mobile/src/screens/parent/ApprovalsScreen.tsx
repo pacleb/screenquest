@@ -15,6 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { completionService, QuestCompletion } from "../../services/completion";
+import {
+  playSessionService,
+  PendingPlayRequest,
+} from "../../services/playSession";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
@@ -27,6 +31,7 @@ export default function ApprovalsScreen() {
   const familyId = user?.familyId;
 
   const [completions, setCompletions] = useState<QuestCompletion[]>([]);
+  const [playRequests, setPlayRequests] = useState<PendingPlayRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("pending");
@@ -38,11 +43,14 @@ export default function ApprovalsScreen() {
     if (!familyId) return;
     try {
       const status = filter === "all" ? undefined : filter;
-      const data = await completionService.listFamilyCompletions(
-        familyId,
-        status,
-      );
+      const [data, requests] = await Promise.all([
+        completionService.listFamilyCompletions(familyId, status),
+        filter === "pending" || filter === "all"
+          ? playSessionService.listPendingRequests(familyId)
+          : Promise.resolve([]),
+      ]);
       setCompletions(data);
+      setPlayRequests(requests);
     } catch {
       Alert.alert("Error", "Failed to load approvals");
     } finally {
@@ -66,6 +74,34 @@ export default function ApprovalsScreen() {
       fetchCompletions();
     } catch (error: any) {
       const msg = error.response?.data?.message || "Failed to approve";
+      Alert.alert("Error", msg);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleApprovePlay = async (sessionId: string) => {
+    setProcessing(sessionId);
+    try {
+      await playSessionService.approve(sessionId);
+      eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+      fetchCompletions();
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Failed to approve";
+      Alert.alert("Error", msg);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDenyPlay = async (sessionId: string) => {
+    setProcessing(sessionId);
+    try {
+      await playSessionService.deny(sessionId);
+      eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+      fetchCompletions();
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Failed to deny";
       Alert.alert("Error", msg);
     } finally {
       setProcessing(null);
@@ -105,7 +141,9 @@ export default function ApprovalsScreen() {
     return `${diffDay}d ago`;
   };
 
-  const pendingCount = completions.filter((c) => c.status === "pending").length;
+  const pendingCount =
+    completions.filter((c) => c.status === "pending").length +
+    playRequests.length;
 
   return (
     <SafeAreaView style={styles.container} testID="parent-approvals-screen">
@@ -156,8 +194,82 @@ export default function ApprovalsScreen() {
           />
         }
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          playRequests.length > 0 ? (
+            <View style={styles.playRequestsSection}>
+              <Text style={styles.playRequestsHeading}>
+                🎮 Play Requests ({playRequests.length})
+              </Text>
+              {playRequests.map((req) => (
+                <View key={req.id} style={styles.playRequestCard}>
+                  <View style={styles.cardTop}>
+                    <View style={styles.childInfo}>
+                      <View style={styles.childAvatar}>
+                        <Text style={styles.avatarText}>
+                          {req.child.name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={styles.childName}>{req.child.name}</Text>
+                        <Text style={styles.timestamp}>
+                          {formatTime(req.createdAt)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.statusBadge, styles.statusPending]}>
+                      <Text style={[styles.statusText, { color: colors.accent }]}>
+                        Pending
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.questRow}>
+                    <Text style={styles.questIcon}>🎮</Text>
+                    <View style={styles.questInfo}>
+                      <Text style={styles.questName}>Play Request</Text>
+                      <Text style={styles.questReward}>
+                        {formatTimeLabel(req.requestedSeconds)} requested
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity
+                      style={styles.denyBtn}
+                      onPress={() => handleDenyPlay(req.id)}
+                      disabled={processing === req.id}
+                    >
+                      <Icon
+                        name="close-circle-outline"
+                        size={20}
+                        color={colors.error}
+                      />
+                      <Text style={styles.denyBtnText}>Deny</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.approveBtn}
+                      onPress={() => handleApprovePlay(req.id)}
+                      disabled={processing === req.id}
+                    >
+                      {processing === req.id ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <>
+                          <Icon
+                            name="checkmark-circle-outline"
+                            size={20}
+                            color="#FFF"
+                          />
+                          <Text style={styles.approveBtnText}>Approve</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
-          !loading ? (
+          !loading && playRequests.length === 0 ? (
             <View style={styles.empty}>
               <Icon
                 name="checkmark-done-circle-outline"
@@ -523,4 +635,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   confirmDenyText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+  playRequestsSection: { marginBottom: spacing.lg },
+  playRequestsHeading: {
+    fontFamily: fonts.parent.bold,
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  playRequestCard: {
+    backgroundColor: colors.accent + "10",
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.accent + "30",
+  },
 });

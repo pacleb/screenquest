@@ -11,19 +11,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import Animated, {
-  FadeInDown,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
 import { useAuthStore } from "../../store/auth";
+import { useSubscriptionStore } from "../../store/subscription";
 import {
   gamificationService,
   AvatarItemData,
 } from "../../services/gamification";
 import { colors, spacing, borderRadius, fonts, useTheme } from "../../theme";
-import { Card } from "../../components";
 
 const SLOTS = [
   "face",
@@ -57,10 +51,21 @@ export default function AvatarCustomize() {
   const navigation = useNavigation<any>();
   const user = useAuthStore((s) => s.user);
   const { colors: themeColors } = useTheme();
+  const {
+    isActive: isPremium,
+    fetchStatus,
+    loaded: subLoaded,
+  } = useSubscriptionStore();
   const [items, setItems] = useState<AvatarItemData[]>([]);
   const [activeSlot, setActiveSlot] = useState<string>("face");
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!subLoaded && user?.familyId) {
+      fetchStatus(user.familyId);
+    }
+  }, [user?.familyId, subLoaded]);
 
   const loadItems = useCallback(async () => {
     if (!user?.id) return;
@@ -106,19 +111,6 @@ export default function AvatarCustomize() {
     }
   };
 
-  const getUnlockLabel = (item: AvatarItemData): string => {
-    switch (item.unlockType) {
-      case "level":
-        return `Level ${item.unlockValue}`;
-      case "achievement":
-        return `Earn "${item.unlockValue}"`;
-      case "purchase":
-        return "Avatar Pack";
-      default:
-        return "";
-    }
-  };
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -151,7 +143,6 @@ export default function AvatarCustomize() {
       <View style={styles.previewArea}>
         <View style={styles.previewCircle}>
           <Text style={styles.previewBase}>😊</Text>
-          {/* Show equipped items around the avatar */}
           {equippedBySlot.hat && (
             <Text style={styles.equippedHat}>{equippedBySlot.hat.icon}</Text>
           )}
@@ -173,80 +164,87 @@ export default function AvatarCustomize() {
         </View>
       </View>
 
-      {/* Slot Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsScroll}
-      >
-        {SLOTS.map((slot) => (
-          <TouchableOpacity
-            key={slot}
-            style={[styles.tab, activeSlot === slot && styles.tabActive]}
-            onPress={() => setActiveSlot(slot)}
+      {isPremium ? (
+        <>
+          {/* Slot Tabs */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsScroll}
           >
-            <Text style={styles.tabIcon}>{SLOT_ICONS[slot]}</Text>
-            <Text
-              style={[
-                styles.tabLabel,
-                activeSlot === slot && styles.tabLabelActive,
-              ]}
-            >
-              {SLOT_LABELS[slot]}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Items Grid */}
-      <ScrollView contentContainerStyle={styles.itemsGrid}>
-        {slotItems.map((item) => {
-          const isEquipped = item.isEquipped;
-          const isLocked = !item.isUnlocked;
-          const isActing = acting === item.id;
-
-          return (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.itemCard,
-                isEquipped && styles.itemCardEquipped,
-                isLocked && styles.itemCardLocked,
-              ]}
-              onPress={() => !isLocked && handleEquip(item)}
-              disabled={isLocked || isActing}
-              activeOpacity={0.7}
-            >
-              {isActing ? (
-                <ActivityIndicator size="small" color={themeColors.primary} />
-              ) : (
-                <Text style={styles.itemIcon}>
-                  {isLocked ? "🔒" : item.icon}
-                </Text>
-              )}
-              <Text
-                style={[styles.itemName, isLocked && styles.lockedText]}
-                numberOfLines={1}
+            {SLOTS.map((slot) => (
+              <TouchableOpacity
+                key={slot}
+                style={[styles.tab, activeSlot === slot && styles.tabActive]}
+                onPress={() => setActiveSlot(slot)}
               >
-                {item.name}
-              </Text>
-              {isEquipped && (
-                <View style={styles.equippedBadge}>
-                  <Text style={styles.equippedBadgeText}>Equipped</Text>
-                </View>
-              )}
-              {isLocked && (
-                <Text style={styles.lockReason} numberOfLines={1}>
-                  {getUnlockLabel(item)}
+                <Text style={styles.tabIcon}>{SLOT_ICONS[slot]}</Text>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeSlot === slot && styles.tabLabelActive,
+                  ]}
+                >
+                  {SLOT_LABELS[slot]}
                 </Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-        {slotItems.length === 0 && (
-          <Text style={styles.emptyText}>No items in this slot yet</Text>
-        )}
-      </ScrollView>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Items Grid */}
+          <ScrollView contentContainerStyle={styles.itemsGrid}>
+            {slotItems.map((item) => {
+              const isEquipped = item.isEquipped;
+              const isActing = acting === item.id;
+
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.itemCard,
+                    isEquipped && styles.itemCardEquipped,
+                  ]}
+                  onPress={() => handleEquip(item)}
+                  disabled={isActing}
+                  activeOpacity={0.7}
+                >
+                  {isActing ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={themeColors.primary}
+                    />
+                  ) : (
+                    <Text style={styles.itemIcon}>{item.icon}</Text>
+                  )}
+                  <Text style={styles.itemName} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {isEquipped && (
+                    <View style={styles.equippedBadge}>
+                      <Text style={styles.equippedBadgeText}>Equipped</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+            {slotItems.length === 0 && (
+              <Text style={styles.emptyText}>No items in this slot yet</Text>
+            )}
+          </ScrollView>
+        </>
+      ) : (
+        /* Premium Gate */
+        <View style={styles.premiumGate}>
+          <Text style={styles.premiumGateIcon}>👑</Text>
+          <Text style={styles.premiumGateTitle}>Premium Feature</Text>
+          <Text style={styles.premiumGateDesc}>
+            Avatar customization is included with ScreenQuest Premium.
+          </Text>
+          <Text style={styles.premiumGateHint}>
+            Ask your parent to subscribe to unlock all items!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -323,7 +321,7 @@ const styles = StyleSheet.create({
   },
   tabsScroll: {
     paddingHorizontal: spacing.md,
-    gap: spacing.sm,
+    gap: spacing.xs,
     paddingBottom: spacing.sm,
   },
   tab: {
@@ -331,8 +329,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     backgroundColor: colors.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.border,
@@ -341,7 +339,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3E8FF",
     borderColor: colors.purple,
   },
-  tabIcon: { fontSize: 16 },
+  tabIcon: { fontSize: 18 },
   tabLabel: {
     fontFamily: fonts.child.semiBold,
     fontSize: 13,
@@ -368,18 +366,13 @@ const styles = StyleSheet.create({
     borderColor: colors.purple,
     backgroundColor: "#F3E8FF",
   },
-  itemCardLocked: {
-    opacity: 0.55,
-    backgroundColor: "#F5F5F5",
-  },
-  itemIcon: { fontSize: 32, marginBottom: 4 },
+  itemIcon: { fontSize: 40, marginBottom: 4 },
   itemName: {
     fontFamily: fonts.child.bold,
     fontSize: 11,
     color: colors.textPrimary,
     textAlign: "center",
   },
-  lockedText: { color: "#999" },
   equippedBadge: {
     backgroundColor: colors.purple,
     paddingHorizontal: 6,
@@ -392,13 +385,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#FFF",
   },
-  lockReason: {
-    fontFamily: fonts.child.regular,
-    fontSize: 9,
-    color: "#999",
-    marginTop: 4,
-    textAlign: "center",
-  },
   emptyText: {
     fontFamily: fonts.child.regular,
     fontSize: 14,
@@ -406,5 +392,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
     width: "100%",
     paddingVertical: spacing.xl,
+  },
+  premiumGate: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    gap: spacing.sm,
+  },
+  premiumGateIcon: { fontSize: 56, marginBottom: spacing.sm },
+  premiumGateTitle: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 22,
+    color: colors.textPrimary,
+    textAlign: "center",
+  },
+  premiumGateDesc: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  premiumGateHint: {
+    fontFamily: fonts.child.regular,
+    fontSize: 14,
+    color: colors.purple,
+    textAlign: "center",
+    marginTop: spacing.xs,
   },
 });
