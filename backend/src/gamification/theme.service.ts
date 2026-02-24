@@ -217,11 +217,11 @@ export class ThemeService {
     const now = new Date();
     const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
 
-    const [completions, progress, playSessions] = await Promise.all([
+    const [allCompletions, progress, playSessions] = await Promise.all([
       this.prisma.questCompletion.findMany({
         where: {
           childId,
-          status: 'approved',
+          status: { in: ['approved', 'pending'] },
           completedAt: { gte: fourWeeksAgo },
         },
         include: { quest: { select: { rewardSeconds: true } } },
@@ -237,9 +237,12 @@ export class ThemeService {
       }),
     ]);
 
+    // Approved completions for summary totals (rewards already credited)
+    const approvedCompletions = allCompletions.filter((c) => c.status === 'approved');
+
     // Only count last 7 days for the summary totals
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekCompletions = completions.filter((c) => c.completedAt >= weekAgo);
+    const weekCompletions = approvedCompletions.filter((c) => c.completedAt >= weekAgo);
     const weekPlaySessions = playSessions.filter((s) => s.startedAt! >= weekAgo);
 
     const questsCompleted = weekCompletions.length;
@@ -260,13 +263,14 @@ export class ThemeService {
     };
 
     // Daily breakdown for charts — 28 days for streak calendar
+    // Uses all completions (approved + pending) so dots reflect activity even before approval
     const dailyStats: { date: string; quests: number; seconds: number; xp: number; playSeconds: number }[] = [];
     for (let i = 27; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = toLocalDateStr(date);
 
-      const dayCompletions = completions.filter(
+      const dayCompletions = allCompletions.filter(
         (c) => toLocalDateStr(c.completedAt) === dateStr,
       );
 

@@ -269,7 +269,7 @@ export default function ParentDashboard() {
                           <View style={styles.weekDotsRow}>
                             {weeklyStats.dailyStats.slice(-7).map((d, i) => {
                               const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-                              const dayLabel = DAY_LABELS[new Date(d.date).getDay()];
+                              const dayLabel = DAY_LABELS[new Date(d.date + 'T12:00:00').getDay()];
                               return (
                                 <View key={i} style={styles.weekDayItem}>
                                   <View

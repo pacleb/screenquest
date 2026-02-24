@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useAuthStore } from "../../store/auth";
 import { timeBankService, TimeBankBalance } from "../../services/timeBank";
 import { completionService, ChildQuest } from "../../services/completion";
 import { violationService, ViolationStatus } from "../../services/violation";
+import { playSessionService, PlaySession } from "../../services/playSession";
 import { useGamificationStore } from "../../store/gamification";
 import {
   colors,
@@ -32,12 +33,14 @@ import {
   EmptyState,
   CelebrationModal,
   SkeletonDashboard,
+  CountdownRing,
 } from "../../components";
 import { useThemeStore } from "../../store/theme";
 import { useHaptics } from "../../hooks/useAccessibility";
 import { offlineCache } from "../../services/offlineCache";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents } from "../../utils/eventBus";
+import { formatTimeLabel } from "../../utils/formatTime";
 
 export default function ChildHome() {
   const navigation = useNavigation<any>();
@@ -57,20 +60,33 @@ export default function ChildHome() {
   const [violationStatus, setViolationStatus] =
     useState<ViolationStatus | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeSession, setActiveSession] = useState<PlaySession | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const [bal, q, vs] = await Promise.all([
+      const [bal, q, vs, session] = await Promise.all([
         timeBankService.getBalance(user.id),
         completionService.listChildQuests(user.id),
         violationService.getViolationStatus(user.id).catch(() => null),
+        playSessionService.getActiveSession(user.id).catch(() => null),
         fetchProgress(user.id),
         fetchWeeklyStats(),
       ]);
       setBalance(bal);
       setQuests(q.filter((quest) => quest.availableToComplete).slice(0, 5));
       setViolationStatus(vs);
+      setActiveSession(session ?? null);
+      if (
+        session &&
+        (session.status === "active" || session.status === "paused")
+      ) {
+        setRemainingSeconds(session.remainingSeconds);
+      } else {
+        setRemainingSeconds(0);
+      }
       // Cache for offline use
       offlineCache.setTimeBank(user.id, bal).catch(() => {});
       offlineCache.setQuests(user.id, q).catch(() => {});
@@ -105,8 +121,33 @@ export default function ChildHome() {
     intervalMs: 15_000,
   });
 
+  // Local countdown timer for active sessions
+  useEffect(() => {
+    if (activeSession?.status === "active" && remainingSeconds > 0) {
+      timerRef.current = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current!);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [activeSession?.status, activeSession?.id]);
+
   const isNegativeBalance = balance.totalSeconds < 0;
   const canPlay = !isNegativeBalance && balance.totalSeconds > 0;
+  const hasActiveSession =
+    activeSession != null &&
+    (activeSession.status === "active" ||
+      activeSession.status === "paused" ||
+      activeSession.status === "requested");
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
 
@@ -185,39 +226,102 @@ export default function ChildHome() {
               totalSeconds={balance.totalSeconds}
             />
 
-            {/* Play Button */}
-            <TouchableOpacity
-              testID="child-play-btn"
-              style={[
-                styles.playButton,
-                {
-                  backgroundColor: themeColors.secondary,
-                  shadowColor: themeColors.secondary,
-                },
-                !canPlay && styles.playButtonDisabled,
-              ]}
-              onPress={() => {
-                haptics.impact("medium");
-                navigation.navigate("Play");
-              }}
-              disabled={!canPlay}
-              activeOpacity={0.85}
-              accessibilityLabel="Start playing"
-              accessibilityRole="button"
-              accessibilityHint="Opens the play timer screen"
-              accessibilityState={{ disabled: !canPlay }}
-            >
-              <Icon
-                name="play-circle"
-                size={32}
-                color={canPlay ? "#FFF" : themeColors.textSecondary}
-              />
-              <Text
-                style={[styles.playText, !canPlay && styles.playTextDisabled]}
+            {/* Play Button / Active Session Card */}
+            {hasActiveSession ? (
+              <TouchableOpacity
+                testID="child-active-session-card"
+                style={[
+                  styles.activeSessionCard,
+                  activeSession.status === "paused" &&
+                    styles.activeSessionPaused,
+                ]}
+                onPress={() => {
+                  haptics.impact("medium");
+                  navigation.navigate("Play");
+                }}
+                activeOpacity={0.85}
+                accessibilityLabel="Return to active play session"
+                accessibilityRole="button"
               >
-                PLAY
-              </Text>
-            </TouchableOpacity>
+                {activeSession.status === "requested" ? (
+                  <>
+                    <Icon name="time-outline" size={28} color={colors.accent} />
+                    <View style={styles.activeSessionInfo}>
+                      <Text style={styles.activeSessionLabel}>
+                        Waiting for Approval
+                      </Text>
+                      <Text style={styles.activeSessionHint}>
+                        Tap to view your request
+                      </Text>
+                    </View>
+                    <Icon
+                      name="chevron-forward"
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.miniRingContainer}>
+                      <CountdownRing
+                        remainingSeconds={remainingSeconds}
+                        totalSeconds={activeSession.requestedSeconds}
+                        size={64}
+                        strokeWidth={5}
+                      />
+                    </View>
+                    <View style={styles.activeSessionInfo}>
+                      <Text style={styles.activeSessionLabel}>
+                        {activeSession.status === "paused"
+                          ? "⏸ Session Paused"
+                          : "🎮 Playing Now"}
+                      </Text>
+                      <Text style={styles.activeSessionTime}>
+                        {formatTimeLabel(remainingSeconds)} remaining
+                      </Text>
+                    </View>
+                    <Icon
+                      name="chevron-forward"
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                testID="child-play-btn"
+                style={[
+                  styles.playButton,
+                  {
+                    backgroundColor: themeColors.secondary,
+                    shadowColor: themeColors.secondary,
+                  },
+                  !canPlay && styles.playButtonDisabled,
+                ]}
+                onPress={() => {
+                  haptics.impact("medium");
+                  navigation.navigate("Play");
+                }}
+                disabled={!canPlay}
+                activeOpacity={0.85}
+                accessibilityLabel="Start playing"
+                accessibilityRole="button"
+                accessibilityHint="Opens the play timer screen"
+                accessibilityState={{ disabled: !canPlay }}
+              >
+                <Icon
+                  name="play-circle"
+                  size={32}
+                  color={canPlay ? "#FFF" : themeColors.textSecondary}
+                />
+                <Text
+                  style={[styles.playText, !canPlay && styles.playTextDisabled]}
+                >
+                  PLAY
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Available Quests */}
             {quests.length > 0 && (
@@ -334,4 +438,46 @@ const styles = StyleSheet.create({
   playTextDisabled: { color: colors.textSecondary },
   questSection: { marginBottom: spacing.lg },
   questScroll: { paddingRight: spacing.lg },
+
+  // Active session card
+  activeSessionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.primary + "12",
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
+    borderWidth: 1.5,
+    borderColor: colors.primary + "30",
+    gap: spacing.md,
+  },
+  activeSessionPaused: {
+    backgroundColor: colors.accent + "12",
+    borderColor: colors.accent + "30",
+  },
+  miniRingContainer: {
+    width: 64,
+    height: 64,
+  },
+  activeSessionInfo: {
+    flex: 1,
+  },
+  activeSessionLabel: {
+    fontFamily: fonts.child.bold,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  activeSessionTime: {
+    fontFamily: fonts.child.extraBold,
+    fontSize: 20,
+    color: colors.primary,
+    marginTop: 2,
+  },
+  activeSessionHint: {
+    fontFamily: fonts.child.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
 });
