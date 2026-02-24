@@ -1,0 +1,160 @@
+-- ScreenQuest: Seed quest_library and quest_categories
+-- Run this in Render PSQL shell or any PostgreSQL client
+-- Safe to re-run: skips if data already exists
+
+DO $$
+BEGIN
+  -- Only seed if the table is empty
+  IF (SELECT COUNT(*) FROM quest_library) = 0 THEN
+
+    INSERT INTO quest_library (id, name, description, icon, category, suggested_reward_seconds, suggested_stacking_type, age_range, is_published, sort_order, created_at, updated_at)
+    VALUES
+      (gen_random_uuid(), 'Clean your room', 'Tidy up your bedroom, put things away, and make it look nice', '🧹', 'chores', 1800, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Make your bed', 'Pull up the sheets and arrange your pillows neatly', '🛏️', 'chores', 900, 'non_stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Help with dishes', 'Help wash, dry, or load the dishwasher after a meal', '🍽️', 'chores', 1200, 'non_stackable', 'ages_8_12', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Take out the trash', 'Take the trash bags to the bin outside', '🗑️', 'chores', 900, 'non_stackable', 'ages_8_12', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Fold laundry', 'Fold your clean clothes and put them away', '👕', 'chores', 1200, 'stackable', 'ages_8_12', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Set the table', 'Set plates, cups, and utensils for the family meal', '🍴', 'chores', 900, 'non_stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Water the plants', 'Water all the indoor and outdoor plants that need it', '🪴', 'chores', 900, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Vacuum a room', 'Vacuum the floors in one room of the house', '🧽', 'chores', 1200, 'stackable', 'ages_8_12', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Wipe down surfaces', 'Use a damp cloth to wipe tables, counters, and shelves', '✨', 'chores', 900, 'stackable', 'ages_8_12', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Put away groceries', 'Help unpack and organize the groceries after a shopping trip', '🛒', 'chores', 900, 'non_stackable', 'all', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Organize your backpack', 'Clean out your backpack, toss old papers, and organize what you need', '🎒', 'chores', 900, 'non_stackable', 'all', true, 11, NOW(), NOW()),
+      (gen_random_uuid(), 'Sort recycling', 'Separate recyclables from trash and put them in the right bins', '♻️', 'chores', 900, 'non_stackable', 'ages_8_12', true, 12, NOW(), NOW()),
+      (gen_random_uuid(), 'Tidy the living room', 'Put toys, remotes, and pillows back where they belong', '🛋️', 'chores', 1200, 'non_stackable', 'all', true, 13, NOW(), NOW()),
+      (gen_random_uuid(), 'Sweep the floor', 'Sweep the kitchen or another room to clear crumbs and dirt', '🧹', 'chores', 1200, 'stackable', 'ages_8_12', true, 14, NOW(), NOW()),
+      (gen_random_uuid(), 'Do math homework', 'Complete your math assignments for today', '🔢', 'studying', 1800, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Do reading homework', 'Complete your reading assignments', '📖', 'studying', 1800, 'stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice spelling', 'Practice your spelling words for the week', '✏️', 'studying', 1200, 'stackable', 'ages_4_7', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Study for a test', 'Review your notes and study materials for an upcoming test', '📝', 'studying', 2700, 'stackable', 'ages_8_12', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Complete a worksheet', 'Finish a practice worksheet or workbook page', '📋', 'studying', 1200, 'stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice multiplication tables', 'Drill your times tables until they feel easy', '✖️', 'studying', 1200, 'stackable', 'ages_8_12', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice handwriting', 'Write neatly on practice paper to improve your handwriting', '🖊️', 'studying', 1200, 'stackable', 'ages_4_7', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Do science homework', 'Complete your science assignments or study guide', '🔬', 'studying', 1800, 'stackable', 'ages_8_12', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice sight words', 'Read and memorize your sight word flashcards', '👁️', 'studying', 900, 'stackable', 'ages_4_7', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Review flashcards', 'Go through a set of flashcards for any subject', '🃏', 'studying', 1200, 'stackable', 'all', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Learn 5 new vocabulary words', 'Look up, write down, and practice using 5 new words', '📓', 'studying', 1200, 'stackable', 'ages_8_12', true, 11, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a typing lesson', 'Complete a typing practice session to improve speed and accuracy', '⌨️', 'studying', 1200, 'stackable', 'ages_8_12', true, 12, NOW(), NOW()),
+      (gen_random_uuid(), 'Read for 30 minutes', 'Read a book of your choice for 30 minutes', '📚', 'reading', 1800, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Read a chapter', 'Read one full chapter of your current book', '📖', 'reading', 1800, 'stackable', 'ages_8_12', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Visit the library', 'Go to the library and pick out a new book', '🏛️', 'reading', 2700, 'stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Read for 15 minutes', 'Read a picture book or easy reader for 15 minutes', '📕', 'reading', 900, 'stackable', 'ages_4_7', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Read aloud to someone', 'Practice reading out loud to a parent, sibling, or pet', '🗣️', 'reading', 1200, 'stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Write a book report', 'Write a short summary and your opinion about a book you finished', '📝', 'reading', 2700, 'non_stackable', 'ages_8_12', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Read a non-fiction article', 'Read a kid-friendly news article or encyclopedia entry', '🗞️', 'reading', 1200, 'stackable', 'ages_8_12', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Listen to an audiobook', 'Listen to an audiobook or story podcast for 20 minutes', '🎧', 'reading', 1200, 'stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Read a comic or graphic novel', 'Enjoy a comic book or graphic novel chapter', '💬', 'reading', 1200, 'stackable', 'all', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Play outside for 30 minutes', 'Go outside and play, run around, and have fun!', '🌳', 'exercise', 1800, 'non_stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Ride your bike', 'Go for a bike ride around the neighborhood', '🚲', 'exercise', 1800, 'non_stackable', 'ages_8_12', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice a sport', 'Practice your favorite sport for at least 30 minutes', '⚽', 'exercise', 1800, 'stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Do stretching or yoga', 'Do a stretching or yoga routine to stay flexible', '🧘', 'exercise', 1200, 'non_stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Jump rope for 10 minutes', 'Grab a jump rope and see how many jumps you can do!', '🤸', 'exercise', 900, 'non_stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Go for a walk', 'Take a walk around the block or on a nature trail', '🚶', 'exercise', 1800, 'non_stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Do 20 jumping jacks', 'Get your heart pumping with 20 jumping jacks', '⭐', 'exercise', 600, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Play catch or frisbee', 'Play catch with a ball or frisbee with a friend or parent', '🥏', 'exercise', 1200, 'non_stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Go swimming', 'Spend time swimming at the pool, lake, or beach', '🏊', 'exercise', 2700, 'non_stackable', 'all', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Ride a scooter or skateboard', 'Practice riding your scooter or skateboard outside', '🛴', 'exercise', 1800, 'non_stackable', 'ages_8_12', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Dance for 15 minutes', 'Put on music and dance around — get moving and have fun!', '💃', 'exercise', 900, 'non_stackable', 'all', true, 11, NOW(), NOW()),
+      (gen_random_uuid(), 'Play at the park', 'Visit the playground and climb, swing, and slide', '🛝', 'exercise', 1800, 'non_stackable', 'ages_4_7', true, 12, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice an instrument', 'Practice piano, guitar, or any instrument for 30 minutes', '🎹', 'creative', 1800, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Draw or paint', 'Create a drawing or painting — let your creativity flow!', '🎨', 'creative', 1800, 'stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Build something', 'Build with LEGO, blocks, or craft materials', '🧱', 'creative', 1800, 'stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Write a story', 'Write a short story, poem, or journal entry', '✍️', 'creative', 1800, 'stackable', 'ages_8_12', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a craft project', 'Complete a craft — origami, paper-mâché, friendship bracelets, or more', '🎭', 'creative', 1800, 'stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Learn a new song', 'Learn the words or melody to a new song', '🎵', 'creative', 1200, 'stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Make a comic strip', 'Create a short comic strip with your own characters and story', '🖍️', 'creative', 1800, 'stackable', 'ages_8_12', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a puzzle', 'Work on a jigsaw puzzle, crossword, or brain teaser', '🧩', 'creative', 1800, 'stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Color a page', 'Color in a coloring book page with care and creativity', '🌈', 'creative', 1200, 'stackable', 'ages_4_7', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Take photos of nature', 'Go outside and capture interesting things with a camera', '📷', 'creative', 1200, 'stackable', 'ages_8_12', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Put on a puppet show', 'Make puppets and perform a story for your family', '🎪', 'creative', 1800, 'stackable', 'ages_4_7', true, 11, NOW(), NOW()),
+      (gen_random_uuid(), 'Design a poster or sign', 'Create a colorful poster about something you love', '🖼️', 'creative', 1800, 'stackable', 'all', true, 12, NOW(), NOW()),
+      (gen_random_uuid(), 'Help a sibling', 'Help your brother or sister with something they need', '🤝', 'helping_others', 1200, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Help a neighbor', 'Do something kind for a neighbor', '🏘️', 'helping_others', 1800, 'stackable', 'ages_8_12', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a kind deed', 'Do something nice for someone without being asked', '💝', 'helping_others', 1200, 'stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Write a thank-you note', 'Write a card or note thanking someone for something they did', '💌', 'helping_others', 900, 'stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Teach someone something', 'Share a skill or fact with a sibling, friend, or parent', '🎓', 'helping_others', 1200, 'stackable', 'ages_8_12', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Make a gift for someone', 'Create a handmade gift — a drawing, card, or craft', '🎁', 'helping_others', 1800, 'stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Donate toys or clothes', 'Pick out items you no longer use to donate to others in need', '📦', 'helping_others', 1800, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Comfort someone who is sad', 'Be there for a friend or sibling who is having a tough time', '🫂', 'helping_others', 900, 'stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Help carry groceries', 'Help a parent or grandparent carry bags in from the car', '💪', 'helping_others', 900, 'non_stackable', 'all', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Pack your own lunch', 'Make and pack a healthy lunch for school tomorrow', '🥪', 'life_skills', 1200, 'non_stackable', 'ages_8_12', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Pick out your clothes for tomorrow', 'Choose and lay out your outfit for the next day', '👔', 'life_skills', 600, 'non_stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Learn to tie your shoes', 'Practice tying your shoelaces by yourself', '👟', 'life_skills', 900, 'non_stackable', 'ages_4_7', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Help cook a meal', 'Assist a parent in preparing breakfast, lunch, or dinner', '👨‍🍳', 'life_skills', 1800, 'non_stackable', 'ages_8_12', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Make a snack', 'Prepare a healthy snack for yourself (with permission)', '🍎', 'life_skills', 900, 'non_stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Learn a new recipe', 'Follow a simple recipe to make something yummy', '📜', 'life_skills', 2700, 'stackable', 'ages_8_12', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Organize your desk', 'Tidy up your homework desk or study area', '🗂️', 'life_skills', 1200, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice telling time', 'Read an analog clock and tell the time correctly 5 times', '🕐', 'life_skills', 900, 'stackable', 'ages_4_7', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Count and sort coins', 'Practice counting money and sorting coins by type', '🪙', 'life_skills', 1200, 'stackable', 'ages_4_7', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Write a to-do list', 'Plan your day by writing down tasks you want to accomplish', '📝', 'life_skills', 600, 'non_stackable', 'ages_8_12', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a load of laundry', 'Sort clothes, run the washer, and move to the dryer', '🧺', 'life_skills', 1200, 'non_stackable', 'ages_8_12', true, 11, NOW(), NOW()),
+      (gen_random_uuid(), 'Brush your teeth (morning)', 'Brush your teeth thoroughly for 2 minutes after waking up', '🪥', 'personal_care', 600, 'non_stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Brush your teeth (bedtime)', 'Brush your teeth thoroughly for 2 minutes before bed', '🌙', 'personal_care', 600, 'non_stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Take a shower or bath', 'Wash up with soap and shampoo — squeaky clean!', '🚿', 'personal_care', 900, 'non_stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Comb or brush your hair', 'Make sure your hair is neat and tangle-free', '💇', 'personal_care', 300, 'non_stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Wash your hands (5 times today)', 'Remember to wash your hands before meals and after playing', '🧼', 'personal_care', 600, 'non_stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Get dressed independently', 'Put on your clothes by yourself without help', '👗', 'personal_care', 600, 'non_stackable', 'ages_4_7', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Complete your bedtime routine', 'Pajamas, teeth, face wash, and ready for bed — all on your own!', '😴', 'personal_care', 900, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Complete your morning routine', 'Wake up, get dressed, eat breakfast, and brush teeth independently', '🌅', 'personal_care', 900, 'non_stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a science experiment', 'Try a safe, kid-friendly experiment at home with a parent', '🧪', 'nature_science', 2700, 'stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Go on a nature walk', 'Explore a trail, park, or your backyard and observe nature', '🌿', 'nature_science', 1800, 'non_stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Identify 3 plants or trees', 'Find and name three different plants, trees, or flowers outside', '🌸', 'nature_science', 1200, 'stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Watch a nature documentary', 'Watch an educational nature or animal documentary (30 min max)', '🐾', 'nature_science', 1800, 'non_stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Start a nature journal', 'Draw or write about something you noticed in nature today', '🍃', 'nature_science', 1200, 'stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Learn about an animal', 'Read or watch a video about an animal and share three fun facts', '🦁', 'nature_science', 1200, 'stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Look at the night sky', 'Go outside at night and try to find constellations or planets', '🌟', 'nature_science', 1200, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Plant a seed', 'Plant a seed in a pot or garden and learn how to care for it', '🌱', 'nature_science', 1200, 'non_stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Build a bird feeder', 'Make a simple bird feeder and hang it outside', '🐦', 'nature_science', 1800, 'non_stackable', 'ages_8_12', true, 9, NOW(), NOW()),
+      (gen_random_uuid(), 'Collect and identify rocks', 'Find interesting rocks and try to identify what type they are', '🪨', 'nature_science', 1200, 'stackable', 'all', true, 10, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice deep breathing', 'Do 5 minutes of deep breathing exercises to calm your mind', '🌬️', 'mindfulness', 600, 'non_stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Write in a gratitude journal', 'Write down 3 things you are grateful for today', '🙏', 'mindfulness', 900, 'non_stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Meditate for 5 minutes', 'Sit quietly and focus on your breathing for 5 minutes', '🧘‍♂️', 'mindfulness', 600, 'non_stackable', 'ages_8_12', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'No screen time for 1 hour', 'Spend a full hour doing activities that do not involve screens', '📵', 'mindfulness', 1800, 'non_stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Draw your feelings', 'Use colors and shapes to express how you are feeling today', '🎨', 'mindfulness', 1200, 'stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Do a body scan relaxation', 'Lie down and relax each part of your body from toes to head', '🛌', 'mindfulness', 900, 'non_stackable', 'ages_8_12', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Say 3 kind things about yourself', 'Look in the mirror and say three positive things about yourself', '💛', 'mindfulness', 300, 'non_stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Listen to calming music', 'Spend 10 minutes listening to peaceful or calming music', '🎶', 'mindfulness', 600, 'non_stackable', 'all', true, 8, NOW(), NOW()),
+      (gen_random_uuid(), 'Feed your pet', 'Give your pet their food and fresh water', '🐕', 'pet_care', 600, 'non_stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Walk the dog', 'Take the dog for a walk around the neighborhood', '🦮', 'pet_care', 1800, 'non_stackable', 'ages_8_12', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Clean the pet area', 'Clean your pet cage, bed, litter box, or tank', '🐾', 'pet_care', 1200, 'non_stackable', 'ages_8_12', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Play with your pet', 'Spend quality time playing with your pet for 15 minutes', '🎾', 'pet_care', 900, 'non_stackable', 'all', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Brush your pet', 'Give your pet a gentle brushing to keep their fur nice', '🐈', 'pet_care', 900, 'non_stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Refill the water bowl', 'Make sure your pet always has fresh, clean water', '💧', 'pet_care', 300, 'non_stackable', 'all', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Call or video-chat a grandparent', 'Spend time talking with a grandparent or relative on the phone', '📞', 'social_skills', 1200, 'non_stackable', 'all', true, 1, NOW(), NOW()),
+      (gen_random_uuid(), 'Write a letter to a friend', 'Write a letter or draw a picture to mail to a friend', '✉️', 'social_skills', 1200, 'stackable', 'all', true, 2, NOW(), NOW()),
+      (gen_random_uuid(), 'Play a board game with family', 'Choose a board game and play it together with your family', '🎲', 'social_skills', 1800, 'non_stackable', 'all', true, 3, NOW(), NOW()),
+      (gen_random_uuid(), 'Practice saying please and thank you', 'Make an effort to use polite words all day long', '😊', 'social_skills', 900, 'non_stackable', 'ages_4_7', true, 4, NOW(), NOW()),
+      (gen_random_uuid(), 'Have a screen-free playdate', 'Invite a friend over and play together without any screens', '👫', 'social_skills', 2700, 'non_stackable', 'all', true, 5, NOW(), NOW()),
+      (gen_random_uuid(), 'Share something with a friend', 'Practice sharing a toy, snack, or game with someone', '🤲', 'social_skills', 600, 'stackable', 'ages_4_7', true, 6, NOW(), NOW()),
+      (gen_random_uuid(), 'Resolve a conflict peacefully', 'Work through a disagreement using words and compromise', '🕊️', 'social_skills', 1200, 'stackable', 'all', true, 7, NOW(), NOW()),
+      (gen_random_uuid(), 'Introduce yourself to someone new', 'Practice meeting new people with a smile and a handshake', '👋', 'social_skills', 600, 'non_stackable', 'all', true, 8, NOW(), NOW());
+
+    RAISE NOTICE 'Seeded 119 quest library entries';
+  ELSE
+    RAISE NOTICE 'quest_library already has data, skipping';
+  END IF;
+
+  IF (SELECT COUNT(*) FROM quest_categories) = 0 THEN
+
+    INSERT INTO quest_categories (id, name, icon, sort_order, created_at)
+    VALUES
+      (gen_random_uuid(), 'Chores', '🧹', 1, NOW()),
+      (gen_random_uuid(), 'Studying', '📝', 2, NOW()),
+      (gen_random_uuid(), 'Reading', '📚', 3, NOW()),
+      (gen_random_uuid(), 'Exercise', '🏃', 4, NOW()),
+      (gen_random_uuid(), 'Creative', '🎨', 5, NOW()),
+      (gen_random_uuid(), 'Helping Others', '🤝', 6, NOW()),
+      (gen_random_uuid(), 'Life Skills', '🎯', 7, NOW()),
+      (gen_random_uuid(), 'Personal Care', '🪥', 8, NOW()),
+      (gen_random_uuid(), 'Nature & Science', '🔬', 9, NOW()),
+      (gen_random_uuid(), 'Mindfulness', '🧘', 10, NOW()),
+      (gen_random_uuid(), 'Pet Care', '🐾', 11, NOW()),
+      (gen_random_uuid(), 'Social Skills', '👋', 12, NOW());
+
+    RAISE NOTICE 'Seeded 12 quest categories';
+  ELSE
+    RAISE NOTICE 'quest_categories already has data, skipping';
+  END IF;
+
+END
+$$;
