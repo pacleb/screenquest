@@ -90,11 +90,8 @@ describe('Accessibility', () => {
       await expect(element(by.label('Start playing'))).toExist();
     });
 
-    it('should have accessible play timer controls', async () => {
-      await element(by.text('Play')).tap();
-      await waitForVisible('child-play-screen');
-
-      // Start button should exist
+    it('should have accessible play controls on home screen', async () => {
+      // Play start button should exist on the home screen
       await expect(element(by.id('play-start-btn'))).toExist();
     });
 

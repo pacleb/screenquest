@@ -7,7 +7,6 @@ import type { ChildTabParamList, ChildStackParamList } from "./types";
 
 import HomeScreen from "../screens/child/HomeScreen";
 import QuestsScreen from "../screens/child/QuestsScreen";
-import PlayScreen from "../screens/child/PlayScreen";
 import TrophiesScreen from "../screens/child/TrophiesScreen";
 import ProfileScreen from "../screens/child/ProfileScreen";
 import QuestDetailScreen from "../screens/child/QuestDetailScreen";
@@ -25,7 +24,7 @@ function ChildTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
+        tabBarInactiveTintColor: "rgba(255,255,255,0.6)",
         tabBarStyle: {
           backgroundColor: staticColors.primaryDark,
           borderTopColor: staticColors.primaryDark,
@@ -56,16 +55,6 @@ function ChildTabs() {
           title: "Quests",
           tabBarIcon: ({ color, size }) => (
             <Icon name="star" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Play"
-        component={PlayScreen}
-        options={{
-          title: "Play",
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="play-circle" size={size + 4} color={color} />
           ),
         }}
       />

@@ -211,7 +211,10 @@ export default function ParentDashboard() {
                 contentContainerStyle={styles.childScroll}
               >
                 {childrenData.map(
-                  ({ member, balance, activeSession, progress, weeklyStats }, idx) => (
+                  (
+                    { member, balance, activeSession, progress, weeklyStats },
+                    idx,
+                  ) => (
                     <Card key={member.id} style={styles.childCard}>
                       <Avatar
                         name={member.name}
@@ -268,8 +271,19 @@ export default function ParentDashboard() {
                         <View style={styles.weekDotsContainer}>
                           <View style={styles.weekDotsRow}>
                             {weeklyStats.dailyStats.slice(-7).map((d, i) => {
-                              const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-                              const dayLabel = DAY_LABELS[new Date(d.date + 'T12:00:00').getDay()];
+                              const DAY_LABELS = [
+                                "Su",
+                                "Mo",
+                                "Tu",
+                                "We",
+                                "Th",
+                                "Fr",
+                                "Sa",
+                              ];
+                              const dayLabel =
+                                DAY_LABELS[
+                                  new Date(d.date + "T12:00:00").getDay()
+                                ];
                               return (
                                 <View key={i} style={styles.weekDayItem}>
                                   <View
@@ -283,7 +297,9 @@ export default function ParentDashboard() {
                                       },
                                     ]}
                                   />
-                                  <Text style={styles.weekDayLabel}>{dayLabel}</Text>
+                                  <Text style={styles.weekDayLabel}>
+                                    {dayLabel}
+                                  </Text>
                                 </View>
                               );
                             })}
@@ -557,7 +573,6 @@ export default function ParentDashboard() {
                         CHILD_CHART_COLORS[idx % CHILD_CHART_COLORS.length],
                     }))}
                 />
-
               </View>
             )}
 

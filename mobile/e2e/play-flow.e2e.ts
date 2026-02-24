@@ -26,16 +26,7 @@ describe('Play Flow', () => {
     });
 
     it('should show play button on home screen', async () => {
-      await expect(element(by.id('child-play-btn'))).toBeVisible();
-    });
-
-    it('should navigate to play screen via tab', async () => {
-      await element(by.text('Play')).tap();
-      await waitForVisible('child-play-screen');
-    });
-
-    it('should show available balance', async () => {
-      await expect(element(by.id('play-balance-value'))).toBeVisible();
+      await expect(element(by.id('play-start-btn'))).toBeVisible();
     });
 
     it('should request play and show waiting or active state', async () => {
@@ -76,7 +67,6 @@ describe('Play Flow', () => {
       await device.launchApp({ newInstance: true });
       await loginAsChild(familyCode, testData.childName);
       await waitForVisible('child-home-screen', 15000);
-      await element(by.text('Play')).tap();
     });
 
     it('should show timer controls when playing', async () => {

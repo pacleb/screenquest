@@ -33,6 +33,7 @@ export type ParentTabParamList = {
 export type ParentStackParamList = {
   ParentTabsInner: undefined;
   QuestEdit: { id?: string };
+  ChildDetail: { childId: string; childName: string };
   Paywall: undefined;
   QuestArchival: undefined;
   NotificationPreferences: undefined;
@@ -41,7 +42,6 @@ export type ParentStackParamList = {
 export type ChildTabParamList = {
   Home: undefined;
   Quests: undefined;
-  Play: undefined;
   Trophies: undefined;
   Profile: undefined;
 };

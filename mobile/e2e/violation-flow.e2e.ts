@@ -81,12 +81,7 @@ describe('Violation Flow', () => {
     });
 
     it('should have play button disabled when balance is negative', async () => {
-      // Navigate to play tab
-      await element(by.text('Play')).tap();
-      await waitForVisible('child-play-screen');
-
-      // The start button should be disabled if balance is negative
-      // We check by trying to tap and seeing if the state changes
+      // The start button should be disabled on home screen if balance is negative
       try {
         await expect(element(by.id('play-start-btn'))).toBeVisible();
       } catch {

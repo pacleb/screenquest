@@ -19,6 +19,9 @@ import { familyService, Family, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { AppEvents, eventBus } from "../../utils/eventBus";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { ParentStackParamList } from "../../navigation/types";
 
 const ROLE_LABELS: Record<string, string> = {
   parent: "Parent",
@@ -33,6 +36,8 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function FamilyScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<ParentStackParamList>>();
   const user = useAuthStore((s) => s.user);
   const familyId = user?.familyId;
 
@@ -401,7 +406,15 @@ export default function FamilyScreen() {
             childMembers.map((child) => (
               <TouchableOpacity
                 key={child.id}
+                testID={`child-member-card-${child.id}`}
+                accessibilityLabel={`View details for ${child.name}`}
                 style={styles.memberCard}
+                onPress={() =>
+                  navigation.navigate("ChildDetail", {
+                    childId: child.id,
+                    childName: child.name,
+                  })
+                }
                 onLongPress={() => handleRemoveChild(child)}
               >
                 <View
@@ -432,6 +445,12 @@ export default function FamilyScreen() {
                     Child
                   </Text>
                 </View>
+                <Icon
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.textSecondary}
+                  style={{ marginLeft: spacing.sm }}
+                />
               </TouchableOpacity>
             ))
           )}

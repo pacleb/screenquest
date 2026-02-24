@@ -54,9 +54,7 @@ describe('Error States', () => {
     });
 
     it('should handle network error during play request', async () => {
-      await element(by.text('Play')).tap();
-      await waitForVisible('child-play-screen');
-
+      // Play controls are now on the home screen
       // Disable network
       await device.setURLBlacklist(['.*api.*']);
 
