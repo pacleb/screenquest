@@ -15,7 +15,7 @@ import { Button } from "../../components";
 
 const { width } = Dimensions.get("window");
 
-const screenquestLogo = require("../../../assets/screenquest-logo.png");
+const screenquestLogo = require("../../../assets/icon.png");
 
 const ONBOARDING_SLIDES = [
   {
