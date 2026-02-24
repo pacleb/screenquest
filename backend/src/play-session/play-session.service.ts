@@ -672,6 +672,43 @@ export class PlaySessionService {
   }
 
   /**
+   * List play sessions for a family filtered by approval status (parent view)
+   * filter: 'pending' = requested, 'approved' = active/paused/completed/stopped,
+   *         'denied' = denied, undefined/'all' = everything
+   */
+  async listFamilyPlaySessions(familyId: string, userId: string, filter?: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.familyId !== familyId || !['parent', 'guardian'].includes(user.role)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    let statusFilter: string[] | undefined;
+    if (filter === 'pending') {
+      statusFilter = ['requested'];
+    } else if (filter === 'approved') {
+      statusFilter = ['active', 'paused', 'completed', 'stopped'];
+    } else if (filter === 'denied') {
+      statusFilter = ['denied'];
+    }
+
+    const sessions = await this.prisma.playSession.findMany({
+      where: {
+        child: { familyId },
+        ...(statusFilter ? { status: { in: statusFilter } } : {}),
+      },
+      include: {
+        child: { select: { id: true, name: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return sessions.map((s) => ({
+      ...this.enrichSession(s),
+      child: s.child,
+    }));
+  }
+
+  /**
    * Scheduled job: check for expired sessions and complete them
    */
   async checkExpiredSessions() {

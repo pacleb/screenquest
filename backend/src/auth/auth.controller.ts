@@ -222,4 +222,13 @@ export class AuthController {
   async getProfile(@Request() req: any) {
     return this.authService.getProfile(req.user.id);
   }
+
+  @Post('avatar')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user avatar emoji' })
+  async updateAvatar(@Request() req: any, @Body() body: { emoji: string }) {
+    return this.authService.updateAvatar(req.user.id, body.emoji);
+  }
 }

@@ -5,6 +5,7 @@ import {
   Put,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   HttpCode,
@@ -37,6 +38,16 @@ export class FamilyPlayController {
     @Request() req: any,
   ) {
     return this.playSessionService.listFamilyPendingPlayRequests(familyId, req.user.id);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List play sessions for a family by filter (parent only)' })
+  async listSessions(
+    @Param('familyId') familyId: string,
+    @Query('filter') filter: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.playSessionService.listFamilyPlaySessions(familyId, req.user.id, filter);
   }
 }
 

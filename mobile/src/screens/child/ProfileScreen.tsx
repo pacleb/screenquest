@@ -166,7 +166,7 @@ export default function ChildProfile() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarEmoji}>😊</Text>
+            <Text style={styles.avatarEmoji}>{user?.avatarUrl || "😊"}</Text>
           </View>
           <Text style={styles.name}>{user?.name}</Text>
 
@@ -223,17 +223,17 @@ export default function ChildProfile() {
           </View>
         )}
 
-        {/* Customize Avatar Button */}
+        {/* Choose Avatar Button */}
         <TouchableOpacity
           style={styles.customizeBtn}
           onPress={() => navigation.navigate("AvatarCustomize")}
           activeOpacity={0.85}
         >
-          <Text style={styles.customizeBtnIcon}>🎭</Text>
+          <Text style={styles.customizeBtnIcon}>{user?.avatarUrl || "😊"}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={styles.customizeBtnText}>Customize Avatar</Text>
+            <Text style={styles.customizeBtnText}>Choose Avatar</Text>
             <Text style={styles.customizeBtnHint}>
-              Equip hats, outfits & more!
+              Pick your favourite icon!
             </Text>
           </View>
           <Icon name="chevron-forward" size={20} color={colors.purple} />

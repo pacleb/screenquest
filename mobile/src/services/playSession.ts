@@ -64,6 +64,14 @@ export const playSessionService = {
   listPendingRequests: (familyId: string) =>
     api.get<PendingPlayRequest[]>(`/families/${familyId}/play-sessions/pending`).then((r) => r.data),
 
+  // Parent: list play sessions by filter (pending/approved/denied/all)
+  listFamilyPlaySessions: (familyId: string, filter?: 'pending' | 'approved' | 'denied') =>
+    api
+      .get<PendingPlayRequest[]>(`/families/${familyId}/play-sessions`, {
+        params: filter ? { filter } : undefined,
+      })
+      .then((r) => r.data),
+
   // Parent actions
   approve: (sessionId: string) =>
     api.put<PlaySession>(`/play-sessions/${sessionId}/approve`).then((r) => r.data),

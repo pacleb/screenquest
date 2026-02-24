@@ -393,6 +393,14 @@ export class AuthService {
     };
   }
 
+  async updateAvatar(userId: string, emoji: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: emoji },
+    });
+    return this.sanitizeUser(user);
+  }
+
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }

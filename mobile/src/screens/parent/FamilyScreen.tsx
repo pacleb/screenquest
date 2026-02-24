@@ -423,11 +423,13 @@ export default function FamilyScreen() {
                     { backgroundColor: colors.secondary + "30" },
                   ]}
                 >
-                  <Text
-                    style={[styles.avatarText, { color: colors.secondary }]}
-                  >
-                    {child.name.charAt(0).toUpperCase()}
-                  </Text>
+                  {child.avatarUrl ? (
+                    <Text style={styles.memberAvatarEmoji}>{child.avatarUrl}</Text>
+                  ) : (
+                    <Text style={[styles.avatarText, { color: colors.secondary }]}>
+                      {child.name.charAt(0).toUpperCase()}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.memberInfo}>
                   <Text style={styles.memberName}>{child.name}</Text>
@@ -560,6 +562,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   avatarText: { fontSize: 18, fontWeight: "700", color: colors.primary },
+  memberAvatarEmoji: { fontSize: 24 },
   memberInfo: { flex: 1 },
   memberName: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
   memberEmail: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },

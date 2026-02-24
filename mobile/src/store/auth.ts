@@ -31,6 +31,7 @@ interface AuthState {
   childLogin: (familyCode: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: UserProfile) => void;
+  updateAvatar: (emoji: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -90,4 +91,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setUser: (user) => set({ user }),
+
+  updateAvatar: async (emoji: string) => {
+    const updated = await authService.updateAvatar(emoji);
+    set({ user: updated });
+  },
 }));

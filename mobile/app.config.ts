@@ -20,7 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: './assets/sq-launch.jpg',
     resizeMode: 'contain',
-    backgroundColor: '#4A90D9',
+    backgroundColor: '#f6f0fa',
   },
   ios: {
     bundleIdentifier: 'com.screenquest.app',

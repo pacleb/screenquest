@@ -3,6 +3,7 @@ import * as Keychain from 'react-native-keychain';
 import * as Sentry from '@sentry/react-native';
 import { showToast } from './toastBridge';
 import { ENV } from '../config/env';
+import { eventBus, AppEvents } from '../utils/eventBus';
 
 const API_URL = ENV.apiUrl;
 
@@ -93,7 +94,8 @@ api.interceptors.response.use(
       try {
         const refreshToken = await getToken('refreshToken');
         if (!refreshToken) {
-          throw new Error('No refresh token');
+          // Transient Keychain miss — don't invalidate the session
+          return Promise.reject(error);
         }
 
         const { data } = await axios.post(`${API_URL}/auth/refresh`, {
@@ -105,9 +107,13 @@ api.interceptors.response.use(
 
         config.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(config);
-      } catch (refreshError) {
-        await deleteToken('accessToken');
-        await deleteToken('refreshToken');
+      } catch (refreshError: any) {
+        if (refreshError.response?.status === 401) {
+          // Server explicitly rejected the refresh token — session truly expired
+          await deleteToken('accessToken');
+          await deleteToken('refreshToken');
+          eventBus.emit(AppEvents.AUTH_SESSION_EXPIRED);
+        }
         return Promise.reject(refreshError);
       }
     }

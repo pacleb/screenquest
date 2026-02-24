@@ -295,6 +295,11 @@ export default function ChildTrophies() {
                       {entry.rank === 1 ? "👑" : `#${entry.rank}`}
                     </Text>
                   </View>
+                  <View style={styles.avatarBubble}>
+                    <Text style={styles.avatarBubbleEmoji}>
+                      {entry.avatarUrl || "😊"}
+                    </Text>
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.leaderboardName}>{entry.name}</Text>
                     <Text style={styles.leaderboardLevel}>
@@ -463,8 +468,19 @@ const styles = StyleSheet.create({
   leaderboardRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
+  avatarBubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.card,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  avatarBubbleEmoji: { fontSize: 20 },
   rankBadge: {
     width: 36,
     height: 36,

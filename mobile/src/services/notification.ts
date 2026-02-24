@@ -134,11 +134,9 @@ export async function setupNotificationHandler() {
     }
   });
 
-  notifee.onBackgroundEvent(async ({ type, detail }) => {
-    if (type === EventType.PRESS && detail.notification?.data) {
-      handleNotifeeData(detail.notification.data as Record<string, string>);
-    }
-  });
+  // Note: notifee.onBackgroundEvent is registered in index.js (module level) so it
+  // runs even when the app is killed. Navigation from background taps is handled
+  // via getInitialNotification / onNotificationOpenedApp when the app opens.
 
   try {
     // Handle foreground messages — display as local notification and trigger UI refresh

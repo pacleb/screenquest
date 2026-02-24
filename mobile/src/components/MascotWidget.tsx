@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -93,7 +93,6 @@ export function MascotWidget(props: MascotWidgetProps) {
   );
 
   const mascotSize = size === "sm" ? 40 : size === "md" ? 56 : 72;
-  const fontSize = size === "sm" ? 24 : size === "md" ? 36 : 48;
 
   // Bounce animation
   const bounce = useSharedValue(0);
@@ -150,7 +149,11 @@ export function MascotWidget(props: MascotWidgetProps) {
             mascotStyle,
           ]}
         >
-          <Text style={{ fontSize }}>🦊</Text>
+          <Image
+            source={require("../../assets/mascot.png")}
+            style={{ width: mascotSize, height: mascotSize }}
+            resizeMode="contain"
+          />
         </Animated.View>
       </TouchableOpacity>
       <View style={[styles.bubble, { backgroundColor: themeColors.card }]}>

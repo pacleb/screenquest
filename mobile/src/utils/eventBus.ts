@@ -51,6 +51,8 @@ export const AppEvents = {
   FAMILY_CHANGED: 'family:changed',
   /** Fired when gamification data changes (XP, level, badges) */
   GAMIFICATION_CHANGED: 'gamification:changed',
+  /** Fired when the session is expired and the user must be logged out */
+  AUTH_SESSION_EXPIRED: 'auth:sessionExpired',
 } as const;
 
 /**

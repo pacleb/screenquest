@@ -63,4 +63,7 @@ export const authService = {
 
   logoutAll: () =>
     api.post('/auth/logout-all').then((r) => r.data),
+
+  updateAvatar: (emoji: string) =>
+    api.post<UserProfile>('/auth/avatar', { emoji }).then((r) => r.data),
 };

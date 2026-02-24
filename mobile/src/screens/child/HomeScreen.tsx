@@ -384,6 +384,7 @@ export default function ChildHome() {
           totalXp={progress?.totalXp ?? 0}
           streak={progress?.currentStreak ?? 0}
           weeklyXp={progress?.weeklyXp ?? 0}
+          avatarEmoji={user?.avatarUrl || "😊"}
           onAvatarPress={() => navigation.navigate("AvatarCustomize")}
         />
 
@@ -579,6 +580,16 @@ export default function ChildHome() {
               </TouchableOpacity>
             )}
 
+            {quests.length === 0 && (
+              <EmptyState
+                emoji="📋"
+                title="No quests available"
+                message="Check back later or ask your parents!"
+                childUI
+                animated
+              />
+            )}
+
             {/* Available Quests */}
             {quests.length > 0 && (
               <View style={styles.questSection}>
@@ -612,16 +623,6 @@ export default function ChildHome() {
                   ))}
                 </ScrollView>
               </View>
-            )}
-
-            {quests.length === 0 && (
-              <EmptyState
-                emoji="📋"
-                title="No quests available"
-                message="Check back later or ask your parents!"
-                childUI
-                animated
-              />
             )}
           </>
         )}

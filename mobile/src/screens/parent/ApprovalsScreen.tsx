@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -43,11 +43,11 @@ export default function ApprovalsScreen() {
     if (!familyId) return;
     try {
       const status = filter === "all" ? undefined : filter;
+      const playFilter =
+        filter === "all" ? undefined : (filter as "pending" | "approved" | "denied");
       const [data, requests] = await Promise.all([
         completionService.listFamilyCompletions(familyId, status),
-        filter === "pending" || filter === "all"
-          ? playSessionService.listPendingRequests(familyId).catch(() => [])
-          : Promise.resolve([]),
+        playSessionService.listFamilyPlaySessions(familyId, playFilter).catch(() => []),
       ]);
       setCompletions(data);
       setPlayRequests(requests);
@@ -62,6 +62,12 @@ export default function ApprovalsScreen() {
       setRefreshing(false);
     }
   }, [familyId, filter]);
+
+  // Re-fetch immediately whenever the filter tab changes
+  useEffect(() => {
+    setLoading(true);
+    fetchCompletions();
+  }, [fetchCompletions]);
 
   useAutoRefresh({
     fetchData: fetchCompletions,
@@ -206,16 +212,24 @@ export default function ApprovalsScreen() {
           playRequests.length > 0 ? (
             <View style={styles.playRequestsSection}>
               <Text style={styles.playRequestsHeading}>
-                🎮 Play Requests ({playRequests.length})
+                🎮 Play Sessions ({playRequests.length})
               </Text>
-              {playRequests.map((req) => (
+              {playRequests.map((req) => {
+                const isApproved = ["active", "paused", "completed", "stopped"].includes(req.status);
+                const isDenied = req.status === "denied";
+                const isPending = req.status === "requested";
+                return (
                 <View key={req.id} style={styles.playRequestCard}>
                   <View style={styles.cardTop}>
                     <View style={styles.childInfo}>
                       <View style={styles.childAvatar}>
-                        <Text style={styles.avatarText}>
-                          {req.child.name.charAt(0).toUpperCase()}
-                        </Text>
+                        {req.child.avatarUrl ? (
+                          <Text style={styles.avatarEmoji}>{req.child.avatarUrl}</Text>
+                        ) : (
+                          <Text style={styles.avatarText}>
+                            {req.child.name.charAt(0).toUpperCase()}
+                          </Text>
+                        )}
                       </View>
                       <View>
                         <Text style={styles.childName}>{req.child.name}</Text>
@@ -224,11 +238,23 @@ export default function ApprovalsScreen() {
                         </Text>
                       </View>
                     </View>
-                    <View style={[styles.statusBadge, styles.statusPending]}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        isPending && styles.statusPending,
+                        isApproved && styles.statusApproved,
+                        isDenied && styles.statusDenied,
+                      ]}
+                    >
                       <Text
-                        style={[styles.statusText, { color: colors.accent }]}
+                        style={[
+                          styles.statusText,
+                          isPending && { color: colors.accent },
+                          isApproved && { color: colors.secondary },
+                          isDenied && { color: colors.error },
+                        ]}
                       >
-                        Pending
+                        {isPending ? "Pending" : isApproved ? "Approved" : "Denied"}
                       </Text>
                     </View>
                   </View>
@@ -241,6 +267,7 @@ export default function ApprovalsScreen() {
                       </Text>
                     </View>
                   </View>
+                  {isPending && (
                   <View style={styles.actionRow}>
                     <TouchableOpacity
                       style={styles.denyBtn}
@@ -273,8 +300,10 @@ export default function ApprovalsScreen() {
                       )}
                     </TouchableOpacity>
                   </View>
+                  )}
                 </View>
-              ))}
+                );
+              })}
             </View>
           ) : null
         }
@@ -305,9 +334,13 @@ export default function ApprovalsScreen() {
             <View style={styles.cardTop}>
               <View style={styles.childInfo}>
                 <View style={styles.childAvatar}>
-                  <Text style={styles.avatarText}>
-                    {completion.child?.name?.charAt(0).toUpperCase() || "?"}
-                  </Text>
+                  {completion.child?.avatarUrl ? (
+                    <Text style={styles.avatarEmoji}>{completion.child.avatarUrl}</Text>
+                  ) : (
+                    <Text style={styles.avatarText}>
+                      {completion.child?.name?.charAt(0).toUpperCase() || "?"}
+                    </Text>
+                  )}
                 </View>
                 <View>
                   <Text style={styles.childName}>{completion.child?.name}</Text>
@@ -542,6 +575,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: { fontSize: 16, fontWeight: "700", color: colors.secondary },
+  avatarEmoji: { fontSize: 20 },
   childName: {
     fontFamily: fonts.parent.semiBold,
     fontSize: 15,

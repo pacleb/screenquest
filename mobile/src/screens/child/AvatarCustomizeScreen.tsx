@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -12,102 +12,42 @@ import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { useAuthStore } from "../../store/auth";
-import {
-  gamificationService,
-  AvatarItemData,
-} from "../../services/gamification";
 import { colors, spacing, borderRadius, fonts, useTheme } from "../../theme";
 
-const SLOTS = [
-  "face",
-  "hair",
-  "hat",
-  "outfit",
-  "accessory",
-  "background",
-  "pet",
-] as const;
-const SLOT_LABELS: Record<string, string> = {
-  face: "Face",
-  hair: "Hair",
-  hat: "Hats",
-  outfit: "Outfits",
-  accessory: "Accessories",
-  background: "Backgrounds",
-  pet: "Pets",
-};
-const SLOT_ICONS: Record<string, string> = {
-  face: "😊",
-  hair: "💇",
-  hat: "🎩",
-  outfit: "👕",
-  accessory: "✨",
-  background: "🌈",
-  pet: "🐾",
-};
+const AVATAR_EMOJIS = [
+  // Animals
+  "🦁", "🐯", "🐻", "🐼", "🦊", "🐸",
+  "🐨", "🐮", "🐷", "🐱", "🐶", "🐺",
+  "🦄", "🐲", "🦖", "🐳", "🦅", "🦜",
+  "🐧", "🦋", "🦝", "🐙", "🦕", "🐬",
+  "🦓", "🐘", "🦒", "🐊", "🦔", "🐿️",
+  // Characters & fun
+  "🤖", "👾", "👻", "🧸", "🧙", "🦸",
+  "🧜", "🧝", "🧚", "🎭", "🦩", "🦚",
+  // Symbols & nature
+  "🌟", "🔥", "🌈", "🚀", "🎮", "🎨",
+  "🏆", "💎", "⚡", "🌊", "✨", "🎯",
+];
 
 export default function AvatarCustomize() {
   const navigation = useNavigation<any>();
   const user = useAuthStore((s) => s.user);
+  const updateAvatar = useAuthStore((s) => s.updateAvatar);
   const { colors: themeColors } = useTheme();
-  const [items, setItems] = useState<AvatarItemData[]>([]);
-  const [activeSlot, setActiveSlot] = useState<string>("face");
-  const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const currentAvatar = user?.avatarUrl || "😊";
 
-  const loadItems = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const data = await gamificationService.getAvatarItems(user.id);
-      setItems(data);
-    } catch {
-      // silently handle
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
-
-  const equippedBySlot = items.reduce<Record<string, AvatarItemData>>(
-    (acc, item) => {
-      if (item.isEquipped) acc[item.slot] = item;
-      return acc;
-    },
-    {},
-  );
-
-  const slotItems = items.filter((i) => i.slot === activeSlot);
-
-  const handleEquip = async (item: AvatarItemData) => {
-    if (!user?.id || acting) return;
-    setActing(item.id);
+  const handleSelect = async (emoji: string) => {
+    if (saving || emoji === currentAvatar) return;
+    setSaving(emoji);
     try {
       ReactNativeHapticFeedback.trigger("impactLight");
-      if (item.isEquipped) {
-        await gamificationService.unequipSlot(user.id, item.slot);
-      } else {
-        await gamificationService.equipItem(user.id, item.id);
-      }
-      await loadItems();
+      await updateAvatar(emoji);
+      navigation.goBack();
     } catch {
-      // silently handle
-    } finally {
-      setActing(null);
+      setSaving(null);
     }
   };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView
@@ -122,94 +62,56 @@ export default function AvatarCustomize() {
           <Icon name="chevron-back" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
-          Customize Avatar
+          Choose Your Avatar
         </Text>
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Avatar Preview */}
+      {/* Current Avatar Preview */}
       <View style={styles.previewArea}>
-        <View style={styles.previewCircle}>
-          <Text style={styles.previewBase}>😊</Text>
-          {equippedBySlot.hat && (
-            <Text style={styles.equippedHat}>{equippedBySlot.hat.icon}</Text>
-          )}
-          {equippedBySlot.pet && (
-            <Text style={styles.equippedPet}>{equippedBySlot.pet.icon}</Text>
-          )}
+        <View style={[styles.previewCircle, { backgroundColor: themeColors.card }]}>
+          <Text style={styles.previewEmoji}>{currentAvatar}</Text>
         </View>
-        <View style={styles.equippedRow}>
-          {SLOTS.map((slot) => (
-            <View key={slot} style={styles.equippedSlot}>
-              <Text style={styles.equippedSlotIcon}>
-                {equippedBySlot[slot]?.icon ?? SLOT_ICONS[slot]}
-              </Text>
-              <Text style={styles.equippedSlotLabel}>
-                {equippedBySlot[slot] ? equippedBySlot[slot].name : "None"}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <Text style={[styles.previewLabel, { color: themeColors.textSecondary }]}>
+          Your avatar
+        </Text>
       </View>
 
-      {/* Slot Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsScroll}
-      >
-        {SLOTS.map((slot) => (
-          <TouchableOpacity
-            key={slot}
-            style={[styles.tab, activeSlot === slot && styles.tabActive]}
-            onPress={() => setActiveSlot(slot)}
-          >
-            <Text style={styles.tabIcon}>{SLOT_ICONS[slot]}</Text>
-            <Text
-              style={[
-                styles.tabLabel,
-                activeSlot === slot && styles.tabLabelActive,
-              ]}
-            >
-              {SLOT_LABELS[slot]}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <Text style={[styles.hint, { color: themeColors.textSecondary }]}>
+        Tap any icon to pick it as your avatar
+      </Text>
 
-      {/* Items Grid */}
-      <ScrollView contentContainerStyle={styles.itemsGrid}>
-        {slotItems.map((item) => {
-          const isEquipped = item.isEquipped;
-          const isActing = acting === item.id;
+      {/* Emoji Grid */}
+      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+        {AVATAR_EMOJIS.map((emoji) => {
+          const isSelected = emoji === currentAvatar;
+          const isSaving = saving === emoji;
 
           return (
             <TouchableOpacity
-              key={item.id}
-              style={[styles.itemCard, isEquipped && styles.itemCardEquipped]}
-              onPress={() => handleEquip(item)}
-              disabled={isActing}
+              key={emoji}
+              style={[
+                styles.emojiCard,
+                { backgroundColor: themeColors.card },
+                isSelected && styles.emojiCardSelected,
+              ]}
+              onPress={() => handleSelect(emoji)}
+              disabled={!!saving}
               activeOpacity={0.7}
             >
-              {isActing ? (
-                <ActivityIndicator size="small" color={themeColors.primary} />
+              {isSaving ? (
+                <ActivityIndicator size="small" color={colors.purple} />
               ) : (
-                <Text style={styles.itemIcon}>{item.icon}</Text>
+                <Text style={styles.emoji}>{emoji}</Text>
               )}
-              <Text style={styles.itemName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              {isEquipped && (
-                <View style={styles.equippedBadge}>
-                  <Text style={styles.equippedBadgeText}>Equipped</Text>
+              {isSelected && (
+                <View style={styles.checkBadge}>
+                  <Icon name="checkmark" size={10} color="#FFF" />
                 </View>
               )}
             </TouchableOpacity>
           );
         })}
-        {slotItems.length === 0 && (
-          <Text style={styles.emptyText}>No items in this slot yet</Text>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -217,7 +119,6 @@ export default function AvatarCustomize() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.childBg },
-  loadingCenter: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -240,123 +141,68 @@ const styles = StyleSheet.create({
   },
   previewArea: {
     alignItems: "center",
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
   },
   previewCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: colors.card,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
-  previewBase: { fontSize: 56 },
-  equippedHat: {
-    position: "absolute",
-    top: -8,
-    fontSize: 28,
-  },
-  equippedPet: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    fontSize: 24,
-  },
-  equippedRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: spacing.md,
-  },
-  equippedSlot: {
-    alignItems: "center",
-    width: 56,
-  },
-  equippedSlotIcon: { fontSize: 28 },
-  equippedSlotLabel: {
-    fontFamily: fonts.child.regular,
-    fontSize: 9,
-    color: colors.textSecondary,
-    marginTop: 2,
-    textAlign: "center",
-  },
-  tabsScroll: {
-    paddingHorizontal: spacing.md,
-    gap: spacing.xs,
-    paddingBottom: spacing.sm,
-  },
-  tab: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.card,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tabActive: {
-    backgroundColor: "#F3E8FF",
-    borderColor: colors.purple,
-  },
-  tabIcon: { fontSize: 30 },
-  tabLabel: {
+  previewEmoji: { fontSize: 60 },
+  previewLabel: {
     fontFamily: fonts.child.semiBold,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
   },
-  tabLabelActive: { color: colors.purple },
-  itemsGrid: {
+  hint: {
+    fontFamily: fonts.child.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    padding: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
     paddingBottom: 100,
+    gap: spacing.sm,
+    justifyContent: "center",
   },
-  itemCard: {
-    width: "30%",
+  emojiCard: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: "transparent",
   },
-  itemCardEquipped: {
+  emojiCardSelected: {
     borderColor: colors.purple,
     backgroundColor: "#F3E8FF",
   },
-  itemIcon: { fontSize: 56, marginBottom: 4 },
-  itemName: {
-    fontFamily: fonts.child.bold,
-    fontSize: 11,
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
-  equippedBadge: {
+  emoji: { fontSize: 40 },
+  checkBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: colors.purple,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: borderRadius.sm,
-    marginTop: 4,
-  },
-  equippedBadgeText: {
-    fontFamily: fonts.child.bold,
-    fontSize: 9,
-    color: "#FFF",
-  },
-  emptyText: {
-    fontFamily: fonts.child.regular,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-    width: "100%",
-    paddingVertical: spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
