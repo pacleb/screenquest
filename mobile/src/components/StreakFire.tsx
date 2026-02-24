@@ -18,9 +18,9 @@ interface StreakFireProps {
 }
 
 const sizeMap = {
-  sm: { fire: 20, text: 13, label: 9, glow: 40, gap: 4 },
-  md: { fire: 32, text: 16, label: 11, glow: 64, gap: 6 },
-  lg: { fire: 56, text: 24, label: 14, glow: 108, gap: 8 },
+  sm: { fire: 20, text: 13, glow: 40, gap: 4 },
+  md: { fire: 32, text: 16, glow: 64, gap: 6 },
+  lg: { fire: 56, text: 24, glow: 108, gap: 8 },
 };
 
 export function StreakFire({ streak, size = "md", showLabel = true }: StreakFireProps) {
@@ -110,7 +110,16 @@ export function StreakFire({ streak, size = "md", showLabel = true }: StreakFire
       </View>
 
       {/* Number + label */}
-      <View style={styles.textGroup}>
+      {showLabel ? (
+        <Text
+          style={[
+            styles.streakCount,
+            { fontSize: dims.text, color: getStreakColor() },
+          ]}
+        >
+          {streak}-day streak
+        </Text>
+      ) : (
         <Text
           style={[
             styles.streakCount,
@@ -119,12 +128,7 @@ export function StreakFire({ streak, size = "md", showLabel = true }: StreakFire
         >
           {streak}
         </Text>
-        {showLabel && (
-          <Text style={[styles.streakLabel, { fontSize: dims.label }]}>
-            streak
-          </Text>
-        )}
-      </View>
+      )}
     </View>
   );
 }
@@ -142,17 +146,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     opacity: 0.2,
   },
-  textGroup: {
-    alignItems: "flex-start",
-  },
   streakCount: {
     fontFamily: fonts.child.extraBold,
     lineHeight: undefined,
-  },
-  streakLabel: {
-    fontFamily: fonts.child.regular,
-    color: "#999",
-    letterSpacing: 0.3,
-    marginTop: -1,
   },
 });

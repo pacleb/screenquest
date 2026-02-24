@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthStore } from "../../store/auth";
-import { ENV } from "../../config/env";
 import { colors, spacing, borderRadius } from "../../theme";
 
 export default function RegisterScreen() {
@@ -39,20 +38,9 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(email.trim(), password, name.trim());
-      Alert.alert(
-        "[DEBUG] Registration Success",
-        `User registered and authenticated. API: ${ENV.apiUrl}`,
-      );
       // RootNavigator will detect familyId is null and show the Setup flow
     } catch (error: any) {
-      const debugInfo = [
-        `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? "N/A"}`,
-        `Code: ${error.code ?? "N/A"}`,
-        `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
-      ].join("\n");
-      Alert.alert("[DEBUG] Registration Failed", debugInfo);
+      Alert.alert("Registration Failed", "Could not create your account. Please try again.");
     } finally {
       setLoading(false);
     }

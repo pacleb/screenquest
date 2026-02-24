@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAuthStore } from "../../store/auth";
-import { ENV } from "../../config/env";
 import { colors, spacing, borderRadius } from "../../theme";
 
 export default function LoginScreen() {
@@ -44,17 +43,9 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      Alert.alert("[DEBUG] Login Success", `Authenticated. API: ${ENV.apiUrl}`);
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
-      const debugInfo = [
-        `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? "N/A"}`,
-        `Code: ${error.code ?? "N/A"}`,
-        `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
-      ].join("\n");
-      Alert.alert("[DEBUG] Login Failed", debugInfo);
+      Alert.alert("Sign In Failed", "Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -71,14 +62,7 @@ export default function LoginScreen() {
       await childLogin(familyCode.trim(), childName.trim());
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
-      const debugInfo = [
-        `URL: ${ENV.apiUrl}`,
-        `Status: ${error.response?.status ?? "N/A"}`,
-        `Code: ${error.code ?? "N/A"}`,
-        `Message: ${error.message}`,
-        `Server: ${JSON.stringify(error.response?.data ?? "no response")}`,
-      ].join("\n");
-      Alert.alert("[DEBUG] Child Login Failed", debugInfo);
+      Alert.alert("Sign In Failed", "Invalid family code or name. Please check and try again.");
     } finally {
       setLoading(false);
     }

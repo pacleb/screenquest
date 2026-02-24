@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, ActivityIndicator, StatusBar, Image } from "react-native";
+import { View, ActivityIndicator, StatusBar, Image, Platform } from "react-native";
 import {
   NavigationContainer,
   LinkingOptions,
@@ -61,6 +61,8 @@ if (SENTRY_DSN) {
     enabled: !__DEV__,
   });
 }
+
+const isIPad = Platform.OS === "ios" && Platform.isPad;
 
 function App() {
   const navigationRef =
@@ -150,12 +152,14 @@ function App() {
   }, [user?.id, user?.familyId]);
 
   if (!fontsReady || isAuthLoading) {
+    // iPad: image is phone-sized, so contain it centered on the purple background
+    // iPhone: cover the full screen with the image
     return (
-      <View style={{ flex: 1, backgroundColor: "#4A90D9" }}>
+      <View style={{ flex: 1, backgroundColor: "#5d1b97" }}>
         <Image
-          source={require("./assets/splash.png")}
+          source={require("./assets/sq-launch.jpg")}
           style={{ flex: 1, width: "100%" }}
-          resizeMode="contain"
+          resizeMode={isIPad ? "contain" : "cover"}
         />
       </View>
     );

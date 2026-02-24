@@ -46,7 +46,7 @@ export default function ApprovalsScreen() {
       const [data, requests] = await Promise.all([
         completionService.listFamilyCompletions(familyId, status),
         filter === "pending" || filter === "all"
-          ? playSessionService.listPendingRequests(familyId)
+          ? playSessionService.listPendingRequests(familyId).catch(() => [])
           : Promise.resolve([]),
       ]);
       setCompletions(data);

@@ -133,11 +133,7 @@ export default function ChildHome() {
           name={user?.name || "Hero"}
           level={progress?.level ?? 1}
           levelName={progress?.levelName ?? "Starter"}
-          xpProgress={
-            progress
-              ? progress.xpProgressInLevel / (progress.xpToNextLevel || 1)
-              : 0
-          }
+          xpProgress={progress?.xpProgressInLevel ?? 0}
           xpToNext={progress?.xpToNextLevel ?? 100}
           totalXp={progress?.totalXp ?? 0}
           streak={progress?.currentStreak ?? 0}

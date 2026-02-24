@@ -97,7 +97,7 @@ export default function AvatarCustomize() {
     if (!user?.id || acting) return;
     setActing(item.id);
     try {
-      await ReactNativeHapticFeedback.trigger("impactLight");
+      ReactNativeHapticFeedback.trigger("impactLight");
       if (item.isEquipped) {
         await gamificationService.unequipSlot(user.id, item.slot);
       } else {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3E8FF",
     borderColor: colors.purple,
   },
-  tabIcon: { fontSize: 18 },
+  tabIcon: { fontSize: 22 },
   tabLabel: {
     fontFamily: fonts.child.semiBold,
     fontSize: 13,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     borderColor: colors.purple,
     backgroundColor: "#F3E8FF",
   },
-  itemIcon: { fontSize: 40, marginBottom: 4 },
+  itemIcon: { fontSize: 56, marginBottom: 4 },
   itemName: {
     fontFamily: fonts.child.bold,
     fontSize: 11,
