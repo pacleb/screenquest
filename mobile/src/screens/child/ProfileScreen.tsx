@@ -194,7 +194,7 @@ export default function ChildProfile() {
               />
               <Text style={styles.xpText}>
                 {progress.xpToNextLevel > 0
-                  ? `${progress.totalXp} / ${progress.totalXp + progress.xpToNextLevel} XP  ·  ${progress.xpToNextLevel} XP to next level`
+                  ? `${progress.xpInLevel} / ${progress.xpForLevel} XP  ·  ${progress.xpToNextLevel} to next level`
                   : `${progress.totalXp} XP  ·  Max level!`}
               </Text>
             </View>
@@ -311,8 +311,7 @@ export default function ChildProfile() {
                     />
                   </View>
                   <Text style={styles.infoXpBarSub}>
-                    {childProgress.totalXp} /{" "}
-                    {childProgress.totalXp + childProgress.xpToNextLevel} XP
+                    {childProgress.xpInLevel} / {childProgress.xpForLevel} XP
                   </Text>
                 </View>
               </View>

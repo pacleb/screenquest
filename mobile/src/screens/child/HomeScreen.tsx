@@ -381,6 +381,8 @@ export default function ChildHome() {
           levelName={progress?.levelName ?? "Starter"}
           xpProgress={progress?.xpProgressInLevel ?? 0}
           xpToNext={progress?.xpToNextLevel ?? 100}
+          xpInLevel={progress?.xpInLevel ?? 0}
+          xpForLevel={progress?.xpForLevel ?? 100}
           totalXp={progress?.totalXp ?? 0}
           streak={progress?.currentStreak ?? 0}
           weeklyXp={progress?.weeklyXp ?? 0}

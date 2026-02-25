@@ -15,6 +15,9 @@ build/
 .env.production
 !.env.example
 
+# Service account keys
+**/google-service-account.json
+
 # IDE
 .vscode/
 .idea/

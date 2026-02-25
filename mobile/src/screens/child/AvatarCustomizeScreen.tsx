@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -42,10 +43,15 @@ export default function AvatarCustomize() {
     setSaving(emoji);
     try {
       ReactNativeHapticFeedback.trigger("impactLight");
+    } catch {
+      // Haptic feedback unavailable on this device — proceed anyway
+    }
+    try {
       await updateAvatar(emoji);
       navigation.goBack();
     } catch {
       setSaving(null);
+      Alert.alert("Oops!", "Couldn't save your avatar. Please try again.");
     }
   };
 

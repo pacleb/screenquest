@@ -1,5 +1,15 @@
 {
   "ios": {
     "bundleIdentifier": "com.jeromep.screenquest"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "a47c75d3-28a0-458a-b76c-fafccc10bd70"
+    }
+  },
+  "expo": {
+    "android": {
+      "package": "com.screenquest.app"
+    }
   }
 }

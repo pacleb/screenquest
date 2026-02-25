@@ -20,6 +20,8 @@ interface AnimatedHeaderProps {
   levelName?: string;
   xpProgress?: number;
   xpToNext?: number;
+  xpInLevel?: number;
+  xpForLevel?: number;
   totalXp?: number;
   streak?: number;
   weeklyXp?: number;
@@ -51,6 +53,8 @@ export function AnimatedHeader({
   levelName = "Starter",
   xpProgress = 0,
   xpToNext = 0,
+  xpInLevel = 0,
+  xpForLevel = 0,
   totalXp = 0,
   streak = 0,
   weeklyXp = 0,
@@ -133,7 +137,7 @@ export function AnimatedHeader({
             />
             <Text style={styles.xpText}>
               {xpToNext > 0
-                ? `${totalXp} / ${totalXp + xpToNext} XP  ·  ${xpToNext} XP to next level`
+                ? `${xpInLevel} / ${xpForLevel} XP  ·  ${xpToNext} to next level`
                 : "Max level!"}
             </Text>
           </View>

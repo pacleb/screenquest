@@ -9,6 +9,8 @@ export interface ChildProgressData {
   weeklyXp: number;
   xpToNextLevel: number;
   xpProgressInLevel: number;
+  xpInLevel: number;
+  xpForLevel: number;
 }
 
 export interface AchievementData {

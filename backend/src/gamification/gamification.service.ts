@@ -276,6 +276,8 @@ export class GamificationService {
         ? (progress.totalXp - levelInfo.xpRequired) /
           (nextLevel.xpRequired - levelInfo.xpRequired)
         : 1,
+      xpInLevel: progress.totalXp - levelInfo.xpRequired,
+      xpForLevel: nextLevel ? nextLevel.xpRequired - levelInfo.xpRequired : 0,
     };
   }
 
