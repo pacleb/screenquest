@@ -54,8 +54,12 @@ export default function ChildPlay() {
   const sessionRef = useRef<PlaySession | null>(null);
   const screenStateRef = useRef<ScreenState>("select");
 
-  useEffect(() => { sessionRef.current = session; }, [session]);
-  useEffect(() => { screenStateRef.current = screenState; }, [screenState]);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+  useEffect(() => {
+    screenStateRef.current = screenState;
+  }, [screenState]);
 
   const syncWithServer = useCallback(async () => {
     const currentSession = sessionRef.current;
@@ -192,10 +196,16 @@ export default function ChildPlay() {
     try {
       const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
       if (requestedSecs < 300) {
-        Alert.alert("Not Enough Time", "You need at least 5 minutes to start playing.");
+        Alert.alert(
+          "Not Enough Time",
+          "You need at least 5 minutes to start playing.",
+        );
         return;
       }
-      const result = await playSessionService.requestPlay(user.id, requestedSecs);
+      const result = await playSessionService.requestPlay(
+        user.id,
+        requestedSecs,
+      );
       setSession(result);
       if (result.status === "active") {
         setRemainingSeconds(result.remainingSeconds);
@@ -356,7 +366,10 @@ export default function ChildPlay() {
             Waiting for your parent to approve{" "}
             {formatTimeLabel(balance.totalSeconds)}...
           </Text>
-          <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleCancelRequest}>
+          <TouchableOpacity
+            style={styles.cancelWaitBtn}
+            onPress={handleCancelRequest}
+          >
             <Text style={styles.cancelWaitText}>Cancel</Text>
           </TouchableOpacity>
         </View>

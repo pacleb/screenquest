@@ -363,7 +363,7 @@ export default function ChildHome() {
     <SafeAreaView
       testID="child-home-screen"
       style={[styles.container, { backgroundColor: themeColors.background }]}
-      edges={['top', 'left', 'right']}
+      edges={["top", "left", "right"]}
     >
       {/* Confetti overlay for play completion */}
       <ConfettiOverlay
