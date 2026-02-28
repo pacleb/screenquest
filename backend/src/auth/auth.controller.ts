@@ -27,6 +27,7 @@ import {
   ResetPasswordDto,
   VerifyEmailDto,
   ChildLoginDto,
+  UpdateAvatarDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SkipEmailVerification } from './guards/email-verified.guard';
@@ -228,7 +229,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user avatar emoji' })
-  async updateAvatar(@Request() req: any, @Body() body: { emoji: string }) {
-    return this.authService.updateAvatar(req.user.id, body.emoji);
+  async updateAvatar(@Request() req: any, @Body() dto: UpdateAvatarDto) {
+    return this.authService.updateAvatar(req.user.id, dto.emoji);
   }
 }

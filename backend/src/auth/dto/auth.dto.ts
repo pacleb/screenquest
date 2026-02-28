@@ -76,6 +76,13 @@ export class SocialAuthDto {
   idToken: string;
 }
 
+export class UpdateAvatarDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  emoji: string;
+}
+
 export class ChildLoginDto {
   @ApiProperty({ example: 'ABCDEFGH' })
   @IsString()

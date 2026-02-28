@@ -48,11 +48,13 @@ export default function AvatarCustomize() {
     }
     try {
       await updateAvatar(emoji);
-      navigation.goBack();
-    } catch {
+    } catch (err) {
+      console.error("[AvatarCustomize] Failed to save avatar:", err);
       setSaving(null);
       Alert.alert("Oops!", "Couldn't save your avatar. Please try again.");
+      return;
     }
+    navigation.goBack();
   };
 
   return (
@@ -64,6 +66,7 @@ export default function AvatarCustomize() {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={[styles.backBtn, { backgroundColor: themeColors.card }]}
+          disabled={!!saving}
         >
           <Icon name="chevron-back" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>

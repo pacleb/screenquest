@@ -55,6 +55,9 @@ export const notificationService = {
       const token = await messaging().getToken();
       const platform = Platform.OS as string;
 
+      // DEBUG: log FCM token so we can test directly from Firebase Console
+      console.log('[FCM DEBUG] Token:', token);
+
       await api.post(`/users/${userId}/push-token`, { token, platform });
     } catch {
       // Firebase not configured or permission denied
