@@ -115,7 +115,7 @@ describe('ViolationService', () => {
   });
 
   describe('forgiveViolation', () => {
-    it('refunds penalty minutes as stackable time', async () => {
+    it('does not credit time to Time Bank when forgiven', async () => {
       prisma.violation.findUnique.mockResolvedValue({
         id: 'v-1',
         childId: 'child-1',
@@ -129,7 +129,7 @@ describe('ViolationService', () => {
 
       await service.forgiveViolation('v-1', 'parent-1');
 
-      expect(timeBankService.creditTime).toHaveBeenCalledWith('child-1', 7200, 'stackable', null);
+      expect(timeBankService.creditTime).not.toHaveBeenCalled();
     });
 
     it('decrements counter (minimum 0)', async () => {

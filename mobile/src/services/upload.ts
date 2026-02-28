@@ -2,7 +2,7 @@ import api from './api';
 
 export interface UploadResult {
   url: string;
-  filename: string;
+  key: string;
   size: number;
 }
 

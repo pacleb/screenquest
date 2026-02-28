@@ -178,6 +178,26 @@ export default function QuestEditScreen() {
     );
   };
 
+  const handleDelete = async () => {
+    if (!familyId || !id) return;
+    Alert.alert("Delete Quest", "Delete this quest? This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await questService.remove(familyId, id);
+            eventBus.emit(AppEvents.QUEST_CHANGED);
+            navigation.goBack();
+          } catch {
+            Alert.alert("Error", "Failed to delete quest");
+          }
+        },
+      },
+    ]);
+  };
+
   const handleSave = async () => {
     if (!familyId) return;
 
@@ -695,6 +715,16 @@ export default function QuestEditScreen() {
             />
           </View>
 
+          {isEditMode && (
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={handleDelete}
+            >
+              <Icon name="trash-outline" size={18} color={colors.error} />
+              <Text style={styles.deleteBtnText}>Delete Quest</Text>
+            </TouchableOpacity>
+          )}
+
           <View style={{ height: 60 }} />
         </ScrollView>
       )}
@@ -923,6 +953,22 @@ const styles = StyleSheet.create({
   toggleInfo: { flex: 1 },
   toggleLabel: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
   toggleDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  deleteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.error,
+  },
+  deleteBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.error,
+  },
   // Library styles
   catWrap: { flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.md },
   catChip: {

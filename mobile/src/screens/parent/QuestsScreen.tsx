@@ -83,26 +83,13 @@ export default function QuestsScreen() {
 
   const handleDelete = async (quest: Quest) => {
     if (!familyId) return;
-    Alert.alert(
-      "Delete Quest",
-      `Delete "${quest.name}"? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await questService.remove(familyId, quest.id);
-              eventBus.emit(AppEvents.QUEST_CHANGED);
-              fetchQuests();
-            } catch {
-              Alert.alert("Error", "Failed to delete quest");
-            }
-          },
-        },
-      ],
-    );
+    try {
+      await questService.remove(familyId, quest.id);
+      eventBus.emit(AppEvents.QUEST_CHANGED);
+      fetchQuests();
+    } catch {
+      Alert.alert("Error", "Failed to delete quest");
+    }
   };
 
   const groupedQuests = quests.reduce<Record<string, Quest[]>>((acc, quest) => {

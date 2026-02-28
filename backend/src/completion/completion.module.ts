@@ -7,9 +7,10 @@ import {
 } from './completion.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TimeBankModule } from '../time-bank/time-bank.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
-  imports: [PrismaModule, TimeBankModule],
+  imports: [PrismaModule, TimeBankModule, UploadModule],
   controllers: [ChildQuestController, FamilyCompletionController, CompletionReviewController],
   providers: [CompletionService],
   exports: [CompletionService],

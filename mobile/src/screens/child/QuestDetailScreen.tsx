@@ -123,7 +123,7 @@ export default function QuestDetailScreen() {
       let proofImageUrl: string | undefined;
       if (proofUri) {
         const uploadResult = await uploadService.uploadProof(proofUri);
-        proofImageUrl = uploadResult.url;
+        proofImageUrl = uploadResult.key;
       }
       const completion = await completionService.completeQuest(
         user.id,

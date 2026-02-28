@@ -247,13 +247,6 @@ export default function ChildHome() {
     setActionLoading(true);
     try {
       const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
-      if (requestedSecs < 300) {
-        Alert.alert(
-          "Not Enough Time",
-          "You need at least 5 minutes to start playing.",
-        );
-        return;
-      }
       const result = await playSessionService.requestPlay(
         user.id,
         requestedSecs,
@@ -355,7 +348,7 @@ export default function ChildHome() {
   const totalSessionSeconds = session ? session.requestedSeconds : 0;
 
   const isNegativeBalance = balance.totalSeconds < 0;
-  const canPlay = !isNegativeBalance && balance.totalSeconds >= 300;
+  const canPlay = !isNegativeBalance && balance.totalSeconds >= 1;
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
 

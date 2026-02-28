@@ -195,13 +195,6 @@ export default function ChildPlay() {
     setActionLoading(true);
     try {
       const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
-      if (requestedSecs < 300) {
-        Alert.alert(
-          "Not Enough Time",
-          "You need at least 5 minutes to start playing.",
-        );
-        return;
-      }
       const result = await playSessionService.requestPlay(
         user.id,
         requestedSecs,
@@ -466,7 +459,7 @@ export default function ChildPlay() {
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}
-          disabled={balance.totalSeconds < 300}
+          disabled={balance.totalSeconds < 1}
           variant="success"
           size="lg"
           childFont

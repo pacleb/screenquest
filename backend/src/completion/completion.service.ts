@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TimeBankService } from '../time-bank/time-bank.service';
 import { NotificationService } from '../notification/notification.service';
 import { GamificationService } from '../gamification/gamification.service';
+import { StorageService } from '../upload/storage.service';
 import { CompleteQuestDto, ReviewCompletionDto } from './dto/completion.dto';
 import {
   QuestCompletedEvent,
@@ -24,6 +25,7 @@ export class CompletionService {
     private notificationService: NotificationService,
     private gamificationService: GamificationService,
     private eventEmitter: EventEmitter2,
+    private storageService: StorageService,
   ) {}
 
   /**
@@ -127,7 +129,7 @@ export class CompletionService {
       where.status = status;
     }
 
-    return this.prisma.questCompletion.findMany({
+    const completions = await this.prisma.questCompletion.findMany({
       where,
       include: {
         quest: { select: { id: true, name: true, icon: true, category: true, rewardSeconds: true } },
@@ -135,6 +137,13 @@ export class CompletionService {
       },
       orderBy: { completedAt: 'desc' },
     });
+
+    return Promise.all(
+      completions.map(async (c) => ({
+        ...c,
+        proofImageUrl: await this.resolveProofUrl(c.proofImageUrl),
+      })),
+    );
   }
 
   /**
@@ -157,13 +166,20 @@ export class CompletionService {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.prisma.questCompletion.findMany({
+    const completions = await this.prisma.questCompletion.findMany({
       where: { childId },
       include: {
         quest: { select: { id: true, name: true, icon: true, category: true, rewardSeconds: true } },
       },
       orderBy: { completedAt: 'desc' },
     });
+
+    return Promise.all(
+      completions.map(async (c) => ({
+        ...c,
+        proofImageUrl: await this.resolveProofUrl(c.proofImageUrl),
+      })),
+    );
   }
 
   /**
@@ -357,6 +373,20 @@ export class CompletionService {
   }
 
   // --- Helpers ---
+
+  /**
+   * Resolves a stored proof image value to a usable URL.
+   * New records store the S3 key (e.g. "proofs/uuid.jpg"); legacy records may
+   * store an already-resolved URL. Only keys are re-signed to avoid expiry.
+   */
+  private async resolveProofUrl(stored: string | null): Promise<string | null> {
+    if (!stored) return null;
+    // Keys don't start with "http" or "/" — they look like "proofs/uuid.jpg"
+    if (!stored.startsWith('http') && !stored.startsWith('/')) {
+      return this.storageService.getSignedDownloadUrl(stored);
+    }
+    return stored;
+  }
 
   private async checkDuplicateCompletion(childId: string, questId: string, recurrence: string) {
     let since: Date | undefined;

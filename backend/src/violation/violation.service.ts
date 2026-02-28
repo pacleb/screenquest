@@ -154,14 +154,6 @@ export class ViolationService {
       data: { forgiven: true },
     });
 
-    // Refund penalty to Time Bank (stackable)
-    await this.timeBankService.creditTime(
-      violation.childId,
-      violation.penaltySeconds,
-      'stackable',
-      null,
-    );
-
     // Decrement counter (minimum 0)
     const counter = await this.ensureCounter(violation.childId);
     await this.prisma.violationCounter.update({
@@ -173,16 +165,15 @@ export class ViolationService {
     });
 
     this.logger.log(
-      `Violation ${violationId} forgiven, refunded ${violation.penaltySeconds}s to child ${violation.childId}`,
+      `Violation ${violationId} forgiven for child ${violation.childId} (no time refund)`,
     );
 
     // Notify child
-    const hours = violation.penaltySeconds / 3600;
     this.notificationService.sendToUser(
       violation.childId,
       {
         title: 'Violation Forgiven!',
-        body: `${hours} hours restored to your Time Bank`,
+        body: 'Your violation has been forgiven',
         data: { type: 'violation_forgiven', violationId },
       },
       'violations',
