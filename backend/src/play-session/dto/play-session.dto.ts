@@ -12,7 +12,7 @@ import {
 export class RequestPlayDto {
   @ApiProperty({ example: 1800, description: 'Seconds of screen time requested' })
   @IsInt()
-  @Min(300)
+  @Min(60)
   @Max(14400)
   requestedSeconds: number;
 

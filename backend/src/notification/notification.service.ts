@@ -283,10 +283,15 @@ export class NotificationService implements OnModuleInit {
         },
       },
       apns: {
+        headers: {
+          'apns-priority': '10',
+        },
         payload: {
           aps: {
             sound: 'default',
             badge: 1,
+            'content-available': 1,
+            'mutable-content': 1,
           },
         },
       },

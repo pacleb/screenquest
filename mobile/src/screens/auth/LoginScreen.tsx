@@ -31,6 +31,7 @@ export default function LoginScreen() {
   // Child login
   const [familyCode, setFamilyCode] = useState("");
   const [childName, setChildName] = useState("");
+  const [childPin, setChildPin] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -45,24 +46,30 @@ export default function LoginScreen() {
       await login(email.trim(), password);
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
-      Alert.alert("Sign In Failed", "Invalid email or password. Please try again.");
+      Alert.alert(
+        "Sign In Failed",
+        "Invalid email or password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleChildLogin = async () => {
-    if (!familyCode.trim() || !childName.trim()) {
+    if (!familyCode.trim() || !childName.trim() || !childPin.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
-      await childLogin(familyCode.trim(), childName.trim());
+      await childLogin(familyCode.trim(), childName.trim(), childPin.trim());
       // RootNavigator automatically switches to App/Setup when isAuthenticated becomes true
     } catch (error: any) {
-      Alert.alert("Sign In Failed", "Invalid family code or name. Please check and try again.");
+      Alert.alert(
+        "Sign In Failed",
+        "Invalid family code, name, or PIN. Please check and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -181,6 +188,20 @@ export default function LoginScreen() {
                   onChangeText={setChildName}
                   autoCapitalize="words"
                   testID="login-child-name-input"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>PIN</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="1234"
+                  value={childPin}
+                  onChangeText={setChildPin}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={6}
+                  testID="login-child-pin-input"
                 />
               </View>
 

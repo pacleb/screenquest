@@ -14,6 +14,7 @@ export interface LoginData {
 export interface ChildLoginData {
   familyCode: string;
   name: string;
+  pin: string;
 }
 
 export interface AuthResponse {

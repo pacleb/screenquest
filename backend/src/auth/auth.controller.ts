@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -226,6 +227,7 @@ export class AuthController {
 
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user avatar emoji' })

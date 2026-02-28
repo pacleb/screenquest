@@ -143,8 +143,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid name');
     }
 
-    // If PIN is provided and the child has a PIN, verify it
-    if (dto.pin && child.pin) {
+    // If the child has a PIN set, require it
+    if (child.pin) {
+      if (!dto.pin) {
+        throw new UnauthorizedException('PIN is required');
+      }
       const pinValid = await bcrypt.compare(dto.pin, child.pin);
       if (!pinValid) {
         await this.recordFailedAttempt(lockoutKey);

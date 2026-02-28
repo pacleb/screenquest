@@ -39,7 +39,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
       {
         name: 'short',
         ttl: 1000,
-        limit: 3,
+        limit: 10,
       },
       {
         name: 'medium',

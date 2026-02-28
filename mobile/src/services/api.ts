@@ -39,6 +39,7 @@ const api = axios.create({
 function isRetryable(error: any): boolean {
   if (!error.response) return true; // network error
   if (error.response.status >= 500) return true; // server error
+  if (error.response.status === 429) return true; // rate limited — retry after backoff
   return false;
 }
 

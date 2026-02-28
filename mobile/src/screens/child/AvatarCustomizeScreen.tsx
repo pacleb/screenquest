@@ -17,17 +17,62 @@ import { colors, spacing, borderRadius, fonts, useTheme } from "../../theme";
 
 const AVATAR_EMOJIS = [
   // Animals
-  "🦁", "🐯", "🐻", "🐼", "🦊", "🐸",
-  "🐨", "🐮", "🐷", "🐱", "🐶", "🐺",
-  "🦄", "🐲", "🦖", "🐳", "🦅", "🦜",
-  "🐧", "🦋", "🦝", "🐙", "🦕", "🐬",
-  "🦓", "🐘", "🦒", "🐊", "🦔", "🐿️",
+  "🦁",
+  "🐯",
+  "🐻",
+  "🐼",
+  "🦊",
+  "🐸",
+  "🐨",
+  "🐮",
+  "🐷",
+  "🐱",
+  "🐶",
+  "🐺",
+  "🦄",
+  "🐲",
+  "🦖",
+  "🐳",
+  "🦅",
+  "🦜",
+  "🐧",
+  "🦋",
+  "🦝",
+  "🐙",
+  "🦕",
+  "🐬",
+  "🦓",
+  "🐘",
+  "🦒",
+  "🐊",
+  "🦔",
+  "🐿️",
   // Characters & fun
-  "🤖", "👾", "👻", "🧸", "🧙", "🦸",
-  "🧜", "🧝", "🧚", "🎭", "🦩", "🦚",
+  "🤖",
+  "👾",
+  "👻",
+  "🧸",
+  "🧙",
+  "🦸",
+  "🧜",
+  "🧝",
+  "🧚",
+  "🎭",
+  "🦩",
+  "🦚",
   // Symbols & nature
-  "🌟", "🔥", "🌈", "🚀", "🎮", "🎨",
-  "🏆", "💎", "⚡", "🌊", "✨", "🎯",
+  "🌟",
+  "🔥",
+  "🌈",
+  "🚀",
+  "🎮",
+  "🎨",
+  "🏆",
+  "💎",
+  "⚡",
+  "🌊",
+  "✨",
+  "🎯",
 ];
 
 export default function AvatarCustomize() {
@@ -48,10 +93,22 @@ export default function AvatarCustomize() {
     }
     try {
       await updateAvatar(emoji);
-    } catch (err) {
-      console.error("[AvatarCustomize] Failed to save avatar:", err);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.message || err?.message || "";
+      console.error(
+        "[AvatarCustomize] Failed to save avatar:",
+        status,
+        detail,
+        err,
+      );
       setSaving(null);
-      Alert.alert("Oops!", "Couldn't save your avatar. Please try again.");
+      Alert.alert(
+        "Oops!",
+        status === 429
+          ? "Too many requests — please wait a moment and try again."
+          : "Couldn't save your avatar. Please try again.",
+      );
       return;
     }
     navigation.goBack();
@@ -78,10 +135,14 @@ export default function AvatarCustomize() {
 
       {/* Current Avatar Preview */}
       <View style={styles.previewArea}>
-        <View style={[styles.previewCircle, { backgroundColor: themeColors.card }]}>
+        <View
+          style={[styles.previewCircle, { backgroundColor: themeColors.card }]}
+        >
           <Text style={styles.previewEmoji}>{currentAvatar}</Text>
         </View>
-        <Text style={[styles.previewLabel, { color: themeColors.textSecondary }]}>
+        <Text
+          style={[styles.previewLabel, { color: themeColors.textSecondary }]}
+        >
           Your avatar
         </Text>
       </View>
@@ -91,7 +152,10 @@ export default function AvatarCustomize() {
       </Text>
 
       {/* Emoji Grid */}
-      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.grid}
+        showsVerticalScrollIndicator={false}
+      >
         {AVATAR_EMOJIS.map((emoji) => {
           const isSelected = emoji === currentAvatar;
           const isSaving = saving === emoji;

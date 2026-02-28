@@ -88,6 +88,9 @@ export default function ChildPlay() {
           "Request Denied",
           "Your play request was denied by a parent.",
         );
+      } else if (updated.status === "cancelled") {
+        setScreenState("select");
+        setSession(null);
       } else if (updated.status === "requested") {
         setScreenState("waiting");
       }
@@ -195,6 +198,13 @@ export default function ChildPlay() {
     setActionLoading(true);
     try {
       const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
+      if (requestedSecs < 60) {
+        Alert.alert(
+          "Not Enough Time",
+          "You need at least 1 minute to start playing.",
+        );
+        return;
+      }
       const result = await playSessionService.requestPlay(
         user.id,
         requestedSecs,
@@ -279,6 +289,9 @@ export default function ChildPlay() {
   const handleDone = () => {
     setScreenState("select");
     setSession(null);
+    // Update refs immediately so concurrent fetches/syncs see the reset state
+    sessionRef.current = null;
+    screenStateRef.current = "select";
     setRemainingSeconds(0);
     setShowConfetti(false);
     init();
@@ -459,7 +472,7 @@ export default function ChildPlay() {
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}
-          disabled={balance.totalSeconds < 1}
+          disabled={balance.totalSeconds < 60}
           variant="success"
           size="lg"
           childFont

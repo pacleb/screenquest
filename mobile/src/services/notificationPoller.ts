@@ -55,7 +55,7 @@ async function ensureChannel() {
   if (channelCreated) return;
   if (Platform.OS === 'android') {
     await notifee.createChannel({
-      id: 'screenquest',
+      id: 'default',
       name: 'ScreenQuest Notifications',
       importance: AndroidImportance.HIGH,
       sound: 'default',
@@ -84,7 +84,7 @@ async function showLocalNotification(notification: InAppNotification) {
         notificationId: notification.id,
       },
       android: {
-        channelId: 'screenquest',
+        channelId: 'default',
         smallIcon: 'ic_launcher',
         pressAction: { id: 'default' },
         sound: 'default',
@@ -193,7 +193,7 @@ export async function startNotificationPoller(userId: string) {
           title: '🔔 ScreenQuest Notifications Active',
           body: 'You will receive play session alerts here.',
           android: {
-            channelId: 'screenquest',
+            channelId: 'default',
             smallIcon: 'ic_launcher',
             pressAction: { id: 'default' },
           },

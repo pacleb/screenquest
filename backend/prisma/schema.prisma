@@ -202,7 +202,7 @@ model QuestCompletion {
   completedAt      DateTime  @default(now()) @map("completed_at") @db.Timestamptz()
   reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz()
 
-  quest      Quest @relation(fields: [questId], references: [id])
+  quest      Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
   child      User  @relation("ChildCompletions", fields: [childId], references: [id])
   approvedBy User? @relation("ApprovedCompletions", fields: [approvedByUserId], references: [id])
 

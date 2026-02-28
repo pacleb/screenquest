@@ -123,6 +123,9 @@ export default function ChildHome() {
           "Request Denied",
           "Your play request was denied by a parent.",
         );
+      } else if (updated.status === "cancelled") {
+        setPlayState("idle");
+        setSession(null);
       } else if (updated.status === "requested") {
         setPlayState("waiting");
       }
@@ -247,6 +250,13 @@ export default function ChildHome() {
     setActionLoading(true);
     try {
       const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
+      if (requestedSecs < 60) {
+        Alert.alert(
+          "Not Enough Time",
+          "You need at least 1 minute to start playing.",
+        );
+        return;
+      }
       const result = await playSessionService.requestPlay(
         user.id,
         requestedSecs,
@@ -330,6 +340,9 @@ export default function ChildHome() {
   const handlePlayDone = () => {
     setPlayState("idle");
     setSession(null);
+    // Update refs immediately so concurrent fetches/syncs see the reset state
+    sessionRef.current = null;
+    playStateRef.current = "idle";
     setRemainingSeconds(0);
     setShowConfetti(false);
     fetchData();
@@ -348,7 +361,7 @@ export default function ChildHome() {
   const totalSessionSeconds = session ? session.requestedSeconds : 0;
 
   const isNegativeBalance = balance.totalSeconds < 0;
-  const canPlay = !isNegativeBalance && balance.totalSeconds >= 1;
+  const canPlay = !isNegativeBalance && balance.totalSeconds >= 60;
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
 
