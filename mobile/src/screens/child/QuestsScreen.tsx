@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.xl,
     backgroundColor: colors.card,
     borderWidth: 1.5,

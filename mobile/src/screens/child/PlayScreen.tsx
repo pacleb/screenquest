@@ -281,6 +281,16 @@ export default function ChildPlay() {
     init();
   };
 
+  const handleCancelRequest = async () => {
+    if (!session) return;
+    try {
+      await playSessionService.cancel(session.id);
+    } catch (e) {
+      // ignore — we still want to reset UI
+    }
+    handleDone();
+  };
+
   const totalSeconds = session ? session.requestedSeconds : 0;
 
   if (loading) {
@@ -346,7 +356,7 @@ export default function ChildPlay() {
             Waiting for your parent to approve{" "}
             {formatTimeLabel(balance.totalSeconds)}...
           </Text>
-          <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleDone}>
+          <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleCancelRequest}>
             <Text style={styles.cancelWaitText}>Cancel</Text>
           </TouchableOpacity>
         </View>

@@ -144,6 +144,16 @@ export class PlaySessionController {
     return this.playSessionService.resumeSession(sessionId, req.user.id);
   }
 
+  @Post(':sessionId/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Cancel a pending play request (child only)' })
+  async cancel(
+    @Param('sessionId') sessionId: string,
+    @Request() req: any,
+  ) {
+    return this.playSessionService.cancelSession(sessionId, req.user.id);
+  }
+
   @Post(':sessionId/stop')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Stop session early (refunds remaining time)' })

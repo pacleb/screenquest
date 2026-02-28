@@ -1,6 +1,12 @@
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, ActivityIndicator, StatusBar, Image, Platform } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  StatusBar,
+  Image,
+  Platform,
+} from "react-native";
 import {
   NavigationContainer,
   LinkingOptions,
@@ -92,7 +98,10 @@ function App() {
           // Navigate parent to Approvals tab
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "ParentTabsInner", params: { screen: "Approvals" } },
+            params: {
+              screen: "ParentTabsInner",
+              params: { screen: "Approvals" },
+            },
           });
           break;
         case "play_request":
@@ -102,27 +111,39 @@ function App() {
           // Navigate parent to Approvals tab for play requests too
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "ParentTabsInner", params: { screen: "Approvals" } },
+            params: {
+              screen: "ParentTabsInner",
+              params: { screen: "Approvals" },
+            },
           });
           break;
         case "violation":
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "ParentTabsInner", params: { screen: "Consequences" } },
+            params: {
+              screen: "ParentTabsInner",
+              params: { screen: "Consequences" },
+            },
           });
           break;
         case "achievement":
         case "level_up":
           nav.navigate("App" as any, {
             screen: "ChildTabs",
-            params: { screen: "ChildTabsInner", params: { screen: "Trophies" } },
+            params: {
+              screen: "ChildTabsInner",
+              params: { screen: "Trophies" },
+            },
           });
           break;
         default:
           // Navigate to dashboard/home as fallback
           nav.navigate("App" as any, {
             screen: "ParentTabs",
-            params: { screen: "ParentTabsInner", params: { screen: "Dashboard" } },
+            params: {
+              screen: "ParentTabsInner",
+              params: { screen: "Dashboard" },
+            },
           });
           break;
       }
@@ -155,7 +176,7 @@ function App() {
     // iPad: image is phone-sized, so contain it centered on the purple background
     // iPhone: cover the full screen with the image
     return (
-      <View style={{ flex: 1, backgroundColor: "#5d1b97" }}>
+      <View style={{ flex: 1, backgroundColor: "#f6f0fa" }}>
         <Image
           source={require("./assets/sq-launch.jpg")}
           style={{ flex: 1, width: "100%" }}

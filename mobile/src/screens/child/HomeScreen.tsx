@@ -342,6 +342,16 @@ export default function ChildHome() {
     fetchData();
   };
 
+  const handleCancelRequest = async () => {
+    if (!session) return;
+    try {
+      await playSessionService.cancel(session.id);
+    } catch (e) {
+      // ignore — we still want to reset UI
+    }
+    handlePlayDone();
+  };
+
   const totalSessionSeconds = session ? session.requestedSeconds : 0;
 
   const isNegativeBalance = balance.totalSeconds < 0;
@@ -480,7 +490,7 @@ export default function ChildHome() {
                 </Text>
                 <TouchableOpacity
                   style={styles.cancelWaitBtn}
-                  onPress={handlePlayDone}
+                  onPress={handleCancelRequest}
                 >
                   <Text style={styles.cancelWaitText}>Cancel</Text>
                 </TouchableOpacity>

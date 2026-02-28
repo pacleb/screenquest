@@ -318,6 +318,30 @@ export class PlaySessionService {
   }
 
   /**
+   * Child cancels a pending (requested) play session
+   */
+  async cancelSession(sessionId: string, userId: string) {
+    const session = await this.prisma.playSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.childId !== userId) throw new ForbiddenException('Access denied');
+    if (session.status !== 'requested') {
+      throw new BadRequestException('Only pending requests can be cancelled');
+    }
+
+    const updated = await this.prisma.playSession.update({
+      where: { id: sessionId },
+      data: {
+        status: 'cancelled',
+        endedAt: new Date(),
+      },
+    });
+
+    this.logger.log(`Play session ${sessionId} cancelled by child ${userId}`);
+
+    return this.enrichSession(updated);
+  }
+
+  /**
    * Pause an active session
    */
   async pauseSession(sessionId: string, userId: string) {

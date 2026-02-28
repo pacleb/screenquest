@@ -60,6 +60,9 @@ export const playSessionService = {
   stop: (sessionId: string) =>
     api.post<PlaySession>(`/play-sessions/${sessionId}/stop`).then((r) => r.data),
 
+  cancel: (sessionId: string) =>
+    api.post<PlaySession>(`/play-sessions/${sessionId}/cancel`).then((r) => r.data),
+
   // Parent: list all pending play requests for a family
   listPendingRequests: (familyId: string) =>
     api.get<PendingPlayRequest[]>(`/families/${familyId}/play-sessions/pending`).then((r) => r.data),

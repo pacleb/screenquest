@@ -27,6 +27,7 @@ export interface NotificationData {
 type NavigationCallback = (data: NotificationData) => void;
 
 let navigationCallback: NavigationCallback | null = null;
+let pendingInitialNotification: FirebaseMessagingTypes.RemoteMessage | null = null;
 
 /**
  * Check if Firebase is configured (GoogleService-Info.plist / google-services.json exists).
@@ -97,6 +98,13 @@ export const notificationService = {
  */
 export function setNotificationNavigationCallback(callback: NavigationCallback) {
   navigationCallback = callback;
+  // Consume any cold-start notification stored before navigation was ready.
+  // React effects run children-first, so NavigationContainer is ready by the
+  // time this (parent) useEffect runs — nav.isReady() will return true.
+  if (pendingInitialNotification) {
+    handleNotificationData(pendingInitialNotification);
+    pendingInitialNotification = null;
+  }
 }
 
 function handleNotificationData(remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) {
@@ -163,11 +171,17 @@ export async function setupNotificationHandler() {
       handleNotificationData(remoteMessage);
     });
 
-    // Handle notification tap when app was killed (cold start)
+    // Handle notification tap when app was killed (cold start).
+    // Store it so setNotificationNavigationCallback() can consume it once
+    // the navigation callback and NavigationContainer are both ready.
     const initialNotification = await messaging().getInitialNotification();
     if (initialNotification) {
-      // Delay slightly to ensure navigation is ready
-      setTimeout(() => handleNotificationData(initialNotification), 1000);
+      pendingInitialNotification = initialNotification;
+      // If the callback was already set (rare but possible), consume immediately.
+      if (navigationCallback) {
+        handleNotificationData(initialNotification);
+        pendingInitialNotification = null;
+      }
     }
   } catch {
     // Firebase messaging setup failed
