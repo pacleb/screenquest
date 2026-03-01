@@ -4,6 +4,7 @@ import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messag
 import { getApp } from '@react-native-firebase/app';
 import { Platform } from 'react-native';
 import { emitEventsForNotificationType } from '../utils/eventBus';
+import { addSeenNotificationId } from './notificationPoller';
 
 export interface NotificationPreferences {
   userId: string;
@@ -43,7 +44,10 @@ function isFirebaseAvailable(): boolean {
 
 export const notificationService = {
   async registerPushToken(userId: string): Promise<void> {
-    if (!isFirebaseAvailable()) return;
+    if (!isFirebaseAvailable()) {
+      console.warn('[FCM] Firebase not available — skipping push token registration');
+      return;
+    }
 
     try {
       const authStatus = await messaging().requestPermission();
@@ -51,17 +55,27 @@ export const notificationService = {
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-      if (!enabled) return;
+      if (!enabled) {
+        console.warn('[FCM] Push notification permission denied by user');
+        return;
+      }
 
       const token = await messaging().getToken();
       const platform = Platform.OS as string;
 
-      // DEBUG: log FCM token so we can test directly from Firebase Console
-      console.log('[FCM DEBUG] Token:', token);
+      console.log('[FCM] Token obtained, registering with backend...');
+      if (__DEV__) {
+        console.log('[FCM DEBUG] Token:', token);
+      }
 
       await api.post(`/users/${userId}/push-token`, { token, platform });
-    } catch {
-      // Firebase not configured or permission denied
+      console.log('[FCM] ✅ Push token registered successfully');
+    } catch (err: any) {
+      console.error(
+        '[FCM] ❌ Failed to register push token:',
+        err?.response?.status,
+        err?.response?.data || err?.message || err,
+      );
     }
   },
 
@@ -73,8 +87,9 @@ export const notificationService = {
       await api.delete(`/users/${userId}/push-token`, {
         data: { token },
       });
-    } catch {
-      // best effort
+      console.log('[FCM] Push token unregistered');
+    } catch (err: any) {
+      console.warn('[FCM] Failed to unregister push token:', err?.message || err);
     }
   },
 
@@ -152,6 +167,13 @@ export async function setupNotificationHandler() {
   try {
     // Handle foreground messages — display as local notification and trigger UI refresh
     messaging().onMessage(async (remoteMessage) => {
+      // Mark the server-side notification ID as "seen" so the poller
+      // won't display a duplicate local notification for the same event.
+      const notificationId = remoteMessage.data?.notificationId as string | undefined;
+      if (notificationId) {
+        addSeenNotificationId(notificationId);
+      }
+
       await notifee.displayNotification({
         title: remoteMessage.notification?.title ?? 'ScreenQuest',
         body: remoteMessage.notification?.body ?? '',
@@ -183,8 +205,8 @@ export async function setupNotificationHandler() {
         pendingInitialNotification = null;
       }
     }
-  } catch {
-    // Firebase messaging setup failed
+  } catch (err: any) {
+    console.error('[FCM] Firebase messaging setup failed:', err?.message || err);
   }
 }
 

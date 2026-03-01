@@ -5,7 +5,7 @@
  * This works WITHOUT Firebase config files (GoogleService-Info.plist / google-services.json).
  * When Firebase is configured, FCM push will also work alongside this.
  */
-import { AppState, Platform } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import notifee, { AndroidImportance, AuthorizationStatus } from '@notifee/react-native';
 import api from './api';
 import { emitEventsForNotificationType } from '../utils/eventBus';
@@ -28,6 +28,15 @@ let pollerInterval: ReturnType<typeof setInterval> | null = null;
 let currentUserId: string | null = null;
 let channelCreated = false;
 let permissionGranted = false;
+let appStateSubscription: { remove: () => void } | null = null;
+
+/**
+ * Mark a notification ID as "seen" so the poller won't show it again.
+ * Called from the FCM foreground handler to prevent duplicate display.
+ */
+export function addSeenNotificationId(id: string) {
+  SEEN_NOTIFICATION_IDS.add(id);
+}
 
 /**
  * Request notification permission from the OS (required on iOS for local notifications).
@@ -165,24 +174,15 @@ export async function startNotificationPoller(userId: string) {
   }
 
   // Do an initial fetch to seed the seen set (don't display existing ones)
-  try {
-    const { data } = await api.get<InAppNotification[]>(
-      `/users/${userId}/notifications/unread`,
-    );
-    for (const n of data) {
-      SEEN_NOTIFICATION_IDS.add(n.id);
-    }
-    if (__DEV__) {
-      console.log(`[NotifPoller] Seeded ${data.length} existing notification(s)`);
-    }
-  } catch (err) {
-    if (__DEV__) {
-      console.warn('[NotifPoller] Initial seed failed:', (err as any)?.message || err);
-    }
-  }
+  await seedSeenSet(userId);
 
   // Start polling
   pollerInterval = setInterval(pollForNotifications, POLL_INTERVAL_MS);
+
+  // Pause polling when app goes to background, re-seed & resume on foreground.
+  // This prevents wasted network calls while backgrounded and prevents
+  // duplicate local notifications for push-delivered items on resume.
+  appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
   // In dev, fire a test notification to verify Notifee works on this device
   if (__DEV__ && permissionGranted) {
@@ -215,6 +215,52 @@ export async function startNotificationPoller(userId: string) {
 }
 
 /**
+ * Seed the seen set from current unread notifications so we don't re-display them.
+ */
+async function seedSeenSet(userId: string) {
+  try {
+    const { data } = await api.get<InAppNotification[]>(
+      `/users/${userId}/notifications/unread`,
+    );
+    for (const n of data) {
+      SEEN_NOTIFICATION_IDS.add(n.id);
+    }
+    if (__DEV__) {
+      console.log(`[NotifPoller] Seeded ${data.length} existing notification(s)`);
+    }
+  } catch (err) {
+    if (__DEV__) {
+      console.warn('[NotifPoller] Initial seed failed:', (err as any)?.message || err);
+    }
+  }
+}
+
+/**
+ * Handle app state changes — pause polling in background, re-seed on foreground.
+ */
+async function handleAppStateChange(nextState: AppStateStatus) {
+  if (nextState === 'active') {
+    // App came to foreground — re-seed the seen set so that notifications
+    // already delivered by native FCM push aren't shown again by the poller.
+    if (currentUserId) {
+      await seedSeenSet(currentUserId);
+    }
+    // Restart polling interval
+    if (!pollerInterval && currentUserId) {
+      pollerInterval = setInterval(pollForNotifications, POLL_INTERVAL_MS);
+      if (__DEV__) console.log('[NotifPoller] Resumed polling (app active)');
+    }
+  } else if (nextState === 'background') {
+    // Pause polling — saves battery and network; FCM push handles background delivery
+    if (pollerInterval) {
+      clearInterval(pollerInterval);
+      pollerInterval = null;
+      if (__DEV__) console.log('[NotifPoller] Paused polling (app backgrounded)');
+    }
+  }
+}
+
+/**
  * Stop polling for notifications.
  * Call this on logout.
  */
@@ -222,6 +268,10 @@ export function stopNotificationPoller() {
   if (pollerInterval) {
     clearInterval(pollerInterval);
     pollerInterval = null;
+  }
+  if (appStateSubscription) {
+    appStateSubscription.remove();
+    appStateSubscription = null;
   }
   currentUserId = null;
 }

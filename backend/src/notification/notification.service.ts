@@ -81,7 +81,7 @@ export class NotificationService implements OnModuleInit {
     }
 
     // Always persist in-app notification
-    await this.prisma.inAppNotification.create({
+    const inAppNotif = await this.prisma.inAppNotification.create({
       data: {
         userId,
         title: payload.title,
@@ -91,7 +91,7 @@ export class NotificationService implements OnModuleInit {
       },
     });
 
-    // Also try FCM push
+    // Also try FCM push — include the in-app notification ID so mobile can deduplicate
     const tokens = await this.prisma.pushToken.findMany({
       where: { userId },
       select: { token: true },
@@ -102,10 +102,17 @@ export class NotificationService implements OnModuleInit {
       return;
     }
 
+    // Merge the in-app notification ID into the FCM data so the mobile client
+    // can mark it as "seen" immediately and the poller won't show a duplicate.
+    const fcmPayload: PushPayload = {
+      ...payload,
+      data: { ...(payload.data || {}), notificationId: inAppNotif.id },
+    };
+
     this.logger.log(`Sending push "${payload.title}" to user ${userId} (${tokens.length} token(s))`);
     await this.sendFCM(
       tokens.map((t: { token: string }) => t.token),
-      payload,
+      fcmPayload,
     );
   }
 

@@ -171,17 +171,22 @@ describe('QuestService', () => {
   });
 
   describe('remove', () => {
-    it('deletes a quest', async () => {
+    it('deletes a quest and its related records in a transaction', async () => {
       setupParentAccess();
       prisma.quest.findFirst.mockResolvedValue({
         id: 'quest-1',
         familyId: 'fam-1',
       });
+      prisma.questCompletion.deleteMany.mockResolvedValue({ count: 2 });
+      prisma.questAssignment.deleteMany.mockResolvedValue({ count: 1 });
       prisma.quest.delete.mockResolvedValue({});
 
       const result = await service.remove('fam-1', 'quest-1', 'parent-1');
 
       expect(result.message).toBe('Quest deleted');
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.questCompletion.deleteMany).toHaveBeenCalledWith({ where: { questId: 'quest-1' } });
+      expect(prisma.questAssignment.deleteMany).toHaveBeenCalledWith({ where: { questId: 'quest-1' } });
       expect(prisma.quest.delete).toHaveBeenCalledWith({ where: { id: 'quest-1' } });
     });
   });

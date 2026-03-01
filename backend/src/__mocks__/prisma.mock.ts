@@ -12,7 +12,7 @@ const createModelMock = () => ({
   upsert: jest.fn(),
 });
 
-export const createMockPrisma = () => ({
+export const createMockPrisma = () => { const result: any = ({
   family: createModelMock(),
   user: createModelMock(),
   familyInvite: createModelMock(),
@@ -42,14 +42,21 @@ export const createMockPrisma = () => ({
   theme: createModelMock(),
   $queryRaw: jest.fn(),
   $executeRawUnsafe: jest.fn(),
-  $transaction: jest.fn((fn: any) => {
+  $transaction: jest.fn(),
+});
+
+// Wire up $transaction to pass the mock itself as the tx client
+(function wireTransaction(mock: any) {
+  mock.$transaction.mockImplementation((fn: any) => {
     if (typeof fn === 'function') {
-      // Pass self-like mock — tests can override $transaction behavior as needed
-      return fn({} as any);
+      return fn(mock);
     }
     return Promise.all(fn);
-  }),
-});
+  });
+})(result);
+
+return result;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MockPrisma = { [K in keyof ReturnType<typeof createMockPrisma>]: any };

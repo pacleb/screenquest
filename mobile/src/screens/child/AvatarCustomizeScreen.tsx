@@ -111,6 +111,7 @@ export default function AvatarCustomize() {
       );
       return;
     }
+    setSaving(null);
     navigation.goBack();
   };
 
@@ -123,7 +124,6 @@ export default function AvatarCustomize() {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={[styles.backBtn, { backgroundColor: themeColors.card }]}
-          disabled={!!saving}
         >
           <Icon name="chevron-back" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>

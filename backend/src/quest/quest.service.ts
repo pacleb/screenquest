@@ -213,7 +213,11 @@ export class QuestService {
 
     if (!quest) throw new NotFoundException('Quest not found');
 
-    await this.prisma.quest.delete({ where: { id: questId } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.questCompletion.deleteMany({ where: { questId } });
+      await tx.questAssignment.deleteMany({ where: { questId } });
+      await tx.quest.delete({ where: { id: questId } });
+    });
 
     return { message: 'Quest deleted' };
   }

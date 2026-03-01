@@ -97,8 +97,9 @@ export function AnimatedHeader({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]}
+        pointerEvents="none"
       />
-      {isAnimated && <Animated.View style={shimmerStyle} />}
+      {isAnimated && <Animated.View style={shimmerStyle} pointerEvents="none" />}
 
       {/* Top Row: Greeting */}
       <View style={styles.topRow}>

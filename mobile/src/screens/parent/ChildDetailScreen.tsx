@@ -310,8 +310,13 @@ export default function ChildDetailScreen({ navigation, route }: Props) {
         {/* ───── Profile Card ───── */}
         <View style={[styles.card, styles.profileCard]}>
           <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>
-              {childName.charAt(0).toUpperCase()}
+            <Text
+              style={[
+                styles.avatarLargeText,
+                child?.avatarUrl ? { fontSize: 40 } : undefined,
+              ]}
+            >
+              {child?.avatarUrl || childName.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.profileInfo}>

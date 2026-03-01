@@ -47,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     '@sentry/react-native/expo',
     '@react-native-firebase/app',
+    '@react-native-firebase/messaging',
   ],
   extra: {
     apiUrl: getApiUrl(),

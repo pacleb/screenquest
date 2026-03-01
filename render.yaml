@@ -41,6 +41,8 @@ services:
         sync: false  # Set to your CMS URL (e.g. https://screenquest-cms.vercel.app)
       - key: ALLOWED_ORIGINS
         sync: false  # Comma-separated additional origins (e.g. https://other.vercel.app)
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false  # JSON-stringified Firebase service account — required for FCM push notifications
 
 databases:
   - name: screenquest-db
