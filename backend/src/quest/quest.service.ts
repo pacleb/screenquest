@@ -42,7 +42,7 @@ export class QuestService {
         recurrence: dto.recurrence || 'one_time',
         recurrenceDays: dto.recurrenceDays ?? Prisma.JsonNull,
         requiresProof: dto.requiresProof || false,
-        autoApprove: dto.autoApprove ?? true,
+        autoApprove: dto.requiresProof ? false : (dto.autoApprove ?? true),
         bonusMultiplier: dto.bonusMultiplier || 1.0,
         assignments: {
           create: dto.assignedChildIds.map((childId) => ({ childId })),
@@ -94,7 +94,7 @@ export class QuestService {
         recurrence: dto.recurrence || 'one_time',
         recurrenceDays: dto.recurrenceDays ?? Prisma.JsonNull,
         requiresProof: dto.requiresProof || false,
-        autoApprove: dto.autoApprove ?? true,
+        autoApprove: dto.requiresProof ? false : (dto.autoApprove ?? true),
         assignments: {
           create: dto.assignedChildIds.map((childId) => ({ childId })),
         },
@@ -180,6 +180,12 @@ export class QuestService {
 
     // Build update data, omitting assignedChildIds
     const { assignedChildIds, ...updateFields } = dto;
+
+    // If requiresProof is being set to true, force autoApprove off
+    const requiresProof = updateFields.requiresProof ?? quest.requiresProof;
+    if (requiresProof) {
+      updateFields.autoApprove = false;
+    }
 
     const updated = await this.prisma.$transaction(async (tx: PrismaService) => {
       // Update assignments if provided

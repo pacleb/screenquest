@@ -122,17 +122,19 @@ export class UploadController {
     @Res() res: Response,
   ) {
     const sanitized = basename(filename);
-    const key = `proofs/${sanitized}`;
 
     // If S3 enabled, redirect to signed URL
     if (this.storageService.isS3Enabled()) {
+      const key = `proofs/${sanitized}`;
       const signedUrl = await this.storageService.getSignedDownloadUrl(key);
       res.redirect(signedUrl);
       return;
     }
 
     // Local fallback: serve file from disk
-    const filePath = this.storageService.getLocalFilePath(key);
+    // The filename is already a flattened key (e.g. "proofs_uuid.jpg"),
+    // so pass it directly — don't re-add the "proofs/" prefix.
+    const filePath = this.storageService.getLocalFilePath(sanitized);
     if (!filePath) {
       throw new NotFoundException('File not found');
     }

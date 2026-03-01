@@ -93,14 +93,23 @@ function App() {
       switch (data.type) {
         case "quest_completion":
         case "quest_completed":
-        case "quest_approved":
-        case "quest_denied":
           // Navigate parent to Approvals tab
           nav.navigate("App" as any, {
             screen: "ParentTabs",
             params: {
               screen: "ParentTabsInner",
               params: { screen: "Approvals" },
+            },
+          });
+          break;
+        case "quest_approved":
+        case "quest_denied":
+          // Navigate child to their Quests tab
+          nav.navigate("App" as any, {
+            screen: "ChildTabs",
+            params: {
+              screen: "ChildTabsInner",
+              params: { screen: "Quests" },
             },
           });
           break;

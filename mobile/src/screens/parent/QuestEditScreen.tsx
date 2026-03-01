@@ -695,31 +695,34 @@ export default function QuestEditScreen() {
             </View>
             <Switch
               value={requiresProof}
-              onValueChange={setRequiresProof}
+              onValueChange={(val) => {
+                setRequiresProof(val);
+                if (val) setAutoApprove(false);
+              }}
               trackColor={{ false: colors.border, true: colors.primary }}
               accessibilityLabel="Requires photo proof"
             />
           </View>
-          <View style={styles.toggleRow}>
+          <View style={[styles.toggleRow, requiresProof && { opacity: 0.5 }]}>
             <View style={styles.toggleInfo}>
               <Text style={styles.toggleLabel}>Auto-Approve</Text>
               <Text style={styles.toggleDesc}>
-                Automatically approve completions
+                {requiresProof
+                  ? "Disabled — photo proof requires manual review"
+                  : "Automatically approve completions"}
               </Text>
             </View>
             <Switch
               value={autoApprove}
               onValueChange={setAutoApprove}
+              disabled={requiresProof}
               trackColor={{ false: colors.border, true: colors.primary }}
               accessibilityLabel="Auto-approve quest completions"
             />
           </View>
 
           {isEditMode && (
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={handleDelete}
-            >
+            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
               <Icon name="trash-outline" size={18} color={colors.error} />
               <Text style={styles.deleteBtnText}>Delete Quest</Text>
             </TouchableOpacity>

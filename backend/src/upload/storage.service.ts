@@ -17,12 +17,14 @@ export class StorageService {
   private readonly bucket: string;
   private readonly localDir: string;
   private readonly useS3: boolean;
+  private readonly appUrl: string;
 
   constructor(private configService: ConfigService) {
     this.bucket = this.configService.get<string>('AWS_S3_BUCKET') || '';
     const region = this.configService.get<string>('AWS_S3_REGION') || 'us-east-1';
     this.useS3 = !!this.bucket;
     this.localDir = join(process.cwd(), 'uploads', 'proofs');
+    this.appUrl = this.configService.get<string>('APP_URL') || 'http://localhost:3000';
 
     if (this.useS3) {
       this.s3 = new S3Client({ region });
@@ -64,9 +66,9 @@ export class StorageService {
       );
     }
 
-    // Local fallback — return API path
+    // Local fallback — return absolute URL so mobile clients can load it
     const filename = key.replace(/\//g, '_');
-    return `/api/uploads/proofs/${filename}`;
+    return `${this.appUrl}/api/uploads/proofs/${filename}`;
   }
 
   async delete(key: string): Promise<void> {

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -439,6 +440,15 @@ export default function ParentDashboard() {
                         variant="primary"
                       />
                     </View>
+                    {completion.proofImageUrl && (
+                      <View style={styles.proofRow}>
+                        <Image
+                          source={{ uri: completion.proofImageUrl }}
+                          style={styles.proofThumb}
+                        />
+                        <Text style={styles.proofLabel}>Proof photo submitted</Text>
+                      </View>
+                    )}
                     <View style={styles.approvalActions}>
                       <TouchableOpacity
                         style={styles.denyBtn}
@@ -730,6 +740,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
   },
+  proofRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  proofThumb: { width: 48, height: 48, borderRadius: borderRadius.sm },
+  proofLabel: { fontSize: 12, color: colors.textSecondary },
   denyBtn: {
     width: 40,
     height: 40,

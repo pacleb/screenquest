@@ -74,7 +74,9 @@ export function emitEventsForNotificationType(type: string | undefined) {
       eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
       break;
     case 'quest_completion':
+    case 'quest_approved':
     case 'completion_approved':
+    case 'quest_denied':
     case 'completion_denied':
       eventBus.emit(AppEvents.COMPLETION_CHANGED);
       eventBus.emit(AppEvents.TIME_BANK_CHANGED);
