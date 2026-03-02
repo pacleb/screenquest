@@ -45,7 +45,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     '@sentry/react-native/expo',
-    '@react-native-firebase/app',
+    [
+      '@react-native-firebase/app',
+      {
+        ios: {
+          googleServicesFile: './GoogleService-Info.plist',
+        },
+      },
+    ],
     '@react-native-firebase/messaging',
   ],
   extra: {
