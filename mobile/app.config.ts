@@ -25,6 +25,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: 'com.screenquest.app',
     supportsTablet: true,
+    googleServicesFile: './GoogleService-Info.plist',
+    appleTeamId: 'XG28K98TXX',
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
     },
@@ -44,7 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   },
   plugins: [
-    '@sentry/react-native/expo',
+    '@sentry/react-native',
     [
       '@react-native-firebase/app',
       {
@@ -54,6 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-firebase/messaging',
+    './plugins/withModularHeaders',
   ],
   extra: {
     apiUrl: getApiUrl(),
