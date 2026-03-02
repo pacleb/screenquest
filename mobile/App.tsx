@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react-native";
+import Config from "react-native-config";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -59,7 +60,7 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 setupNotificationHandler();
 
-const SENTRY_DSN = process.env.SENTRY_DSN;
+const SENTRY_DSN = Config.SENTRY_DSN;
 if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,

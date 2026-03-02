@@ -12,7 +12,11 @@ import Sound from "react-native-sound";
  */
 
 // Enable playback in silence mode (iOS)
-Sound.setCategory("Playback", false);
+try {
+  Sound.setCategory("Playback", false);
+} catch (e) {
+  console.warn("Failed to set audio category:", e);
+}
 
 // Sound asset map — maps keys to filenames (bundled in app)
 const SOUND_FILES: Record<string, string> = {

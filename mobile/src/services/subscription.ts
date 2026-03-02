@@ -4,6 +4,7 @@ import Purchases, {
   PurchasesOfferings,
 } from 'react-native-purchases';
 import { Platform } from 'react-native';
+import Config from 'react-native-config';
 import api from './api';
 
 const ENTITLEMENT_ID = 'premium';
@@ -22,14 +23,18 @@ export interface SubscriptionStatus {
 
 export const subscriptionService = {
   initRevenueCat: async () => {
-    const apiKey = Platform.select({
-      ios: process.env.REVENUECAT_APPLE_KEY || '',
-      android: process.env.REVENUECAT_GOOGLE_KEY || '',
-    });
+    try {
+      const apiKey = Platform.select({
+        ios: Config.REVENUECAT_APPLE_KEY || '',
+        android: Config.REVENUECAT_GOOGLE_KEY || '',
+      });
 
-    if (!apiKey) return;
+      if (!apiKey) return;
 
-    Purchases.configure({ apiKey });
+      Purchases.configure({ apiKey });
+    } catch (e) {
+      console.warn('Failed to initialize RevenueCat:', e);
+    }
   },
 
   identifyUser: async (familyId: string) => {
