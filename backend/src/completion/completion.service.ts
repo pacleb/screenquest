@@ -17,68 +17,6 @@ import {
   QuestDeniedEvent,
 } from '../common/analytics/analytics.events';
 
-/**
- * Returns the UTC Date representing midnight (00:00:00.000) in the given
- * IANA timezone. Falls back to server-local midnight if timezone is omitted or invalid.
- */
-function localStartOfDay(timezone?: string): Date {
-  const now = new Date();
-  if (timezone) {
-    try {
-      const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hour12: false,
-      }).formatToParts(now);
-      const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? '0');
-      const h = get('hour') % 24;
-      const m = get('minute');
-      const s = get('second');
-      const msFromMidnight = (h * 3600 + m * 60 + s) * 1000 + now.getMilliseconds();
-      return new Date(now.getTime() - msFromMidnight);
-    } catch {
-      // fall through
-    }
-  }
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-/** Returns 23:59:59.999 in the given timezone (end of current local day). */
-function localEndOfDay(timezone?: string): Date {
-  return new Date(localStartOfDay(timezone).getTime() + 24 * 60 * 60 * 1000 - 1);
-}
-
-/**
- * Returns the UTC Date representing Monday 00:00:00.000 of the current local
- * week in the given timezone.
- */
-function localStartOfWeek(timezone?: string): Date {
-  const now = new Date();
-  let dayOfWeek: number;
-  if (timezone) {
-    try {
-      const dateStr = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        weekday: 'short',
-      }).format(now);
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const idx = days.findIndex((d) => dateStr.startsWith(d));
-      dayOfWeek = idx === -1 ? now.getDay() : idx;
-    } catch {
-      dayOfWeek = now.getDay();
-    }
-  } else {
-    dayOfWeek = now.getDay();
-  }
-  // Days since Monday (Sunday = 0 → treat as 7 days after Monday)
-  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  return new Date(localStartOfDay(timezone).getTime() - daysSinceMonday * 24 * 60 * 60 * 1000);
-}
-
 @Injectable()
 export class CompletionService {
   constructor(
@@ -114,7 +52,7 @@ export class CompletionService {
     }
 
     // Check for duplicate completions in current period
-    await this.checkDuplicateCompletion(childId, questId, quest.recurrence, dto.timezone);
+    await this.checkDuplicateCompletion(childId, questId, quest.recurrence);
 
     // Validate proof if required
     if (quest.requiresProof && !dto.proofImageUrl) {
@@ -126,7 +64,7 @@ export class CompletionService {
     // Determine expiry for non-stackable
     let expiresAt: Date | null = null;
     if (quest.stackingType === 'non_stackable') {
-      expiresAt = localEndOfDay(dto.timezone);
+      expiresAt = this.getEndOfDay();
     }
 
     // Determine initial status
@@ -258,7 +196,7 @@ export class CompletionService {
     // so the earned time doesn't silently expire if the parent reviews late.
     const effectiveExpiresAt =
       completion.stackingType === 'non_stackable'
-        ? localEndOfDay(dto.timezone)
+        ? this.getEndOfDay()
         : completion.expiresAt;
 
     const updated = await this.prisma.questCompletion.update({
@@ -358,7 +296,7 @@ export class CompletionService {
   /**
    * List quests available for a child to complete
    */
-  async listChildQuests(childId: string, requesterId: string, timezone?: string) {
+  async listChildQuests(childId: string, requesterId: string) {
     const child = await this.prisma.user.findUnique({ where: { id: childId } });
     if (!child || child.role !== 'child') throw new NotFoundException('Child not found');
 
@@ -389,8 +327,8 @@ export class CompletionService {
     });
 
     // Get recent completions to determine availability
-    const todayStart = localStartOfDay(timezone);
-    const weekStart = localStartOfWeek(timezone);
+    const todayStart = this.getStartOfDay();
+    const weekStart = this.getStartOfWeek();
 
     // Split quests into one-time vs recurring so we can query appropriately
     const oneTimeQuestIds = quests
@@ -476,13 +414,13 @@ export class CompletionService {
     return stored;
   }
 
-  private async checkDuplicateCompletion(childId: string, questId: string, recurrence: string, timezone?: string) {
+  private async checkDuplicateCompletion(childId: string, questId: string, recurrence: string) {
     let since: Date | undefined;
 
     if (recurrence === 'daily') {
-      since = localStartOfDay(timezone);
+      since = this.getStartOfDay();
     } else if (recurrence === 'weekly') {
-      since = localStartOfWeek(timezone);
+      since = this.getStartOfWeek();
     } else if (recurrence === 'one_time') {
       // For one-time quests, check if ever completed (pending or approved)
       const existing = await this.prisma.questCompletion.findFirst({
@@ -543,6 +481,18 @@ export class CompletionService {
     }
   }
 
+  private getStartOfDay(): Date {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private getEndOfDay(): Date {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
   /**
    * Convert seconds to a human-friendly string like "30 minutes", "1 hour 15 minutes", etc.
    */
@@ -559,4 +509,12 @@ export class CompletionService {
     return parts.join(' ');
   }
 
+  private getStartOfWeek(): Date {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
 }

@@ -40,7 +40,7 @@ export class ChildQuestController {
     @Request() req: any,
     @Query('timezone') timezone?: string,
   ) {
-    return this.completionService.listChildQuests(childId, req.user.id, timezone);
+    return this.completionService.listChildQuests(childId, req.user.id);
   }
 
   @Post('quests/:questId/complete')
