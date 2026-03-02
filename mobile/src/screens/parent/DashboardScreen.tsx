@@ -366,8 +366,7 @@ export default function ParentDashboard() {
                           {req.child.name}
                         </Text>
                         <Text style={styles.approvalQuest}>
-                          🎮 Wants to play for{" "}
-                          {formatTimeLabel(req.requestedSeconds)}
+                          🎮 Wants to start playing
                         </Text>
                       </View>
                     </View>
@@ -446,7 +445,9 @@ export default function ParentDashboard() {
                           source={{ uri: completion.proofImageUrl }}
                           style={styles.proofThumb}
                         />
-                        <Text style={styles.proofLabel}>Proof photo submitted</Text>
+                        <Text style={styles.proofLabel}>
+                          Proof photo submitted
+                        </Text>
                       </View>
                     )}
                     <View style={styles.approvalActions}>

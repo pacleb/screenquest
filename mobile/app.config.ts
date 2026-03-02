@@ -29,6 +29,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     appleTeamId: 'XG28K98TXX',
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
+      NSPhotoLibraryUsageDescription:
+        'ScreenQuest needs access to your photo library so your child can submit proof photos for completed quests.',
+      NSCameraUsageDescription:
+        'ScreenQuest needs access to your camera so your child can take proof photos for completed quests.',
+      NSMicrophoneUsageDescription:
+        'ScreenQuest needs access to your microphone if you record a video as quest proof.',
     },
   },
   android: {

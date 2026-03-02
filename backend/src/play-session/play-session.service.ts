@@ -226,7 +226,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Request',
-            body: `${child.name} wants to play for ${Math.ceil(effectiveSeconds / 60)} minutes — Approve?`,
+            body: `${child.name} wants to start playing — Approve?`,
             data: { type: 'play_request', sessionId: session.id },
           },
           'play_requests',
