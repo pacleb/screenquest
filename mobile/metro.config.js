@@ -6,6 +6,9 @@ const monorepoRoot = path.resolve(projectRoot, "..");
 
 const config = getDefaultConfig(projectRoot);
 
+// Force absolute projectRoot so CLIs running from the monorepo root
+// still resolve entry files from the mobile directory.
+config.projectRoot = projectRoot;
 config.watchFolders = [monorepoRoot];
 config.resolver.nodeModulesPaths = [path.resolve(monorepoRoot, "node_modules")];
 config.resolver.disableHierarchicalLookup = true;

@@ -1,6 +1,6 @@
 import { AppRegistry } from "react-native";
+import { registerRootComponent } from "expo";
 import App from "./App";
-import { name as appName } from "./app.json";
 import messaging from "@react-native-firebase/messaging";
 import notifee from "@notifee/react-native";
 
@@ -27,4 +27,6 @@ try {
   // Notifee not configured — background event handler skipped
 }
 
-AppRegistry.registerComponent(appName, () => App);
+// Register with Expo's registerRootComponent which uses module name "main"
+// to match the AppDelegate's moduleName.
+registerRootComponent(App);
