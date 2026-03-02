@@ -44,10 +44,14 @@ export default function ApprovalsScreen() {
     try {
       const status = filter === "all" ? undefined : filter;
       const playFilter =
-        filter === "all" ? undefined : (filter as "pending" | "approved" | "denied");
+        filter === "all"
+          ? undefined
+          : (filter as "pending" | "approved" | "denied");
       const [data, requests] = await Promise.all([
         completionService.listFamilyCompletions(familyId, status),
-        playSessionService.listFamilyPlaySessions(familyId, playFilter).catch(() => []),
+        playSessionService
+          .listFamilyPlaySessions(familyId, playFilter)
+          .catch(() => []),
       ]);
       setCompletions(data);
       setPlayRequests(requests);
@@ -215,93 +219,102 @@ export default function ApprovalsScreen() {
                 🎮 Play Sessions ({playRequests.length})
               </Text>
               {playRequests.map((req) => {
-                const isApproved = ["active", "paused", "completed", "stopped"].includes(req.status);
+                const isApproved = [
+                  "active",
+                  "paused",
+                  "completed",
+                  "stopped",
+                ].includes(req.status);
                 const isDenied = req.status === "denied";
                 const isPending = req.status === "requested";
                 return (
-                <View key={req.id} style={styles.playRequestCard}>
-                  <View style={styles.cardTop}>
-                    <View style={styles.childInfo}>
-                      <View style={styles.childAvatar}>
-                        {req.child.avatarUrl ? (
-                          <Text style={styles.avatarEmoji}>{req.child.avatarUrl}</Text>
-                        ) : (
-                          <Text style={styles.avatarText}>
-                            {req.child.name.charAt(0).toUpperCase()}
+                  <View key={req.id} style={styles.playRequestCard}>
+                    <View style={styles.cardTop}>
+                      <View style={styles.childInfo}>
+                        <View style={styles.childAvatar}>
+                          {req.child.avatarUrl ? (
+                            <Text style={styles.avatarEmoji}>
+                              {req.child.avatarUrl}
+                            </Text>
+                          ) : (
+                            <Text style={styles.avatarText}>
+                              {req.child.name.charAt(0).toUpperCase()}
+                            </Text>
+                          )}
+                        </View>
+                        <View>
+                          <Text style={styles.childName}>{req.child.name}</Text>
+                          <Text style={styles.timestamp}>
+                            {formatTime(req.createdAt)}
                           </Text>
-                        )}
+                        </View>
                       </View>
-                      <View>
-                        <Text style={styles.childName}>{req.child.name}</Text>
-                        <Text style={styles.timestamp}>
-                          {formatTime(req.createdAt)}
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          isPending && styles.statusPending,
+                          isApproved && styles.statusApproved,
+                          isDenied && styles.statusDenied,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusText,
+                            isPending && { color: colors.accent },
+                            isApproved && { color: colors.secondary },
+                            isDenied && { color: colors.error },
+                          ]}
+                        >
+                          {isPending
+                            ? "Pending"
+                            : isApproved
+                              ? "Approved"
+                              : "Denied"}
                         </Text>
                       </View>
                     </View>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        isPending && styles.statusPending,
-                        isApproved && styles.statusApproved,
-                        isDenied && styles.statusDenied,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusText,
-                          isPending && { color: colors.accent },
-                          isApproved && { color: colors.secondary },
-                          isDenied && { color: colors.error },
-                        ]}
-                      >
-                        {isPending ? "Pending" : isApproved ? "Approved" : "Denied"}
-                      </Text>
+                    <View style={styles.questRow}>
+                      <Text style={styles.questIcon}>🎮</Text>
+                      <View style={styles.questInfo}>
+                        <Text style={styles.questName}>Play Request</Text>
+                        <Text style={styles.questReward}>Play Request</Text>
+                      </View>
                     </View>
-                  </View>
-                  <View style={styles.questRow}>
-                    <Text style={styles.questIcon}>🎮</Text>
-                    <View style={styles.questInfo}>
-                      <Text style={styles.questName}>Play Request</Text>
-                      <Text style={styles.questReward}>
-                        {formatTimeLabel(req.requestedSeconds)} requested
-                      </Text>
-                    </View>
-                  </View>
-                  {isPending && (
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={styles.denyBtn}
-                      onPress={() => handleDenyPlay(req.id)}
-                      disabled={processing === req.id}
-                    >
-                      <Icon
-                        name="close-circle-outline"
-                        size={20}
-                        color={colors.error}
-                      />
-                      <Text style={styles.denyBtnText}>Deny</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.approveBtn}
-                      onPress={() => handleApprovePlay(req.id)}
-                      disabled={processing === req.id}
-                    >
-                      {processing === req.id ? (
-                        <ActivityIndicator size="small" color="#FFF" />
-                      ) : (
-                        <>
+                    {isPending && (
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={styles.denyBtn}
+                          onPress={() => handleDenyPlay(req.id)}
+                          disabled={processing === req.id}
+                        >
                           <Icon
-                            name="checkmark-circle-outline"
+                            name="close-circle-outline"
                             size={20}
-                            color="#FFF"
+                            color={colors.error}
                           />
-                          <Text style={styles.approveBtnText}>Approve</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
+                          <Text style={styles.denyBtnText}>Deny</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.approveBtn}
+                          onPress={() => handleApprovePlay(req.id)}
+                          disabled={processing === req.id}
+                        >
+                          {processing === req.id ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                          ) : (
+                            <>
+                              <Icon
+                                name="checkmark-circle-outline"
+                                size={20}
+                                color="#FFF"
+                              />
+                              <Text style={styles.approveBtnText}>Approve</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
-                  )}
-                </View>
                 );
               })}
             </View>
@@ -335,7 +348,9 @@ export default function ApprovalsScreen() {
               <View style={styles.childInfo}>
                 <View style={styles.childAvatar}>
                   {completion.child?.avatarUrl ? (
-                    <Text style={styles.avatarEmoji}>{completion.child.avatarUrl}</Text>
+                    <Text style={styles.avatarEmoji}>
+                      {completion.child.avatarUrl}
+                    </Text>
                   ) : (
                     <Text style={styles.avatarText}>
                       {completion.child?.name?.charAt(0).toUpperCase() || "?"}

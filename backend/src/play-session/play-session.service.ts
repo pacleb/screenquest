@@ -279,7 +279,7 @@ export class PlaySessionService {
       session.childId,
       {
         title: 'Play Approved!',
-        body: `Your play request for ${Math.ceil(session.requestedSeconds / 60)} minutes was approved!`,
+        body: `Your Play Request was approved!`,
         data: { type: 'play_approved', sessionId },
       },
       'play_requests',

@@ -369,8 +369,7 @@ export default function ChildPlay() {
             Request Sent!
           </Text>
           <Text style={styles.waitingSubtitle}>
-            Waiting for your parent to approve{" "}
-            {formatTimeLabel(balance.totalSeconds)}...
+            Waiting for your parent to approve your Play Request
           </Text>
           <TouchableOpacity
             style={styles.cancelWaitBtn}
