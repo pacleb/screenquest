@@ -97,6 +97,17 @@ function to12h(hhmm: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+  return parts.join(' ');
+}
+
 const DEFAULT_PLAY_SETTINGS: PlaySettings = {
   playApprovalMode: 'notify_only',
   dailyScreenTimeCap: 7200,
@@ -156,8 +167,8 @@ export class PlaySessionService {
     // Check play hours
     this.validatePlayHours(settings, dto.timezone);
 
-    // Check daily cap
-    await this.validateDailyCap(childId, dto.requestedSeconds, settings, dto.timezone);
+    // Check daily cap — returns the effective (possibly clamped) seconds
+    const effectiveSeconds = await this.validateDailyCap(childId, dto.requestedSeconds, settings, dto.timezone);
 
     // Determine if auto-start or requires approval
     const autoStart = settings.playApprovalMode === 'notify_only';
@@ -168,19 +179,19 @@ export class PlaySessionService {
       const session = await this.prisma.playSession.create({
         data: {
           childId,
-          requestedSeconds: dto.requestedSeconds,
+          requestedSeconds: effectiveSeconds,
           status: 'active',
           startedAt: now,
           lastSyncedAt: now,
         },
       });
 
-      this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${dto.requestedSeconds}s)`);
+      this.logger.log(`Play session ${session.id} auto-started for child ${childId} (${effectiveSeconds}s)`);
 
       // Emit play session started analytics event
       this.eventEmitter.emit(
         'play_session.started',
-        new PlaySessionStartedEvent(childId, child.familyId || '', session.id, dto.requestedSeconds),
+        new PlaySessionStartedEvent(childId, child.familyId || '', session.id, effectiveSeconds),
       );
 
       // Notify parents
@@ -189,7 +200,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Session Started',
-            body: `${child.name} started playing (${Math.ceil(dto.requestedSeconds / 60)} minutes left)`,
+            body: `${child.name} started playing (${Math.ceil(effectiveSeconds / 60)} minutes left)`,
             data: { type: 'play_started', sessionId: session.id },
           },
           'play_state_changes',
@@ -201,12 +212,12 @@ export class PlaySessionService {
       const session = await this.prisma.playSession.create({
         data: {
           childId,
-          requestedSeconds: dto.requestedSeconds,
+          requestedSeconds: effectiveSeconds,
           status: 'requested',
         },
       });
 
-      this.logger.log(`Play session ${session.id} requested for child ${childId} (${dto.requestedSeconds}s)`);
+      this.logger.log(`Play session ${session.id} requested for child ${childId} (${effectiveSeconds}s)`);
 
       // Notify parents of play request
       if (child.familyId) {
@@ -214,7 +225,7 @@ export class PlaySessionService {
           child.familyId,
           {
             title: 'Play Request',
-            body: `${child.name} wants to play for ${Math.ceil(dto.requestedSeconds / 60)} minutes — Approve?`,
+            body: `${child.name} wants to play for ${Math.ceil(effectiveSeconds / 60)} minutes — Approve?`,
             data: { type: 'play_request', sessionId: session.id },
           },
           'play_requests',
@@ -899,21 +910,24 @@ export class PlaySessionService {
     }
   }
 
-  private async validateDailyCap(childId: string, requestedSeconds: number, settings: PlaySettings, timezone?: string) {
+  private async validateDailyCap(childId: string, requestedSeconds: number, settings: PlaySettings, timezone?: string): Promise<number> {
     const { dayOfWeek } = localTime(timezone);
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const cap = isWeekend ? settings.weekendDailyScreenTimeCap : settings.dailyScreenTimeCap;
 
-    if (cap === null) return; // No cap
+    if (cap === null) return requestedSeconds; // No cap
 
     const usedToday = await this.getDailyUsage(childId, timezone);
+    const remaining = Math.max(0, cap - usedToday);
 
-    if (usedToday + requestedSeconds > cap) {
-      const remaining = Math.max(0, cap - usedToday);
+    if (remaining <= 0) {
       throw new BadRequestException(
-        `Daily screen time limit: ${remaining} seconds remaining (${cap}s cap)`,
+        `Daily screen time limit reached (${formatDuration(cap)} cap)`,
       );
     }
+
+    // Clamp to however much daily time is left
+    return Math.min(requestedSeconds, remaining);
   }
 
   private async getSessionWithParentAccess(sessionId: string, userId: string) {
