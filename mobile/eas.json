@@ -6,7 +6,14 @@
   "build": {
     "base": {
       "node": "20.11.0",
-      "pnpm": "9.15.4"
+      "pnpm": "9.15.4",
+      "ios": {
+        "resourceClass": "m-medium",
+        "cacheScheme": "default"
+      },
+      "cache": {
+        "paths": ["ios/Pods"]
+      }
     },
     "development": {
       "extends": "base",
@@ -17,7 +24,9 @@
       },
       "env": {
         "APP_ENV": "development",
-        "ENVFILE": ".env"
+        "ENVFILE": ".env",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "USE_CCACHE": "1"
       }
     },
     "development-device": {
@@ -33,7 +42,8 @@
       "env": {
         "APP_ENV": "development",
         "ENVFILE": ".env",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "USE_CCACHE": "1"
       }
     },
     "preview": {
@@ -44,7 +54,9 @@
       },
       "env": {
         "APP_ENV": "staging",
-        "ENVFILE": ".env.staging"
+        "ENVFILE": ".env.staging",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "USE_CCACHE": "1"
       },
       "channel": "preview"
     },
