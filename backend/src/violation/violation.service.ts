@@ -159,7 +159,8 @@ export class ViolationService {
       await this.timeBankService.creditTime(
         violation.childId,
         violation.penaltySeconds,
-        'Violation forgiven — time refunded',
+        'stackable',
+        null,
       );
     }
 
