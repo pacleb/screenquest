@@ -154,6 +154,15 @@ export class ViolationService {
       data: { forgiven: true },
     });
 
+    // Refund the deducted time
+    if (violation.penaltySeconds > 0) {
+      await this.timeBankService.creditTime(
+        violation.childId,
+        violation.penaltySeconds,
+        'Violation forgiven — time refunded',
+      );
+    }
+
     // Decrement counter (minimum 0)
     const counter = await this.ensureCounter(violation.childId);
     await this.prisma.violationCounter.update({
@@ -164,8 +173,9 @@ export class ViolationService {
       },
     });
 
+    const refundHours = Math.round(violation.penaltySeconds / 3600);
     this.logger.log(
-      `Violation ${violationId} forgiven for child ${violation.childId} (no time refund)`,
+      `Violation ${violationId} forgiven for child ${violation.childId} (+${violation.penaltySeconds}s / ${refundHours}h refunded)`,
     );
 
     // Notify child
@@ -173,7 +183,7 @@ export class ViolationService {
       violation.childId,
       {
         title: 'Violation Forgiven!',
-        body: 'Your violation has been forgiven',
+        body: `Your violation has been forgiven and ${refundHours}h of screen time has been refunded!`,
         data: { type: 'violation_forgiven', violationId },
       },
       'violations',

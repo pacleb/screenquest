@@ -429,7 +429,10 @@ export class PlaySessionService {
   }
 
   /**
-   * Child stops session early — deduct only the time actually used
+   * Child stops session — handles both early stop and natural timer expiry.
+   * When the timer naturally reaches 0 the client calls this endpoint too;
+   * we detect that case (remaining ≤ 0) and treat it as a proper completion
+   * with the appropriate status and notifications.
    */
   async stopSession(sessionId: string, userId: string) {
     const session = await this.prisma.playSession.findUnique({ where: { id: sessionId } });
@@ -440,7 +443,10 @@ export class PlaySessionService {
     }
 
     const remainingSeconds = this.calculateRemainingSeconds(session);
-    const usedSeconds = session.requestedSeconds - remainingSeconds;
+    const timerExpired = remainingSeconds <= 0;
+    const usedSeconds = timerExpired
+      ? session.requestedSeconds
+      : session.requestedSeconds - remainingSeconds;
 
     const now = new Date();
     // If paused, account for the current pause duration
@@ -452,7 +458,7 @@ export class PlaySessionService {
     const updated = await this.prisma.playSession.update({
       where: { id: sessionId },
       data: {
-        status: 'stopped',
+        status: timerExpired ? 'completed' : 'stopped',
         endedAt: now,
         pausedAt: null,
         totalPausedSeconds: totalPaused,
@@ -482,18 +488,44 @@ export class PlaySessionService {
       new PlaySessionCompletedEvent(session.childId, childForEvent?.familyId || '', sessionId, usedSeconds),
     );
 
-    // Notify parents
+    // Notifications differ depending on whether the timer expired naturally
     const childUser = await this.prisma.user.findUnique({ where: { id: session.childId } });
-    if (childUser?.familyId) {
-      this.notificationService.sendToParents(
-        childUser.familyId,
+    if (timerExpired) {
+      // Timer naturally expired — notify child and parents
+      this.notificationService.sendToUser(
+        session.childId,
         {
-          title: 'Play Stopped',
-          body: `${childUser.name} stopped playing (used ${Math.ceil(usedSeconds / 60)} min)`,
-          data: { type: 'play_stopped', sessionId },
+          title: "Time's Up!",
+          body: 'Great job managing your time!',
+          data: { type: 'play_completed', sessionId },
         },
         'play_state_changes',
-      ).catch((err) => this.logger.error(`Failed to notify parents of stop: ${err}`));
+      ).catch((err) => this.logger.error(`Failed to notify child of completion: ${err}`));
+
+      if (childUser?.familyId) {
+        this.notificationService.sendToParents(
+          childUser.familyId,
+          {
+            title: 'Play Session Ended',
+            body: `${childUser.name}'s play session ended`,
+            data: { type: 'play_completed', sessionId },
+          },
+          'play_state_changes',
+        ).catch((err) => this.logger.error(`Failed to notify parents of completion: ${err}`));
+      }
+    } else {
+      // Child stopped early
+      if (childUser?.familyId) {
+        this.notificationService.sendToParents(
+          childUser.familyId,
+          {
+            title: 'Play Stopped',
+            body: `${childUser.name} stopped playing (used ${Math.ceil(usedSeconds / 60)} min)`,
+            data: { type: 'play_stopped', sessionId },
+          },
+          'play_state_changes',
+        ).catch((err) => this.logger.error(`Failed to notify parents of stop: ${err}`));
+      }
     }
 
     return this.enrichSession(updated);

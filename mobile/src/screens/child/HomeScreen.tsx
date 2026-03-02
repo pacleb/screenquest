@@ -87,6 +87,8 @@ export default function ChildHome() {
   const syncRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionRef = useRef<PlaySession | null>(null);
   const playStateRef = useRef<PlayState>("idle");
+  // Guard: prevent syncWithServer from overriding a client-side timer expiry
+  const justCompletedRef = useRef(false);
 
   useEffect(() => {
     sessionRef.current = session;
@@ -99,6 +101,9 @@ export default function ChildHome() {
   const syncWithServer = useCallback(async () => {
     const currentSession = sessionRef.current;
     if (!currentSession?.id) return;
+    // Skip sync if the client just completed the timer — the stop API call
+    // is in flight and we don't want to reset back to "active".
+    if (justCompletedRef.current) return;
     try {
       const updated = await playSessionService.getSession(currentSession.id);
       setSession(updated);
@@ -208,14 +213,30 @@ export default function ChildHome() {
         setRemainingSeconds((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
+            // Set guard BEFORE state updates so sync doesn't reset us
+            justCompletedRef.current = true;
             setPlayState("completed");
             setShowConfetti(true);
-            SoundEffects.play("timerComplete");
+            // Play alarm sound (outside state updater via setTimeout)
+            setTimeout(() => SoundEffects.play("timerComplete"), 0);
+            // Tell the backend the session is over
+            const sid = sessionRef.current?.id;
+            if (sid) {
+              playSessionService.stop(sid).catch(() => {
+                /* silent */
+              });
+            }
             eventBus.emit(AppEvents.TIME_BANK_CHANGED);
             eventBus.emit(AppEvents.PLAY_SESSION_CHANGED);
+            // Clear the guard after backend has had time to process
+            setTimeout(() => {
+              justCompletedRef.current = false;
+            }, 5000);
             return 0;
           }
-          if (prev === 60) SoundEffects.play("timerWarning");
+          if (prev === 60) {
+            setTimeout(() => SoundEffects.play("timerWarning"), 0);
+          }
           return prev - 1;
         });
       }, 1000);
