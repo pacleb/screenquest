@@ -24,7 +24,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     bundleIdentifier: 'com.screenquest.app',
-    buildNumber: '1',
     supportsTablet: true,
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
@@ -52,7 +51,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     apiUrl: getApiUrl(),
     eas: {
-      projectId: 'YOUR_EAS_PROJECT_ID',
+      projectId: 'a47c75d3-28a0-458a-b76c-fafccc10bd70',
     },
   },
 });

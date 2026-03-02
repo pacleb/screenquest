@@ -6,9 +6,7 @@
   "build": {
     "base": {
       "node": "20.11.0",
-      "pnpm": {
-        "version": "9.x"
-      }
+      "pnpm": "9.15.4"
     },
     "development": {
       "extends": "base",
@@ -26,7 +24,6 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "bundleIdentifier": "com.screenquest.app",
         "simulator": false
       },
       "android": {
@@ -39,9 +36,6 @@
     "preview": {
       "extends": "base",
       "distribution": "internal",
-      "ios": {
-        "bundleIdentifier": "com.screenquest.app"
-      },
       "android": {
         "buildType": "apk"
       },
@@ -54,7 +48,6 @@
       "extends": "base",
       "autoIncrement": true,
       "ios": {
-        "bundleIdentifier": "com.screenquest.app",
         "autoIncrement": "buildNumber"
       },
       "android": {
