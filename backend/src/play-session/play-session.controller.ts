@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -103,6 +104,29 @@ export class ChildPlayController {
     @Request() req: any,
   ) {
     return this.playSessionService.updateChildPlaySettings(childId, req.user.id, dto);
+  }
+
+  @Get('daily-usage')
+  @ApiOperation({ summary: 'Get daily screen time usage for a child' })
+  async getDailyUsage(
+    @Param('childId') childId: string,
+    @Query('timezone') timezone: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.playSessionService.getDailyUsageDetails(childId, req.user.id, timezone);
+  }
+
+  @Delete('daily-usage')
+  @UseGuards(RolesGuard)
+  @Roles('parent', 'guardian')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset daily screen time usage by clearing stale sessions (parent only)' })
+  async resetDailyUsage(
+    @Param('childId') childId: string,
+    @Query('timezone') timezone: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.playSessionService.resetDailyUsage(childId, req.user.id, timezone);
   }
 }
 

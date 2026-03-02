@@ -39,7 +39,6 @@ export interface SocialAuthRequest {
 export interface ChildLoginRequest {
   familyCode: string;
   name: string;
-  pin: string;
 }
 
 export interface UserProfile {

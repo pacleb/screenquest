@@ -1,11 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsString,
   MinLength,
   MaxLength,
   IsNotEmpty,
-  IsOptional,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -94,10 +93,4 @@ export class ChildLoginDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: '1234' })
-  @IsString()
-  @IsOptional()
-  @MinLength(4)
-  @MaxLength(6)
-  pin?: string;
 }

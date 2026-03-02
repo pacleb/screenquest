@@ -34,11 +34,13 @@ export class ChildQuestController {
 
   @Get('quests')
   @ApiOperation({ summary: 'List available quests for this child' })
+  @ApiQuery({ name: 'timezone', required: false, example: 'Asia/Manila', description: 'IANA timezone of the device' })
   async listChildQuests(
     @Param('childId') childId: string,
     @Request() req: any,
+    @Query('timezone') timezone?: string,
   ) {
-    return this.completionService.listChildQuests(childId, req.user.id);
+    return this.completionService.listChildQuests(childId, req.user.id, timezone);
   }
 
   @Post('quests/:questId/complete')

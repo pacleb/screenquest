@@ -129,11 +129,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid family code');
     }
 
-    // Find child by family + name only (PIN is hashed, can't query directly)
+    // Find child by family + name (case-insensitive)
     const child = await this.prisma.user.findFirst({
       where: {
         familyId: family.id,
-        name: dto.name,
+        name: { equals: dto.name, mode: 'insensitive' },
         role: 'child',
       },
     });
@@ -141,18 +141,6 @@ export class AuthService {
     if (!child) {
       await this.recordFailedAttempt(lockoutKey);
       throw new UnauthorizedException('Invalid name');
-    }
-
-    // If the child has a PIN set, require it
-    if (child.pin) {
-      if (!dto.pin) {
-        throw new UnauthorizedException('PIN is required');
-      }
-      const pinValid = await bcrypt.compare(dto.pin, child.pin);
-      if (!pinValid) {
-        await this.recordFailedAttempt(lockoutKey);
-        throw new UnauthorizedException('Invalid name or PIN');
-      }
     }
 
     await this.clearLoginAttempts(lockoutKey);

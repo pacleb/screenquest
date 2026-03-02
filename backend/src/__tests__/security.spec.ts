@@ -103,12 +103,12 @@ describe('Security – Login Lockout', () => {
     redis.ttl.mockResolvedValue(600);
 
     await expect(
-      service.childLogin({ familyCode: 'ABC123', name: 'Kid', pin: '1234' }),
+      service.childLogin({ familyCode: 'ABC123', name: 'Kid' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });
 
-describe('Security – PIN Hashing (childLogin)', () => {
+describe('Security – Child login (case-insensitive name)', () => {
   let service: AuthService;
   let prisma: MockPrisma;
   let redis: MockRedis;
@@ -139,8 +139,7 @@ describe('Security – PIN Hashing (childLogin)', () => {
     service = module.get<AuthService>(AuthService);
   });
 
-  it('validates hashed PIN with bcrypt.compare', async () => {
-    const hashedPin = await bcrypt.hash('1234', 10);
+  it('authenticates child by family code + name', async () => {
     prisma.family.findUnique.mockResolvedValue({ id: 'fam-1' });
     prisma.user.findFirst.mockResolvedValue({
       id: 'child-1',
@@ -148,34 +147,26 @@ describe('Security – PIN Hashing (childLogin)', () => {
       role: 'child',
       familyId: 'fam-1',
       email: null,
-      pin: hashedPin,
+      pin: null,
     });
     prisma.refreshToken.create.mockResolvedValue({});
 
     const result = await service.childLogin({
       familyCode: 'ABC123',
       name: 'Kid',
-      pin: '1234',
     });
 
     expect(result.accessToken).toBeDefined();
     expect(result.user.name).toBe('Kid');
   });
 
-  it('rejects wrong PIN even when hashed', async () => {
-    const hashedPin = await bcrypt.hash('1234', 10);
+  it('rejects invalid name', async () => {
     prisma.family.findUnique.mockResolvedValue({ id: 'fam-1' });
-    prisma.user.findFirst.mockResolvedValue({
-      id: 'child-1',
-      name: 'Kid',
-      role: 'child',
-      familyId: 'fam-1',
-      pin: hashedPin,
-    });
+    prisma.user.findFirst.mockResolvedValue(null);
     redis.incr.mockResolvedValue(1);
 
     await expect(
-      service.childLogin({ familyCode: 'ABC123', name: 'Kid', pin: '0000' }),
+      service.childLogin({ familyCode: 'ABC123', name: 'Nobody' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

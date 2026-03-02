@@ -12,6 +12,11 @@ export class CompleteQuestDto {
   @IsOptional()
   @MaxLength(500)
   proofImageUrl?: string;
+
+  @ApiPropertyOptional({ example: 'Asia/Manila', description: 'IANA timezone of the device' })
+  @IsString()
+  @IsOptional()
+  timezone?: string;
 }
 
 export class ReviewCompletionDto {
@@ -20,6 +25,11 @@ export class ReviewCompletionDto {
   @IsOptional()
   @MaxLength(1000)
   parentNote?: string;
+
+  @ApiPropertyOptional({ example: 'Asia/Manila', description: 'IANA timezone of the device' })
+  @IsString()
+  @IsOptional()
+  timezone?: string;
 }
 
 export class ListCompletionsQueryDto {

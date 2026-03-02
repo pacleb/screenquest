@@ -57,7 +57,7 @@ describe('Play Flow (E2E)', () => {
     // Child logs in
     const childLoginRes = await agent
       .post('/api/auth/child-login')
-      .send({ familyCode, name: 'Play Kid', pin: '5678' })
+      .send({ familyCode, name: 'Play Kid' })
       .expect(200);
 
     const childToken = childLoginRes.body.accessToken;
@@ -131,7 +131,7 @@ describe('Play Flow (E2E)', () => {
 
       const childLoginRes = await agent
         .post('/api/auth/child-login')
-        .send({ familyCode: familyRes.body.familyCode, name: 'Broke Kid', pin: '0000' })
+        .send({ familyCode: familyRes.body.familyCode, name: 'Broke Kid' })
         .expect(200);
 
       // Try to play with no balance

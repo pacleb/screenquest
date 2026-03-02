@@ -61,7 +61,7 @@ export class AuthController {
   @Post('child-login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ short: { limit: 5, ttl: 60000 } })
-  @ApiOperation({ summary: 'Child login with family code, name, and PIN' })
+  @ApiOperation({ summary: 'Child login with family code and name' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async childLogin(@Body() dto: ChildLoginDto) {

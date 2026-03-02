@@ -70,7 +70,7 @@ describe('Quest Flow (E2E)', () => {
       // 2. Child logs in
       const childLoginRes = await agent
         .post('/api/auth/child-login')
-        .send({ familyCode, name: 'Quest Kid', pin: '1234' })
+        .send({ familyCode, name: 'Quest Kid' })
         .expect(200);
 
       const childToken = childLoginRes.body.accessToken;
