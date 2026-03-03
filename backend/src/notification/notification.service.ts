@@ -41,6 +41,20 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
+   * Check if FCM push notifications are enabled (Firebase Admin initialized)
+   */
+  isFcmEnabled(): boolean {
+    return this.fcmEnabled;
+  }
+
+  /**
+   * Get the count of registered push tokens
+   */
+  async getPushTokenCount(): Promise<number> {
+    return this.prisma.pushToken.count();
+  }
+
+  /**
    * Register a push token for a user
    */
   async registerToken(userId: string, token: string, platform: string) {
