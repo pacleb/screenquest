@@ -138,6 +138,7 @@ export class TimeBankService {
   /**
    * Deduct penalty from Time Bank (violations). Balance CAN go negative.
    * Non-stackable is used first, then stackable goes negative.
+   * Returns breakdown of how much was deducted from each type.
    */
   async deductPenalty(childId: string, seconds: number) {
     const timeBank = await this.ensureTimeBank(childId);
@@ -150,7 +151,8 @@ export class TimeBankService {
     remainingDeduction -= nonStackDeduct;
 
     // The rest comes from stackable (CAN go negative)
-    const newStackable = timeBank.stackableBalanceSeconds - remainingDeduction;
+    const stackDeduct = remainingDeduction;
+    const newStackable = timeBank.stackableBalanceSeconds - stackDeduct;
     const newNonStackable = currentNonStackable - nonStackDeduct;
 
     await this.prisma.timeBank.update({
@@ -164,6 +166,8 @@ export class TimeBankService {
 
     return {
       deducted: seconds,
+      nonStackableDeducted: nonStackDeduct,
+      stackableDeducted: stackDeduct,
       stackableSeconds: newStackable,
       nonStackableSeconds: newNonStackable,
       totalSeconds: newStackable + newNonStackable,

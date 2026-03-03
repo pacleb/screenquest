@@ -39,13 +39,18 @@ export class ViolationService {
     const penaltyHours = 2 * Math.pow(2, violationNumber - 1);
     const penaltySeconds = penaltyHours * 3600;
 
-    // Create violation record
+    // Deduct penalty from Time Bank first to get the breakdown
+    const deduction = await this.timeBankService.deductPenalty(childId, penaltySeconds);
+
+    // Create violation record with penalty breakdown
     const violation = await this.prisma.violation.create({
       data: {
         childId,
         recordedByUserId: parentId,
         violationNumber,
         penaltySeconds,
+        penaltyNonStackableSeconds: deduction.nonStackableDeducted,
+        penaltyStackableSeconds: deduction.stackableDeducted,
         description: dto.description || null,
       },
     });
@@ -59,11 +64,8 @@ export class ViolationService {
       },
     });
 
-    // Deduct penalty from Time Bank (CAN go negative)
-    await this.timeBankService.deductPenalty(childId, penaltySeconds);
-
     this.logger.log(
-      `Violation #${violationNumber} recorded for child ${childId}: -${penaltySeconds}s (${penaltyHours}h)`,
+      `Violation #${violationNumber} recorded for child ${childId}: -${penaltySeconds}s (${penaltyHours}h) [non-stackable: ${deduction.nonStackableDeducted}s, stackable: ${deduction.stackableDeducted}s]`,
     );
 
     // Notify child
@@ -154,11 +156,19 @@ export class ViolationService {
       data: { forgiven: true },
     });
 
-    // Refund the deducted time
-    if (violation.penaltySeconds > 0) {
+    // Refund the deducted time - restore each type separately to preserve stacking behavior
+    if (violation.penaltyNonStackableSeconds > 0) {
       await this.timeBankService.creditTime(
         violation.childId,
-        violation.penaltySeconds,
+        violation.penaltyNonStackableSeconds,
+        'non_stackable',
+        null,
+      );
+    }
+    if (violation.penaltyStackableSeconds > 0) {
+      await this.timeBankService.creditTime(
+        violation.childId,
+        violation.penaltyStackableSeconds,
         'stackable',
         null,
       );
@@ -176,7 +186,7 @@ export class ViolationService {
 
     const refundHours = Math.round(violation.penaltySeconds / 3600);
     this.logger.log(
-      `Violation ${violationId} forgiven for child ${violation.childId} (+${violation.penaltySeconds}s / ${refundHours}h refunded)`,
+      `Violation ${violationId} forgiven for child ${violation.childId} (+${violation.penaltySeconds}s / ${refundHours}h refunded) [non-stackable: ${violation.penaltyNonStackableSeconds}s, stackable: ${violation.penaltyStackableSeconds}s]`,
     );
 
     // Notify child

@@ -16,7 +16,10 @@ describe('ViolationService', () => {
 
   beforeEach(async () => {
     prisma = createMockPrisma();
-    timeBankService = { deductPenalty: jest.fn(), creditTime: jest.fn() };
+    timeBankService = {
+      deductPenalty: jest.fn().mockResolvedValue({ nonStackableDeducted: 0, stackableDeducted: 7200 }),
+      creditTime: jest.fn(),
+    };
     notificationService = createMockNotification();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -115,11 +118,13 @@ describe('ViolationService', () => {
   });
 
   describe('forgiveViolation', () => {
-    it('credits deducted time back to Time Bank when forgiven', async () => {
+    it('credits deducted time back to Time Bank preserving stacking type', async () => {
       prisma.violation.findUnique.mockResolvedValue({
         id: 'v-1',
         childId: 'child-1',
         penaltySeconds: 7200,
+        penaltyNonStackableSeconds: 1800,
+        penaltyStackableSeconds: 5400,
         forgiven: false,
       });
       setupParentChildAccess();
@@ -129,10 +134,18 @@ describe('ViolationService', () => {
 
       await service.forgiveViolation('v-1', 'parent-1');
 
+      // Should credit non-stackable and stackable separately
       expect(timeBankService.creditTime).toHaveBeenCalledWith(
         'child-1',
-        7200,
-        'Violation forgiven — time refunded',
+        1800,
+        'non_stackable',
+        null,
+      );
+      expect(timeBankService.creditTime).toHaveBeenCalledWith(
+        'child-1',
+        5400,
+        'stackable',
+        null,
       );
     });
 
@@ -141,6 +154,8 @@ describe('ViolationService', () => {
         id: 'v-1',
         childId: 'child-1',
         penaltySeconds: 7200,
+        penaltyNonStackableSeconds: 0,
+        penaltyStackableSeconds: 7200,
         forgiven: false,
       });
       setupParentChildAccess();
@@ -161,6 +176,8 @@ describe('ViolationService', () => {
         id: 'v-1',
         childId: 'child-1',
         penaltySeconds: 7200,
+        penaltyNonStackableSeconds: 0,
+        penaltyStackableSeconds: 7200,
         forgiven: true,
       });
       setupParentChildAccess();
