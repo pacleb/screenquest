@@ -13,6 +13,7 @@ interface PushPayload {
 export class NotificationService implements OnModuleInit {
   private readonly logger = new Logger(NotificationService.name);
   private fcmEnabled = false;
+  private fcmProjectId: string | null = null;
 
   constructor(
     private prisma: PrismaService,
@@ -28,13 +29,14 @@ export class NotificationService implements OnModuleInit {
 
     try {
       const serviceAccount = JSON.parse(serviceAccountJson);
+      this.fcmProjectId = serviceAccount.project_id || null;
       if (!admin.apps.length) {
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
       }
       this.fcmEnabled = true;
-      this.logger.log('Firebase Admin initialized — push notifications enabled');
+      this.logger.log(`Firebase Admin initialized — push notifications enabled (project: ${this.fcmProjectId})`);
     } catch (error) {
       this.logger.warn(`Failed to initialize Firebase Admin: ${error}`);
     }
@@ -45,6 +47,10 @@ export class NotificationService implements OnModuleInit {
    */
   isFcmEnabled(): boolean {
     return this.fcmEnabled;
+  }
+
+  getFcmProjectId(): string | null {
+    return this.fcmProjectId;
   }
 
   /**
@@ -407,9 +413,14 @@ export class NotificationService implements OnModuleInit {
       }
 
       if (response.failureCount > staleTokens.length) {
+        const otherErrors = response.responses
+          .filter((r) => r.error && !staleTokens.includes(tokens[response.responses.indexOf(r)]))
+          .map((r) => ({ code: r.error?.code, message: r.error?.message }));
         this.logger.warn(
-          `FCM: ${response.successCount} sent, ${response.failureCount} failed`,
+          `FCM: ${response.successCount} sent, ${response.failureCount} failed. Errors: ${JSON.stringify(otherErrors)}`,
         );
+      } else {
+        this.logger.log(`FCM: ${response.successCount} sent successfully`);
       }
     } catch (error) {
       this.logger.warn(`Failed to send push notification: ${error}`);

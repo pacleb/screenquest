@@ -29,6 +29,7 @@ export class NotificationController {
     const tokenDetails = await this.notificationService.getPushTokenDetails();
     return {
       fcmEnabled: this.notificationService.isFcmEnabled(),
+      fcmProjectId: this.notificationService.getFcmProjectId(),
       registeredTokens: tokenCount,
       tokens: tokenDetails.map((t: any) => ({
         userId: t.userId,
