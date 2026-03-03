@@ -327,6 +327,12 @@ export default function PrivacyPolicyPage() {
             >
               Terms of Service
             </Link>
+            <Link
+              href="/coppa"
+              className="hover:text-brand-600 transition-colors"
+            >
+              COPPA Compliance
+            </Link>
           </div>
         </div>
       </footer>

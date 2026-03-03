@@ -501,7 +501,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => openExternalLink("https://screenquest.app/privacy")}
+            onPress={() => openExternalLink("https://screenquest.restdayapps.com/privacy")}
           >
             <Icon
               name="document-text-outline"
