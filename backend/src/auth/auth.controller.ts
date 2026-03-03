@@ -156,6 +156,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const deepLink = `screenquest://reset-password?token=${encodeURIComponent(token)}`;
+    const webUrl = `https://screenquest.restdayapps.com/reset-password?token=${encodeURIComponent(token)}`;
     res.setHeader('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
@@ -169,17 +170,26 @@ export class AuthController {
           .card { background: white; border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
           h1 { color: #333; font-size: 22px; }
           p { color: #666; line-height: 1.6; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #6B2FA0, #8B5FBF); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #6366F1, #4338CA); color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px; }
         </style>
       </head>
       <body>
         <div class="card">
           <h1>ScreenQuest</h1>
-          <p>Opening the app to reset your password...</p>
-          <a class="btn" href="${deepLink}">Open ScreenQuest</a>
-          <p style="margin-top:24px;font-size:13px;color:#999;">If the app didn't open automatically, tap the button above.</p>
+          <p id="msg">Redirecting...</p>
+          <a id="btn" class="btn" href="${deepLink}" style="display:none;">Open ScreenQuest</a>
         </div>
-        <script>window.location.href = "${deepLink}";</script>
+        <script>
+          var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          if (isMobile) {
+            document.getElementById('msg').textContent = 'Opening the app to reset your password...';
+            document.getElementById('btn').style.display = 'inline-block';
+            document.getElementById('btn').textContent = 'Open ScreenQuest App';
+            setTimeout(function() { window.location.href = "${deepLink}"; }, 300);
+          } else {
+            window.location.href = "${webUrl}";
+          }
+        </script>
       </body>
       </html>
     `);
