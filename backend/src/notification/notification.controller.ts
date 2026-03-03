@@ -26,10 +26,29 @@ export class NotificationController {
   @Get('notifications/fcm-status')
   async getFcmStatus() {
     const tokenCount = await this.notificationService.getPushTokenCount();
+    const tokenDetails = await this.notificationService.getPushTokenDetails();
     return {
       fcmEnabled: this.notificationService.isFcmEnabled(),
       registeredTokens: tokenCount,
+      tokens: tokenDetails.map((t: any) => ({
+        userId: t.userId,
+        platform: t.platform,
+        tokenPrefix: t.token.substring(0, 20) + '...',
+        createdAt: t.createdAt,
+      })),
     };
+  }
+
+  /**
+   * Send a test push notification to a user (no auth for quick testing).
+   * Usage: POST /api/notifications/test-push { "userId": "..." }
+   */
+  @Post('notifications/test-push')
+  async testPush(@Body() body: { userId: string }) {
+    if (!body.userId) {
+      return { success: false, detail: 'userId is required' };
+    }
+    return this.notificationService.sendTestPush(body.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))

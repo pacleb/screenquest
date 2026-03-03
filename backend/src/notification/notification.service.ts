@@ -55,6 +55,72 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
+   * Get all registered push tokens with user info (for diagnostics)
+   */
+  async getPushTokenDetails() {
+    return this.prisma.pushToken.findMany({
+      select: {
+        userId: true,
+        platform: true,
+        token: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+  }
+
+  /**
+   * Send a test push notification to a specific user (for diagnostics)
+   */
+  async sendTestPush(userId: string): Promise<{ success: boolean; detail: string }> {
+    if (!this.fcmEnabled) {
+      return { success: false, detail: 'FCM is disabled — FIREBASE_SERVICE_ACCOUNT not set or invalid' };
+    }
+
+    const tokens = await this.prisma.pushToken.findMany({
+      where: { userId },
+      select: { token: true },
+    });
+
+    if (tokens.length === 0) {
+      return { success: false, detail: `No push tokens registered for user ${userId}` };
+    }
+
+    const messages: admin.messaging.Message[] = tokens.map((t: { token: string }) => ({
+      token: t.token,
+      notification: {
+        title: '\u{1F514} Push Test',
+        body: 'If you see this, push notifications are working!',
+      },
+      data: { type: 'test_push' },
+      apns: {
+        headers: { 'apns-priority': '10' },
+        payload: {
+          aps: { sound: 'default', badge: 1, 'content-available': 1, 'mutable-content': 1 },
+        },
+      },
+    }));
+
+    try {
+      const response = await admin.messaging().sendEach(messages);
+      const errors = response.responses
+        .filter((r: admin.messaging.SendResponse) => r.error)
+        .map((r: admin.messaging.SendResponse) => ({
+          code: r.error?.code,
+          message: r.error?.message,
+        }));
+
+      return {
+        success: response.successCount > 0,
+        detail: `Sent to ${tokens.length} token(s): ${response.successCount} succeeded, ${response.failureCount} failed${errors.length ? '. Errors: ' + JSON.stringify(errors) : ''}`,
+      };
+    } catch (error: any) {
+      return { success: false, detail: `FCM sendEach threw: ${error?.message || error}` };
+    }
+  }
+
+  /**
    * Register a push token for a user
    */
   async registerToken(userId: string, token: string, platform: string) {
