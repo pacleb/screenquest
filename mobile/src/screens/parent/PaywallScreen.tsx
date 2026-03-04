@@ -51,6 +51,7 @@ export default function PaywallScreen() {
   const user = useAuthStore((s) => s.user);
   const { isActive } = useSubscriptionStore();
   const fetchStatus = useSubscriptionStore((s) => s.fetchStatus);
+  const activatePremium = useSubscriptionStore((s) => s.activatePremium);
 
   const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("yearly");
   const [packages, setPackages] = useState<{
@@ -68,6 +69,7 @@ export default function PaywallScreen() {
   const loadOfferings = async () => {
     try {
       const offerings = await subscriptionService.getOfferings();
+      console.log("[Paywall] Offerings result:", offerings ? "loaded" : "null");
       if (offerings?.current) {
         const monthly =
           offerings.current.availablePackages.find(
@@ -77,10 +79,18 @@ export default function PaywallScreen() {
           offerings.current.availablePackages.find(
             (p) => p.packageType === "ANNUAL",
           ) ?? null;
+        console.log(
+          "[Paywall] Found packages — monthly:",
+          !!monthly,
+          "yearly:",
+          !!yearly,
+        );
         setPackages({ monthly, yearly });
+      } else {
+        console.warn("[Paywall] No current offering available");
       }
-    } catch {
-      // Offerings may fail in simulator
+    } catch (e) {
+      console.error("[Paywall] Failed to load offerings:", e);
     } finally {
       setLoading(false);
     }
@@ -101,8 +111,15 @@ export default function PaywallScreen() {
     try {
       const customerInfo = await subscriptionService.purchasePackage(pkg);
       if (customerInfo) {
+        const hasPremium = !!customerInfo.entitlements.active['premium'];
+        if (hasPremium) {
+          // Optimistically update local state — webhook may not have reached
+          // the backend yet (common in sandbox/TestFlight environments)
+          activatePremium();
+        }
+        // Sync with backend in background (no await — don't block the UI)
         if (user?.familyId) {
-          await fetchStatus(user.familyId);
+          fetchStatus(user.familyId).catch(() => {});
         }
         Alert.alert(
           "Welcome to Premium!",
@@ -122,8 +139,9 @@ export default function PaywallScreen() {
     try {
       const customerInfo = await subscriptionService.restorePurchases();
       if (customerInfo?.entitlements?.active?.premium) {
+        activatePremium();
         if (user?.familyId) {
-          await fetchStatus(user.familyId);
+          fetchStatus(user.familyId).catch(() => {});
         }
         Alert.alert(
           "Restored!",

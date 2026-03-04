@@ -15,6 +15,7 @@ interface SubscriptionState {
 
   isPremium: () => boolean;
   fetchStatus: (familyId: string) => Promise<void>;
+  activatePremium: () => void;
   reset: () => void;
 }
 
@@ -52,6 +53,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       set({ loaded: true });
     }
   },
+
+  activatePremium: () =>
+    set({
+      plan: 'premium',
+      subscriptionStatus: 'active',
+      isActive: true,
+      willRenew: true,
+      loaded: true,
+    }),
 
   reset: () =>
     set({

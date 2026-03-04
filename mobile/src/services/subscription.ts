@@ -29,11 +29,17 @@ export const subscriptionService = {
         android: Config.REVENUECAT_GOOGLE_KEY || '',
       });
 
-      if (!apiKey) return;
+      console.log('[RevenueCat] API key present:', !!apiKey, 'length:', apiKey?.length);
+
+      if (!apiKey) {
+        console.warn('[RevenueCat] No API key found — skipping init');
+        return;
+      }
 
       Purchases.configure({ apiKey });
+      console.log('[RevenueCat] Configured successfully');
     } catch (e) {
-      console.warn('Failed to initialize RevenueCat:', e);
+      console.warn('[RevenueCat] Failed to initialize:', e);
     }
   },
 
@@ -59,8 +65,15 @@ export const subscriptionService = {
   getOfferings: async (): Promise<PurchasesOfferings | null> => {
     try {
       const offerings = await Purchases.getOfferings();
+      console.log('[RevenueCat] Offerings loaded:', JSON.stringify({
+        hasCurrent: !!offerings?.current,
+        currentId: offerings?.current?.identifier,
+        packageCount: offerings?.current?.availablePackages?.length,
+        packages: offerings?.current?.availablePackages?.map(p => p.packageType),
+      }));
       return offerings;
-    } catch {
+    } catch (e) {
+      console.error('[RevenueCat] Failed to load offerings:', e);
       return null;
     }
   },
