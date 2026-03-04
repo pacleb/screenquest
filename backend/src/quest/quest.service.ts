@@ -273,6 +273,14 @@ export class QuestService {
     });
   }
 
+  async getQuestCountInfo(familyId: string): Promise<{ activeQuests: number; limit: number | null }> {
+    const [activeQuests, isPremium] = await Promise.all([
+      this.getActiveQuestCount(familyId),
+      this.subscriptionService.isPremium(familyId),
+    ]);
+    return { activeQuests, limit: isPremium ? null : FREE_PLAN_QUEST_LIMIT };
+  }
+
   // --- Quest Library (read-only for parents) ---
 
   async getLibraryQuests(category?: string) {

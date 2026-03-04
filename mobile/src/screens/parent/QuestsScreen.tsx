@@ -37,7 +37,7 @@ export default function QuestsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("active");
-  const [questCount, setQuestCount] = useState({ activeQuests: 0, limit: 3 });
+  const [questCount, setQuestCount] = useState<{ activeQuests: number; limit: number | null }>({ activeQuests: 0, limit: 3 });
 
   const familyId = user?.familyId;
 
@@ -161,9 +161,9 @@ export default function QuestsScreen() {
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>
           <Text style={styles.counter}>
-            {questCount.activeQuests}/{questCount.limit} quests
+            {questCount.activeQuests}{questCount.limit !== null ? `/${questCount.limit}` : ""} quests
           </Text>
-          {questCount.activeQuests >= questCount.limit && (
+          {questCount.limit !== null && questCount.activeQuests >= questCount.limit && (
             <Text style={styles.upgradeHint}>Upgrade for unlimited</Text>
           )}
         </View>

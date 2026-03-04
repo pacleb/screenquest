@@ -84,8 +84,7 @@ export class QuestController {
   async getCount(
     @Param('familyId') familyId: string,
   ) {
-    const count = await this.questService.getActiveQuestCount(familyId);
-    return { activeQuests: count, limit: 3 };
+    return this.questService.getQuestCountInfo(familyId);
   }
 
   @Get(':questId')
