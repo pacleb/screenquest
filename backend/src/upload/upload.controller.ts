@@ -57,12 +57,12 @@ function validateMagicBytes(buffer: Buffer): boolean {
 
 @ApiTags('Uploads')
 @Controller('uploads')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class UploadController {
   constructor(private storageService: StorageService) {}
 
   @Post('proof')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload proof photo for quest completion' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

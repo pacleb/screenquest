@@ -150,6 +150,7 @@ export async function setupNotificationHandler() {
       id: 'default',
       name: 'Default',
       importance: AndroidImportance.HIGH,
+      sound: 'default',
     });
   }
 
@@ -182,6 +183,15 @@ export async function setupNotificationHandler() {
           channelId: 'default',
           smallIcon: 'ic_launcher',
           pressAction: { id: 'default' },
+          sound: 'default',
+        },
+        ios: {
+          sound: 'default',
+          foregroundPresentationOptions: {
+            alert: true,
+            badge: true,
+            sound: true,
+          },
         },
       });
       // Immediately refresh the relevant screen via EventBus

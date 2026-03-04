@@ -501,7 +501,9 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => openExternalLink("https://screenquest.restdayapps.com/privacy")}
+            onPress={() =>
+              openExternalLink("https://screenquest.restdayapps.com/privacy")
+            }
           >
             <Icon
               name="document-text-outline"
@@ -517,7 +519,9 @@ export default function SettingsScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => openExternalLink("https://screenquest.app/terms")}
+            onPress={() =>
+              openExternalLink("https://screenquest.restdayapps.com/terms")
+            }
           >
             <Icon
               name="shield-checkmark-outline"

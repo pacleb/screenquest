@@ -210,13 +210,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   chip: {
+    height: 30,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
     borderRadius: borderRadius.xl,
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.border,
     marginRight: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   chipActive: {
     backgroundColor: colors.primary,

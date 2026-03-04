@@ -38,7 +38,7 @@ Subscription unlocks premium features including unlimited quests, advanced analy
   ],
   SUPPORT_URL: 'https://screenquest.app/support',
   PRIVACY_URL: 'https://screenquest.restdayapps.com/privacy',
-  TERMS_URL: 'https://screenquest.app/terms',
+  TERMS_URL: 'https://screenquest.restdayapps.com/terms',
   AGE_RATING: '4+',
   CATEGORY_IOS: 'Lifestyle',
   CATEGORY_ANDROID: 'Parenting',
