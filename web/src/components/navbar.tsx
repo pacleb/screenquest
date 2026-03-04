@@ -24,8 +24,8 @@ export function Navbar() {
           <Image
             src="/screenquest-mascot.png"
             alt="ScreenQuest"
-            width={36}
-            height={36}
+            width={48}
+            height={48}
             className="rounded-xl"
           />
           <span className="text-xl font-bold tracking-tight">

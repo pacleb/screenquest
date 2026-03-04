@@ -33,8 +33,8 @@ export function Sidebar() {
         <Image
           src="/screenquest-mascot.png"
           alt="ScreenQuest"
-          width={32}
-          height={32}
+          width={40}
+          height={40}
           className="rounded-lg"
         />
         <span className="text-lg font-bold text-gray-900">ScreenQuest</span>
