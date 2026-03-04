@@ -169,6 +169,11 @@ export async function startNotificationPoller(userId: string) {
   // Request notification permission (critical on iOS)
   permissionGranted = await requestPermission();
 
+  // Clear any stale badge count from previous sessions
+  if (Platform.OS === 'ios') {
+    notifee.setBadgeCount(0).catch(() => {});
+  }
+
   if (__DEV__) {
     console.log(`[NotifPoller] Starting for user ${userId} (permission=${permissionGranted})`);
   }
@@ -240,8 +245,12 @@ async function seedSeenSet(userId: string) {
  */
 async function handleAppStateChange(nextState: AppStateStatus) {
   if (nextState === 'active') {
-    // App came to foreground — re-seed the seen set so that notifications
-    // already delivered by native FCM push aren't shown again by the poller.
+    // App came to foreground — clear the iOS badge so the count resets to 0.
+    if (Platform.OS === 'ios') {
+      notifee.setBadgeCount(0).catch(() => {});
+    }
+    // Re-seed the seen set so that notifications already delivered by native
+    // FCM push aren't shown again by the poller.
     if (currentUserId) {
       await seedSeenSet(currentUserId);
     }

@@ -402,12 +402,13 @@ export default function ApprovalsScreen() {
               </View>
             </View>
 
-            {/* Proof image thumbnail */}
+            {/* Proof image */}
             {completion.proofImageUrl && (
-              <View style={styles.proofRow}>
+              <View style={styles.proofContainer}>
                 <Image
                   source={{ uri: completion.proofImageUrl }}
-                  style={styles.proofThumb}
+                  style={styles.proofImage}
+                  resizeMode="cover"
                 />
                 <Text style={styles.proofLabel}>Proof photo submitted</Text>
               </View>
@@ -624,14 +625,15 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginTop: 2,
   },
-  proofRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
+  proofContainer: {
     marginBottom: spacing.sm,
   },
-  proofThumb: { width: 48, height: 48, borderRadius: borderRadius.sm },
-  proofLabel: { fontSize: 12, color: colors.textSecondary },
+  proofImage: {
+    width: "100%",
+    aspectRatio: 4 / 3,
+    borderRadius: borderRadius.md,
+  },
+  proofLabel: { fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs },
   noteRow: { flexDirection: "row", gap: spacing.xs, marginBottom: spacing.sm },
   noteLabel: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   noteText: { fontSize: 12, color: colors.textSecondary, flex: 1 },

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
@@ -20,9 +21,13 @@ export function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white font-bold text-lg">
-            S
-          </div>
+          <Image
+            src="/screenquest-mascot.png"
+            alt="ScreenQuest"
+            width={36}
+            height={36}
+            className="rounded-xl"
+          />
           <span className="text-xl font-bold tracking-tight">
             Screen<span className="text-brand-600">Quest</span>
           </span>

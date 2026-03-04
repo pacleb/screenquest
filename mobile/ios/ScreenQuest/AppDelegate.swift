@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseMessaging
 import React
 import ReactAppDependencyProvider
+import UserNotifications
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -50,6 +51,17 @@ public class AppDelegate: ExpoAppDelegate {
     Messaging.messaging().setAPNSToken(deviceToken, type: .prod)
     #endif
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  // Ensure foreground notifications always present with sound, banner, and badge.
+  // ExpoAppDelegate intercepts UNUserNotificationCenterDelegate and omits .sound,
+  // causing push notifications to vibrate but play no sound when the app is open.
+  public func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .sound, .badge])
   }
 
   // Linking API

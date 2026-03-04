@@ -103,7 +103,7 @@ export class NotificationService implements OnModuleInit {
       apns: {
         headers: { 'apns-priority': '10' },
         payload: {
-          aps: { sound: 'default', badge: 1, 'content-available': 1, 'mutable-content': 1 },
+          aps: { sound: 'default', 'content-available': 1, 'mutable-content': 1 },
         },
       },
     }));
@@ -178,10 +178,15 @@ export class NotificationService implements OnModuleInit {
     });
 
     // Also try FCM push — include the in-app notification ID so mobile can deduplicate
-    const tokens = await this.prisma.pushToken.findMany({
-      where: { userId },
-      select: { token: true },
-    });
+    const [tokens, unreadCount] = await Promise.all([
+      this.prisma.pushToken.findMany({
+        where: { userId },
+        select: { token: true },
+      }),
+      this.prisma.inAppNotification.count({
+        where: { userId, read: false },
+      }),
+    ]);
 
     if (tokens.length === 0) {
       this.logger.debug(`No push tokens for user ${userId} — in-app notification stored, no FCM sent`);
@@ -195,10 +200,11 @@ export class NotificationService implements OnModuleInit {
       data: { ...(payload.data || {}), notificationId: inAppNotif.id },
     };
 
-    this.logger.log(`Sending push "${payload.title}" to user ${userId} (${tokens.length} token(s))`);
+    this.logger.log(`Sending push "${payload.title}" to user ${userId} (${tokens.length} token(s), badge=${unreadCount})`);
     await this.sendFCM(
       tokens.map((t: { token: string }) => t.token),
       fcmPayload,
+      unreadCount,
     );
   }
 
@@ -355,7 +361,7 @@ export class NotificationService implements OnModuleInit {
   /**
    * Send push notifications via Firebase Cloud Messaging
    */
-  private async sendFCM(tokens: string[], payload: PushPayload) {
+  private async sendFCM(tokens: string[], payload: PushPayload, badge = 1) {
     if (!this.fcmEnabled) {
       this.logger.debug('FCM disabled — skipping push notification');
       return;
@@ -382,7 +388,7 @@ export class NotificationService implements OnModuleInit {
         payload: {
           aps: {
             sound: 'default',
-            badge: 1,
+            badge,
             'content-available': 1,
             'mutable-content': 1,
           },
