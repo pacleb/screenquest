@@ -33,6 +33,7 @@ BUMP=""
 EXPLICIT_VERSION=""
 EXPLICIT_BUILD=""
 SKIP_UPLOAD=false
+USE_STAGING=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -40,6 +41,7 @@ while [[ $# -gt 0 ]]; do
     --version)    EXPLICIT_VERSION="$2"; shift 2 ;;
     --build)      EXPLICIT_BUILD="$2"; shift 2 ;;
     --skip-upload) SKIP_UPLOAD=true; shift ;;
+    --staging)    USE_STAGING=true; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -115,7 +117,11 @@ echo "📝 Updating Info.plist..."
 # ── Set ENVFILE for react-native-config ──────────────────
 # Ensures the production .env file is used for Release builds,
 # so API_URL points to the production backend (not localhost).
-export ENVFILE="$SCRIPT_DIR/../.env.production"
+if [[ "$USE_STAGING" == true ]]; then
+  export ENVFILE="$SCRIPT_DIR/../.env.staging"
+else
+  export ENVFILE="$SCRIPT_DIR/../.env.production"
+fi
 echo "🔧 ENVFILE set to $ENVFILE"
 
 # ── Clean previous archive artifacts ────────────────────
