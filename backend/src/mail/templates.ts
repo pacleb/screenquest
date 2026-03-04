@@ -25,7 +25,9 @@ function layout(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #6B2FA0 0%, #4A1D73 100%); padding:32px 40px; text-align:center;">
-              <img src="${process.env.FRONTEND_URL || 'https://screenquest.restdayapps.com'}/screenquest-mascot.png" alt="ScreenQuest" width="64" height="64" style="display:inline-block; width:64px; height:64px; border-radius:16px; margin-bottom:12px;" />
+              <div style="display:inline-block; background-color:#f6f0fa; border-radius:20px; padding:6px; margin-bottom:12px;">
+                <img src="${process.env.FRONTEND_URL || 'https://screenquest.restdayapps.com'}/screenquest-mascot.png" alt="ScreenQuest" width="64" height="64" style="display:block; width:64px; height:64px; border-radius:14px;" />
+              </div>
               <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:-0.5px;">ScreenQuest</h1>
               <p style="margin:6px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">Earn screen time through real-world quests</p>
             </td>
