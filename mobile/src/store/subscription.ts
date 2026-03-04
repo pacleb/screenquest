@@ -49,6 +49,21 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         period: status.period,
         loaded: true,
       });
+
+      // If backend says free, verify directly with RevenueCat as a fallback.
+      // This handles cases where the webhook hasn't been received yet (common
+      // in sandbox/TestFlight) or webhook delivery failed entirely.
+      if (!status.isActive) {
+        const hasPremium = await subscriptionService.checkEntitlement();
+        if (hasPremium) {
+          set({
+            plan: 'premium',
+            subscriptionStatus: 'active',
+            isActive: true,
+            willRenew: true,
+          });
+        }
+      }
     } catch {
       set({ loaded: true });
     }
