@@ -75,17 +75,9 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
               period: updated.period,
               loaded: true,
             });
-          } else {
-            // Sync unavailable (no secret key configured, network error, etc.)
-            // — fall back to optimistic local state so the UI works.
-            set({
-              plan: 'premium',
-              subscriptionStatus: 'active',
-              isActive: true,
-              willRenew: true,
-              questLimit: null,
-            });
-          }
+          // If sync failed, do nothing — keep the backend's free state.
+          // Do not optimistically grant Premium; the entitlement cannot be
+          // confirmed server-side and this causes false Premium on new accounts.
         }
       }
     } catch {
