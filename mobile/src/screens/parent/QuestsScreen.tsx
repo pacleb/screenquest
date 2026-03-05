@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
+import { useSubscriptionStore } from "../../store/subscription";
 import { questService, Quest } from "../../services/quest";
 import { colors, spacing, borderRadius, typography } from "../../theme";
 import { useAutoRefresh } from "../../hooks/useAutoRefresh";
@@ -40,6 +41,7 @@ export default function QuestsScreen() {
   const [questCount, setQuestCount] = useState<{ activeQuests: number; limit: number | null }>({ activeQuests: 0, limit: 3 });
 
   const familyId = user?.familyId;
+  const subQuestLimit = useSubscriptionStore((s) => s.questLimit);
 
   const fetchQuests = useCallback(async () => {
     if (!familyId) return;
@@ -161,9 +163,9 @@ export default function QuestsScreen() {
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>
           <Text style={styles.counter}>
-            {questCount.activeQuests}{questCount.limit !== null ? `/${questCount.limit}` : ""} quests
+            {questCount.activeQuests}{subQuestLimit !== null ? `/${subQuestLimit}` : ""} quests
           </Text>
-          {questCount.limit !== null && questCount.activeQuests >= questCount.limit && (
+          {subQuestLimit !== null && questCount.activeQuests >= subQuestLimit && (
             <Text style={styles.upgradeHint}>Upgrade for unlimited</Text>
           )}
         </View>
