@@ -56,12 +56,36 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       if (!status.isActive) {
         const hasPremium = await subscriptionService.checkEntitlement();
         if (hasPremium) {
-          set({
-            plan: 'premium',
-            subscriptionStatus: 'active',
-            isActive: true,
-            willRenew: true,
-          });
+          // Ask the backend to sync with RevenueCat's REST API so that
+          // server-side enforcement (quest limits, etc.) also reflects premium.
+          const synced = await subscriptionService.syncFromRevenueCat(familyId);
+          if (synced) {
+            // Re-fetch so the store reflects the server's updated state
+            // (including questLimit: null).
+            const updated = await subscriptionService.getSubscriptionStatus(familyId);
+            set({
+              plan: updated.plan,
+              subscriptionStatus: updated.subscriptionStatus,
+              isActive: updated.isActive,
+              expiresAt: updated.expiresAt,
+              gracePeriodEndsAt: updated.gracePeriodEndsAt,
+              activeQuestCount: updated.activeQuestCount,
+              questLimit: updated.questLimit,
+              willRenew: updated.willRenew,
+              period: updated.period,
+              loaded: true,
+            });
+          } else {
+            // Sync unavailable (no secret key configured, network error, etc.)
+            // — fall back to optimistic local state so the UI works.
+            set({
+              plan: 'premium',
+              subscriptionStatus: 'active',
+              isActive: true,
+              willRenew: true,
+              questLimit: null,
+            });
+          }
         }
       }
     } catch {

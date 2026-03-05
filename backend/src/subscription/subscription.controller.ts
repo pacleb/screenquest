@@ -67,6 +67,33 @@ export class SubscriptionController {
   }
 
   /**
+   * Sync subscription status directly from RevenueCat REST API.
+   * Called by the mobile app when RevenueCat SDK reports premium but the backend
+   * does not (common in sandbox/TestFlight where webhooks may be delayed or
+   * sandbox subscriptions expire before the next backend check).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('families/:familyId/subscription/sync')
+  @HttpCode(200)
+  async syncSubscription(
+    @Param('familyId') familyId: string,
+    @Request() req: any,
+  ) {
+    if (req.user.familyId !== familyId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const secretKey = this.configService.get<string>('REVENUECAT_SECRET_KEY');
+    if (!secretKey) {
+      this.logger.warn('REVENUECAT_SECRET_KEY not configured — sync skipped');
+      return { synced: false };
+    }
+
+    const synced = await this.subscriptionService.syncFromRevenueCat(familyId, secretKey);
+    return { synced };
+  }
+
+  /**
    * Parent chooses which quests to keep after premium expiration
    */
   @UseGuards(JwtAuthGuard)

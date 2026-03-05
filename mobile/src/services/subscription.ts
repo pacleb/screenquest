@@ -113,6 +113,17 @@ export const subscriptionService = {
     return data;
   },
 
+  syncFromRevenueCat: async (familyId: string): Promise<boolean> => {
+    try {
+      const { data } = await api.post<{ synced: boolean }>(
+        `/families/${familyId}/subscription/sync`,
+      );
+      return data.synced;
+    } catch {
+      return false;
+    }
+  },
+
   archiveQuests: async (familyId: string, keepQuestIds: string[]) => {
     await api.post(`/families/${familyId}/subscription/archive-quests`, {
       keepQuestIds,

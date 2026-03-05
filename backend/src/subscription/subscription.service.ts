@@ -236,6 +236,58 @@ export class SubscriptionService {
     });
   }
 
+  async syncFromRevenueCat(familyId: string, secretKey: string): Promise<boolean> {
+    const family = await this.prisma.family.findUnique({ where: { id: familyId } });
+    if (!family) return false;
+
+    const appUserId = family.revenuecatAppUserId || familyId;
+
+    let subscriberData: any;
+    try {
+      const response = await fetch(
+        `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`,
+        { headers: { Authorization: `Bearer ${secretKey}` } },
+      );
+      if (!response.ok) {
+        this.logger.warn(`RevenueCat sync: API returned ${response.status} for family ${familyId}`);
+        return false;
+      }
+      subscriberData = await response.json();
+    } catch (e) {
+      this.logger.warn(`RevenueCat sync: fetch failed for family ${familyId}: ${e}`);
+      return false;
+    }
+
+    const entitlement = subscriberData?.subscriber?.entitlements?.premium;
+    if (!entitlement || !entitlement.expires_date) {
+      this.logger.log(`RevenueCat sync: no active premium entitlement for family ${familyId}`);
+      return false;
+    }
+
+    const expiresAt = new Date(entitlement.expires_date);
+    if (expiresAt <= new Date()) {
+      this.logger.log(`RevenueCat sync: entitlement expired at ${expiresAt.toISOString()} for family ${familyId}`);
+      return false;
+    }
+
+    const productId = entitlement.product_identifier ?? '';
+    const period = productId.includes('yearly') || productId.includes('annual') ? 'yearly' : 'monthly';
+
+    await this.prisma.family.update({
+      where: { id: familyId },
+      data: {
+        plan: 'premium',
+        subscriptionStatus: 'active',
+        subscriptionExpiresAt: expiresAt,
+        subscriptionPeriod: period,
+        gracePeriodEndsAt: null,
+      },
+    });
+
+    this.logger.log(`RevenueCat sync: updated family ${familyId} to premium, expires ${expiresAt.toISOString()}`);
+    return true;
+  }
+
   // Avatar pack purchases
   async purchaseAvatarPack(userId: string, packId: string) {
     return this.prisma.avatarPackPurchase.create({
