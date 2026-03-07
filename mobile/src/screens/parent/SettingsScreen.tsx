@@ -212,23 +212,58 @@ export default function SettingsScreen() {
           </View>
 
           {sub.isActive ? (
-            <TouchableOpacity
-              style={styles.subButton}
-              onPress={() => {
-                if (Platform.OS === "ios") {
-                  openExternalLink(
-                    "https://apps.apple.com/account/subscriptions",
-                  );
-                } else {
-                  openExternalLink(
-                    "https://play.google.com/store/account/subscriptions",
-                  );
-                }
-              }}
-            >
-              <Icon name="open-outline" size={16} color={colors.primary} />
-              <Text style={styles.subButtonText}>Manage Subscription</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.subButton}
+                onPress={() => {
+                  if (Platform.OS === "ios") {
+                    openExternalLink(
+                      "https://apps.apple.com/account/subscriptions",
+                    );
+                  } else {
+                    openExternalLink(
+                      "https://play.google.com/store/account/subscriptions",
+                    );
+                  }
+                }}
+              >
+                <Icon name="open-outline" size={16} color={colors.primary} />
+                <Text style={styles.subButtonText}>Manage Subscription</Text>
+              </TouchableOpacity>
+              {sub.willRenew && (
+                <TouchableOpacity
+                  style={styles.cancelSubButton}
+                  onPress={() => {
+                    Alert.alert(
+                      "Cancel Subscription",
+                      "You'll be taken to " +
+                        (Platform.OS === "ios" ? "the App Store" : "Google Play") +
+                        " to cancel your subscription. Your premium access remains active until the end of the current billing period.",
+                      [
+                        { text: "Not Now", style: "cancel" },
+                        {
+                          text: "Continue",
+                          style: "destructive",
+                          onPress: () => {
+                            if (Platform.OS === "ios") {
+                              openExternalLink(
+                                "https://apps.apple.com/account/subscriptions",
+                              );
+                            } else {
+                              openExternalLink(
+                                "https://play.google.com/store/account/subscriptions",
+                              );
+                            }
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                >
+                  <Text style={styles.cancelSubText}>Cancel Subscription</Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : (
             <TouchableOpacity
               style={[styles.subButton, styles.upgradeButton]}
@@ -801,6 +836,16 @@ const styles = StyleSheet.create({
   upgradeButton: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  cancelSubButton: {
+    alignItems: "center",
+    paddingVertical: spacing.sm,
+  },
+  cancelSubText: {
+    fontFamily: fonts.parent.medium,
+    fontSize: 13,
+    color: colors.error,
+    textDecorationLine: "underline",
   },
   restoreButton: {
     alignItems: "center",
