@@ -75,6 +75,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
               period: updated.period,
               loaded: true,
             });
+          }
           // If sync failed, do nothing — keep the backend's free state.
           // Do not optimistically grant Premium; the entitlement cannot be
           // confirmed server-side and this causes false Premium on new accounts.
