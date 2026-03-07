@@ -81,9 +81,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
           });
         } else {
           // RevenueCat confirms premium but backend sync failed (e.g. webhook
-          // delay in sandbox). Don't overwrite the optimistic premium state —
-          // just mark as loaded.
-          set({ loaded: true });
+          // delay in sandbox). Grant premium optimistically so the UI is correct.
+          set({
+            plan: 'premium',
+            subscriptionStatus: 'active',
+            isActive: true,
+            willRenew: true,
+            questLimit: null,
+            loaded: true,
+          });
         }
         return;
       }
@@ -112,6 +118,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       subscriptionStatus: 'active',
       isActive: true,
       willRenew: true,
+      questLimit: null,
       loaded: true,
     }),
 

@@ -16,7 +16,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { PurchasesPackage } from "react-native-purchases";
 import { subscriptionService } from "../../services/subscription";
 import { useSubscriptionStore } from "../../store/subscription";
-import { useAuthStore } from "../../store/auth";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Button, Card } from "../../components";
 
@@ -48,9 +47,7 @@ const FEATURES = [
 
 export default function PaywallScreen() {
   const navigation = useNavigation<any>();
-  const user = useAuthStore((s) => s.user);
   const { isActive } = useSubscriptionStore();
-  const fetchStatus = useSubscriptionStore((s) => s.fetchStatus);
   const activatePremium = useSubscriptionStore((s) => s.activatePremium);
 
   const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("yearly");
@@ -111,16 +108,10 @@ export default function PaywallScreen() {
     try {
       const customerInfo = await subscriptionService.purchasePackage(pkg);
       if (customerInfo) {
-        const hasPremium = !!customerInfo.entitlements.active['premium'];
-        if (hasPremium) {
-          // Optimistically update local state — webhook may not have reached
-          // the backend yet (common in sandbox/TestFlight environments)
-          activatePremium();
-        }
-        // Sync with backend in background (no await — don't block the UI)
-        if (user?.familyId) {
-          fetchStatus(user.familyId).catch(() => {});
-        }
+        // A non-null customerInfo means the App Store accepted the transaction.
+        // Activate premium immediately — don't wait for the backend webhook,
+        // which can be delayed (especially in sandbox/TestFlight).
+        activatePremium();
         Alert.alert(
           "Welcome to Premium!",
           "You now have access to all ScreenQuest features.",
@@ -140,9 +131,6 @@ export default function PaywallScreen() {
       const customerInfo = await subscriptionService.restorePurchases();
       if (customerInfo?.entitlements?.active?.premium) {
         activatePremium();
-        if (user?.familyId) {
-          fetchStatus(user.familyId).catch(() => {});
-        }
         Alert.alert(
           "Restored!",
           "Your premium subscription has been restored.",
