@@ -230,7 +230,7 @@ export default function SettingsScreen() {
                 <Icon name="open-outline" size={16} color={colors.primary} />
                 <Text style={styles.subButtonText}>Manage Subscription</Text>
               </TouchableOpacity>
-              {sub.willRenew && (
+              {sub.subscriptionStatus !== 'cancelled' && (
                 <TouchableOpacity
                   style={styles.cancelSubButton}
                   onPress={() => {

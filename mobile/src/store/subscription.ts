@@ -37,6 +37,58 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     try {
       const status: SubscriptionStatus =
         await subscriptionService.getSubscriptionStatus(familyId);
+
+      // If backend already confirms premium, apply immediately.
+      if (status.isActive) {
+        set({
+          plan: status.plan,
+          subscriptionStatus: status.subscriptionStatus,
+          isActive: status.isActive,
+          expiresAt: status.expiresAt,
+          gracePeriodEndsAt: status.gracePeriodEndsAt,
+          activeQuestCount: status.activeQuestCount,
+          questLimit: status.questLimit,
+          willRenew: status.willRenew,
+          period: status.period,
+          loaded: true,
+        });
+        return;
+      }
+
+      // Backend says not active. Before overwriting local state (which may
+      // contain an optimistic premium activation), check RevenueCat directly.
+      // This handles webhook delays common in sandbox/TestFlight.
+      const hasPremium = await subscriptionService.checkEntitlement();
+      if (hasPremium) {
+        // Ask the backend to sync with RevenueCat's REST API so that
+        // server-side enforcement (quest limits, etc.) also reflects premium.
+        const synced = await subscriptionService.syncFromRevenueCat(familyId);
+        if (synced) {
+          // Re-fetch so the store reflects the server's updated state
+          // (including questLimit: null).
+          const updated = await subscriptionService.getSubscriptionStatus(familyId);
+          set({
+            plan: updated.plan,
+            subscriptionStatus: updated.subscriptionStatus,
+            isActive: updated.isActive,
+            expiresAt: updated.expiresAt,
+            gracePeriodEndsAt: updated.gracePeriodEndsAt,
+            activeQuestCount: updated.activeQuestCount,
+            questLimit: updated.questLimit,
+            willRenew: updated.willRenew,
+            period: updated.period,
+            loaded: true,
+          });
+        } else {
+          // RevenueCat confirms premium but backend sync failed (e.g. webhook
+          // delay in sandbox). Don't overwrite the optimistic premium state —
+          // just mark as loaded.
+          set({ loaded: true });
+        }
+        return;
+      }
+
+      // Neither backend nor RevenueCat confirm premium — apply the free state.
       set({
         plan: status.plan,
         subscriptionStatus: status.subscriptionStatus,
@@ -49,38 +101,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         period: status.period,
         loaded: true,
       });
-
-      // If backend says free, verify directly with RevenueCat as a fallback.
-      // This handles cases where the webhook hasn't been received yet (common
-      // in sandbox/TestFlight) or webhook delivery failed entirely.
-      if (!status.isActive) {
-        const hasPremium = await subscriptionService.checkEntitlement();
-        if (hasPremium) {
-          // Ask the backend to sync with RevenueCat's REST API so that
-          // server-side enforcement (quest limits, etc.) also reflects premium.
-          const synced = await subscriptionService.syncFromRevenueCat(familyId);
-          if (synced) {
-            // Re-fetch so the store reflects the server's updated state
-            // (including questLimit: null).
-            const updated = await subscriptionService.getSubscriptionStatus(familyId);
-            set({
-              plan: updated.plan,
-              subscriptionStatus: updated.subscriptionStatus,
-              isActive: updated.isActive,
-              expiresAt: updated.expiresAt,
-              gracePeriodEndsAt: updated.gracePeriodEndsAt,
-              activeQuestCount: updated.activeQuestCount,
-              questLimit: updated.questLimit,
-              willRenew: updated.willRenew,
-              period: updated.period,
-              loaded: true,
-            });
-          }
-          // If sync failed, do nothing — keep the backend's free state.
-          // Do not optimistically grant Premium; the entitlement cannot be
-          // confirmed server-side and this causes false Premium on new accounts.
-        }
-      }
     } catch {
       set({ loaded: true });
     }
