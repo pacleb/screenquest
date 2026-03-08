@@ -16,6 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { PurchasesPackage } from "react-native-purchases";
 import { subscriptionService } from "../../services/subscription";
 import { useSubscriptionStore } from "../../store/subscription";
+import { useAuthStore } from "../../store/auth";
 import { colors, spacing, borderRadius, fonts, typography } from "../../theme";
 import { Button, Card } from "../../components";
 
@@ -47,8 +48,10 @@ const FEATURES = [
 
 export default function PaywallScreen() {
   const navigation = useNavigation<any>();
+  const user = useAuthStore((s) => s.user);
   const { isActive } = useSubscriptionStore();
   const activatePremium = useSubscriptionStore((s) => s.activatePremium);
+  const fetchStatus = useSubscriptionStore((s) => s.fetchStatus);
 
   const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("yearly");
   const [packages, setPackages] = useState<{
@@ -115,7 +118,17 @@ export default function PaywallScreen() {
         Alert.alert(
           "Welcome to Premium!",
           "You now have access to all ScreenQuest features.",
-          [{ text: "OK", onPress: () => navigation.goBack() }],
+          [{
+            text: "OK",
+            onPress: () => {
+              navigation.goBack();
+              // Sync backend after navigating away so premium features are
+              // enforced server-side (quest limits, photo proof, etc.)
+              if (user?.familyId) {
+                fetchStatus(user.familyId).catch(() => {});
+              }
+            },
+          }],
         );
       }
     } catch {
@@ -134,7 +147,15 @@ export default function PaywallScreen() {
         Alert.alert(
           "Restored!",
           "Your premium subscription has been restored.",
-          [{ text: "OK", onPress: () => navigation.goBack() }],
+          [{
+            text: "OK",
+            onPress: () => {
+              navigation.goBack();
+              if (user?.familyId) {
+                fetchStatus(user.familyId).catch(() => {});
+              }
+            },
+          }],
         );
       } else {
         Alert.alert(
