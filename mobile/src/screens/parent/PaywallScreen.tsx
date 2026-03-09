@@ -5,9 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
-  Linking,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -120,13 +118,13 @@ export default function PaywallScreen() {
           "You now have access to all ScreenQuest features.",
           [{
             text: "OK",
-            onPress: () => {
-              navigation.goBack();
-              // Sync backend after navigating away so premium features are
-              // enforced server-side (quest limits, photo proof, etc.)
+            onPress: async () => {
+              // Sync backend before navigating so server-side limits are
+              // lifted by the time the user tries to use premium features.
               if (user?.familyId) {
-                fetchStatus(user.familyId).catch(() => {});
+                await fetchStatus(user.familyId).catch(() => {});
               }
+              navigation.goBack();
             },
           }],
         );

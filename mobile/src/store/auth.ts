@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as Keychain from 'react-native-keychain';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, UserProfile } from '../services/auth';
+import { useSubscriptionStore } from './subscription';
 
 const USER_CACHE_KEY = 'sq:user';
 
@@ -137,6 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await deleteToken('refreshToken');
     await clearCachedUser();
     set({ user: null, isAuthenticated: false });
+    useSubscriptionStore.getState().reset();
   },
 
   setUser: (user) => {
