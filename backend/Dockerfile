@@ -17,6 +17,7 @@ COPY shared/ shared/
 
 # Dummy DATABASE_URL so Prisma's postinstall schema validation passes at build time
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DIRECT_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Install dependencies (prisma postinstall runs generate automatically)
 RUN pnpm install --frozen-lockfile --filter @screenquest/backend...
@@ -48,6 +49,7 @@ COPY shared/package.json shared/package.json
 # Dummy DATABASE_URL so Prisma's postinstall schema validation passes at build time
 # Use ARG (not ENV) so this does NOT persist to runtime — Render injects the real URL
 ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ARG DIRECT_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Install production deps only
 RUN pnpm install --frozen-lockfile --prod --filter @screenquest/backend...

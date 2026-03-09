@@ -13,9 +13,9 @@ services:
       - key: PORT
         value: "3000"
       - key: DATABASE_URL
-        fromDatabase:
-          name: screenquest-db
-          property: connectionString
+        sync: false  # Set to Supabase pooled connection string (port 6543)
+      - key: DIRECT_URL
+        sync: false  # Set to Supabase direct connection string (port 5432)
       - key: REDIS_URL
         fromService:
           name: screenquest-redis
@@ -45,10 +45,5 @@ services:
         sync: false  # JSON-stringified Firebase service account — required for FCM push notifications
 
 databases:
-  - name: screenquest-db
-    plan: free
-    databaseName: screenquest
-    user: screenquest
-
   - name: screenquest-redis
     plan: free

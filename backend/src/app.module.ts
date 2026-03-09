@@ -26,10 +26,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppLoggingModule } from './common/logging/logging.module';
 import { AnalyticsModule } from './common/analytics/analytics.module';
 import { MetricsModule } from './common/metrics/metrics.module';
+import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AppLoggingModule,

@@ -4,15 +4,16 @@
 
 ### Required
 
-| Variable             | Description                  | Example                                             |
-| -------------------- | ---------------------------- | --------------------------------------------------- |
-| `DATABASE_URL`       | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/screenquest` |
-| `REDIS_URL`          | Redis connection string      | `redis://localhost:6379`                            |
-| `JWT_SECRET`         | Access token signing secret  | (random string, 32+ chars)                          |
-| `JWT_REFRESH_SECRET` | Refresh token signing secret | (random string, 32+ chars)                          |
-| `APP_URL`            | Backend API URL              | `https://api.screenquest.app`                       |
-| `FRONTEND_URL`       | Mobile app URL (for CORS)    | `http://localhost:8081`                             |
-| `EMAIL_FROM`         | Sender email address         | `noreply@screenquest.app`                           |
+| Variable             | Description                                | Example                                                                     |
+| -------------------- | ------------------------------------------ | --------------------------------------------------------------------------- |
+| `DATABASE_URL`       | PostgreSQL connection string               | `postgresql://user:pass@localhost:5432/screenquest`                         |
+| `DIRECT_URL`         | Direct DB connection (Supabase migrations) | Same as `DATABASE_URL` for local; direct Supabase URL (port 5432) for cloud |
+| `REDIS_URL`          | Redis connection string                    | `redis://localhost:6379`                                                    |
+| `JWT_SECRET`         | Access token signing secret                | (random string, 32+ chars)                                                  |
+| `JWT_REFRESH_SECRET` | Refresh token signing secret               | (random string, 32+ chars)                                                  |
+| `APP_URL`            | Backend API URL                            | `https://api.screenquest.app`                                               |
+| `FRONTEND_URL`       | Mobile app URL (for CORS)                  | `http://localhost:8081`                                                     |
+| `EMAIL_FROM`         | Sender email address                       | `noreply@screenquest.app`                                                   |
 
 ### Optional
 

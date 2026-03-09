@@ -41,6 +41,7 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: "postgresql://screenquest:screenquest@postgres:5432/screenquest?schema=public"
+      DIRECT_URL: "postgresql://screenquest:screenquest@postgres:5432/screenquest?schema=public"
       REDIS_URL: "redis://redis:6379"
       JWT_SECRET: "dev-jwt-secret-change-in-production"
       JWT_ACCESS_EXPIRY: "15m"
