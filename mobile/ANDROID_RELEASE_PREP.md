@@ -9,6 +9,9 @@ This runbook covers all Android production tasks you can complete outside Google
 - `SENTRY_DSN`
 - `REVENUECAT_GOOGLE_KEY`
 
+Current repo status:
+- Both keys exist as placeholders and still need real production values.
+
 2. Ensure EAS build environment has:
 
 - `SENTRY_AUTH_TOKEN`
@@ -96,6 +99,8 @@ Before rolling out widely:
 - Push notifications arrive foreground/background/killed
 - Subscription purchase and restore flow works (sandbox tester)
 - Account deletion flow still works
+- Privacy policy URL opens: `https://screenquest.restdayapps.com/privacy`
+- Terms URL opens: `https://screenquest.restdayapps.com/terms`
 
 ## 7. Versioning and rollout safety
 

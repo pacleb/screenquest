@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
-  ActivityIndicator,
+              openExternalLink("https://screenquest.restdayapps.com/privacy")
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -232,7 +232,7 @@ export default function SettingsScreen() {
               </TouchableOpacity>
               {sub.subscriptionStatus !== "cancelled" && (
                 <TouchableOpacity
-                  style={styles.cancelSubButton}
+                  openExternalLink("https://screenquest.restdayapps.com/terms")
                   onPress={() => {
                     Alert.alert(
                       "Cancel Subscription",
