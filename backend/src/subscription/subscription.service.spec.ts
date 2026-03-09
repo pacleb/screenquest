@@ -214,6 +214,33 @@ describe('SubscriptionService', () => {
       expect(prisma.family.update).not.toHaveBeenCalled();
     });
 
+    it('handles non-UUID ids (e.g. $RCAnonymousID) without crashing', async () => {
+      prisma.family.update.mockResolvedValue({});
+
+      await service.handleWebhookEvent(
+        makeEvent('INITIAL_PURCHASE', {
+          app_user_id: '550e8400-e29b-41d4-a716-446655440000',
+          original_app_user_id: '$RCAnonymousID:abc123xyz',
+        }),
+      );
+
+      // Non-UUID anonymous IDs should be filtered from the UUID column query
+      expect(prisma.family.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { revenuecatAppUserId: { in: expect.arrayContaining(['$RCAnonymousID:abc123xyz']) } },
+            ]),
+          }),
+        }),
+      );
+      expect(prisma.family.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ plan: 'premium' }),
+        }),
+      );
+    });
+
     it('detects yearly products', async () => {
       prisma.family.update.mockResolvedValue({});
 

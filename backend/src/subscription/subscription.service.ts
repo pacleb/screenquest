@@ -126,10 +126,15 @@ export class SubscriptionService {
 
     // RevenueCat recommends checking app_user_id, original_app_user_id, and aliases.
     // We support all of them to handle identity changes and payload variations.
+    // Filter to valid UUIDs for the `id` column (Postgres rejects non-UUID
+    // strings like "$RCAnonymousID:…" and would throw a 500).
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidCandidates = idCandidates.filter((c) => UUID_RE.test(c));
+
     const family = await this.prisma.family.findFirst({
       where: {
         OR: [
-          { id: { in: idCandidates } },
+          ...(uuidCandidates.length > 0 ? [{ id: { in: uuidCandidates } }] : []),
           { revenuecatAppUserId: { in: idCandidates } },
         ],
       },
