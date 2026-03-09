@@ -34,6 +34,13 @@
 | `POSTHOG_HOST`                | PostHog instance URL       | `https://us.i.posthog.com`   |
 | `REVENUECAT_WEBHOOK_AUTH_KEY` | RevenueCat webhook auth    | (required for subscriptions) |
 
+### Supabase + Prisma Notes
+
+- If `DATABASE_URL` uses Supabase pooler (host includes `pooler.supabase.com`, usually port `6543`), ensure it includes `?pgbouncer=true`.
+- Keep `DIRECT_URL` pointed at Supabase direct Postgres (usually port `5432`) for Prisma migrations.
+- Example pooled runtime URL:
+  `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require`
+
 ## Mobile (`mobile/.env`)
 
 | Variable                | Description                | Default                      |

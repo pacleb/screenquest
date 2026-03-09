@@ -13,7 +13,7 @@ services:
       - key: PORT
         value: "3000"
       - key: DATABASE_URL
-        sync: false  # Set to Supabase pooled connection string (port 6543)
+        sync: false  # Set to Supabase pooled connection string (port 6543) with ?pgbouncer=true
       - key: DIRECT_URL
         sync: false  # Set to Supabase direct connection string (port 5432)
       - key: REDIS_URL
