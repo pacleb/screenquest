@@ -107,6 +107,9 @@ export default function PaywallScreen() {
 
     setPurchasing(true);
     try {
+      if (user?.familyId) {
+        await subscriptionService.identifyUser(user.familyId);
+      }
       const customerInfo = await subscriptionService.purchasePackage(pkg);
       if (customerInfo) {
         // A non-null customerInfo means the App Store accepted the transaction.
@@ -116,17 +119,19 @@ export default function PaywallScreen() {
         Alert.alert(
           "Welcome to Premium!",
           "You now have access to all ScreenQuest features.",
-          [{
-            text: "OK",
-            onPress: async () => {
-              // Sync backend before navigating so server-side limits are
-              // lifted by the time the user tries to use premium features.
-              if (user?.familyId) {
-                await fetchStatus(user.familyId).catch(() => {});
-              }
-              navigation.goBack();
+          [
+            {
+              text: "OK",
+              onPress: async () => {
+                // Sync backend before navigating so server-side limits are
+                // lifted by the time the user tries to use premium features.
+                if (user?.familyId) {
+                  await fetchStatus(user.familyId).catch(() => {});
+                }
+                navigation.goBack();
+              },
             },
-          }],
+          ],
         );
       }
     } catch {
@@ -139,21 +144,26 @@ export default function PaywallScreen() {
   const handleRestore = async () => {
     setRestoring(true);
     try {
+      if (user?.familyId) {
+        await subscriptionService.identifyUser(user.familyId);
+      }
       const customerInfo = await subscriptionService.restorePurchases();
       if (customerInfo?.entitlements?.active?.premium) {
         activatePremium();
         Alert.alert(
           "Restored!",
           "Your premium subscription has been restored.",
-          [{
-            text: "OK",
-            onPress: () => {
-              navigation.goBack();
-              if (user?.familyId) {
-                fetchStatus(user.familyId).catch(() => {});
-              }
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                navigation.goBack();
+                if (user?.familyId) {
+                  fetchStatus(user.familyId).catch(() => {});
+                }
+              },
             },
-          }],
+          ],
         );
       } else {
         Alert.alert(
