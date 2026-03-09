@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
-              openExternalLink("https://screenquest.restdayapps.com/privacy")
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -232,7 +232,7 @@ export default function SettingsScreen() {
               </TouchableOpacity>
               {sub.subscriptionStatus !== "cancelled" && (
                 <TouchableOpacity
-                  openExternalLink("https://screenquest.restdayapps.com/terms")
+                  style={styles.cancelSubButton}
                   onPress={() => {
                     Alert.alert(
                       "Cancel Subscription",
@@ -538,7 +538,9 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => openExternalLink("https://screenquest.app/privacy")}
+            onPress={() =>
+              openExternalLink("https://screenquest.restdayapps.com/privacy")
+            }
           >
             <Icon
               name="document-text-outline"
@@ -554,7 +556,9 @@ export default function SettingsScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => openExternalLink("https://screenquest.app/terms")}
+            onPress={() =>
+              openExternalLink("https://screenquest.restdayapps.com/terms")
+            }
           >
             <Icon
               name="shield-checkmark-outline"
