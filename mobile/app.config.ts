@@ -44,11 +44,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#4A90D9',
     },
+    // Keep Android runtime permissions minimal for Play Families review.
     permissions: [
       'CAMERA',
-      'READ_EXTERNAL_STORAGE',
-      'WRITE_EXTERNAL_STORAGE',
+      'POST_NOTIFICATIONS',
+      'RECORD_AUDIO',
       'VIBRATE',
+    ],
+    blockedPermissions: [
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
     ],
   },
   plugins: [

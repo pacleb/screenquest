@@ -230,14 +230,16 @@ export default function SettingsScreen() {
                 <Icon name="open-outline" size={16} color={colors.primary} />
                 <Text style={styles.subButtonText}>Manage Subscription</Text>
               </TouchableOpacity>
-              {sub.subscriptionStatus !== 'cancelled' && (
+              {sub.subscriptionStatus !== "cancelled" && (
                 <TouchableOpacity
                   style={styles.cancelSubButton}
                   onPress={() => {
                     Alert.alert(
                       "Cancel Subscription",
                       "You'll be taken to " +
-                        (Platform.OS === "ios" ? "the App Store" : "Google Play") +
+                        (Platform.OS === "ios"
+                          ? "the App Store"
+                          : "Google Play") +
                         " to cancel your subscription. Your premium access remains active until the end of the current billing period.",
                       [
                         { text: "Not Now", style: "cancel" },
@@ -536,9 +538,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() =>
-              openExternalLink("https://screenquest.restdayapps.com/privacy")
-            }
+            onPress={() => openExternalLink("https://screenquest.app/privacy")}
           >
             <Icon
               name="document-text-outline"
@@ -554,9 +554,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() =>
-              openExternalLink("https://screenquest.restdayapps.com/terms")
-            }
+            onPress={() => openExternalLink("https://screenquest.app/terms")}
           >
             <Icon
               name="shield-checkmark-outline"
