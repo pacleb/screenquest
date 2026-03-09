@@ -17,6 +17,8 @@ build/
 
 # Service account keys
 **/google-service-account.json
+**/GoogleService-Info.plist
+**/google-services.json
 
 # IDE
 .vscode/
