@@ -76,5 +76,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:3000/api/health || exit 1
 
-# Run migrations then start
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+# Run migrations then start; fail fast if Render env is incomplete.
+CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then echo 'FATAL: DATABASE_URL is not set. Configure it in Render service environment variables.' >&2; exit 1; fi; npx prisma migrate deploy && node dist/main.js"]
