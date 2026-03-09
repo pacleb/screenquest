@@ -15,12 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
+import { useSubscriptionStore } from "../../store/subscription";
 import {
   questService,
   Quest,
   LibraryQuest,
   CreateQuestData,
 } from "../../services/quest";
+import { subscriptionService } from "../../services/subscription";
 import { familyService, FamilyMember } from "../../services/family";
 import { colors, spacing, borderRadius, typography } from "../../theme";
 import { formatTimeLabel, formatTimeCompact } from "../../utils/formatTime";
@@ -89,6 +91,7 @@ export default function QuestEditScreen() {
   const route = useRoute<any>();
   const id = route.params?.id;
   const user = useAuthStore((s) => s.user);
+  const fetchSubscriptionStatus = useSubscriptionStore((s) => s.fetchStatus);
   const familyId = user?.familyId;
 
   const isEditMode = !!id;
@@ -198,6 +201,19 @@ export default function QuestEditScreen() {
     ]);
   };
 
+  const tryRecoverPremiumAndRetryServerSync = async (): Promise<boolean> => {
+    if (!familyId) return false;
+
+    // If RevenueCat confirms premium, ask backend to sync and refresh local state.
+    const hasPremiumEntitlement = await subscriptionService.checkEntitlement();
+    if (!hasPremiumEntitlement) return false;
+
+    await subscriptionService.syncFromRevenueCat(familyId);
+    await fetchSubscriptionStatus(familyId).catch(() => {});
+
+    return useSubscriptionStore.getState().isPremium();
+  };
+
   const handleSave = async () => {
     if (!familyId) return;
 
@@ -242,6 +258,36 @@ export default function QuestEditScreen() {
       navigation.goBack();
     } catch (error: any) {
       if (error.response?.status === 402) {
+        const recovered = await tryRecoverPremiumAndRetryServerSync();
+        if (recovered) {
+          try {
+            const retryData: CreateQuestData = {
+              name: name.trim(),
+              description: description.trim() || undefined,
+              icon,
+              category,
+              rewardSeconds,
+              stackingType,
+              recurrence,
+              requiresProof,
+              autoApprove,
+              assignedChildIds: selectedChildIds,
+            };
+
+            if (isEditMode && id) {
+              await questService.update(familyId, id, retryData);
+            } else {
+              await questService.create(familyId, retryData);
+            }
+
+            eventBus.emit(AppEvents.QUEST_CHANGED);
+            navigation.goBack();
+            return;
+          } catch {
+            // Fall through to the upgrade alert if retry still fails with 402.
+          }
+        }
+
         Alert.alert(
           "Upgrade Required",
           error.response?.data?.message ||
@@ -292,6 +338,22 @@ export default function QuestEditScreen() {
       navigation.goBack();
     } catch (error: any) {
       if (error.response?.status === 402) {
+        const recovered = await tryRecoverPremiumAndRetryServerSync();
+        if (recovered) {
+          try {
+            await questService.createFromLibrary(familyId, lq.id, {
+              rewardSeconds: lq.suggestedRewardSeconds,
+              stackingType: lq.suggestedStackingType,
+              assignedChildIds: selectedChildIds,
+            });
+            eventBus.emit(AppEvents.QUEST_CHANGED);
+            navigation.goBack();
+            return;
+          } catch {
+            // Fall through to the upgrade alert if retry still fails with 402.
+          }
+        }
+
         Alert.alert(
           "Upgrade Required",
           error.response?.data?.message ||

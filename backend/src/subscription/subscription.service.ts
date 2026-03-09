@@ -57,10 +57,14 @@ export class SubscriptionService {
   async isPremium(familyId: string): Promise<boolean> {
     const family = await this.prisma.family.findUnique({
       where: { id: familyId },
-      select: { plan: true, subscriptionExpiresAt: true },
+      select: { plan: true, subscriptionExpiresAt: true, subscriptionStatus: true },
     });
     if (!family) return false;
     if (family.plan !== 'premium') return false;
+    // subscriptionStatus 'active' is set by INITIAL_PURCHASE / RENEWAL webhooks
+    // and is a strong signal the subscription is live, even when
+    // subscriptionExpiresAt is stale due to a missed RENEWAL webhook.
+    if (family.subscriptionStatus === 'active') return true;
     if (!family.subscriptionExpiresAt) return false;
     return family.subscriptionExpiresAt > new Date();
   }
@@ -73,8 +77,9 @@ export class SubscriptionService {
 
     const isActive =
       family.plan === 'premium' &&
-      !!family.subscriptionExpiresAt &&
-      family.subscriptionExpiresAt > new Date();
+      (family.subscriptionStatus === 'active' ||
+        (!!family.subscriptionExpiresAt &&
+          family.subscriptionExpiresAt > new Date()));
 
     const activeQuestCount = await this.prisma.quest.count({
       where: { familyId, isArchived: false },

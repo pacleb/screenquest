@@ -10,6 +10,8 @@ set -euo pipefail
 #   ./build-and-upload.sh --bump patch # bump patch (1.31.0 → 1.31.1)
 #   ./build-and-upload.sh --version 2.0.0 --build 50  # set explicit values
 #   ./build-and-upload.sh --skip-upload  # archive only, don't upload
+#   ./build-and-upload.sh --env staging   # build with .env.staging
+#   BUILD_ENV=production ./build-and-upload.sh  # env via shell var
 #──────────────────────────────────────────────────────────
 
 # ── Config ───────────────────────────────────────────────
@@ -33,7 +35,7 @@ BUMP=""
 EXPLICIT_VERSION=""
 EXPLICIT_BUILD=""
 SKIP_UPLOAD=false
-USE_STAGING=false
+TARGET_ENV="${BUILD_ENV:-production}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,10 +43,19 @@ while [[ $# -gt 0 ]]; do
     --version)    EXPLICIT_VERSION="$2"; shift 2 ;;
     --build)      EXPLICIT_BUILD="$2"; shift 2 ;;
     --skip-upload) SKIP_UPLOAD=true; shift ;;
-    --staging)    USE_STAGING=true; shift ;;
+    --env)        TARGET_ENV="$2"; shift 2 ;;
+    --staging)
+      echo "❌ --staging has been removed. Use --env staging (or BUILD_ENV=staging) instead."
+      exit 1
+      ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
+
+if [[ "$TARGET_ENV" != "staging" && "$TARGET_ENV" != "production" ]]; then
+  echo "❌ Invalid --env value: $TARGET_ENV (use staging or production)"
+  exit 1
+fi
 
 # ── Navigate to ios directory ────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -115,13 +126,14 @@ echo "📝 Updating Info.plist..."
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" "$INFO_PLIST"
 
 # ── Set ENVFILE for react-native-config ──────────────────
-# Ensures the production .env file is used for Release builds,
-# so API_URL points to the production backend (not localhost).
-if [[ "$USE_STAGING" == true ]]; then
+# Environment-specific values are embedded at build time,
+# so pick staging for staging backend tests and production for release.
+if [[ "$TARGET_ENV" == "staging" ]]; then
   export ENVFILE="$SCRIPT_DIR/../.env.staging"
 else
   export ENVFILE="$SCRIPT_DIR/../.env.production"
 fi
+echo "🔧 Build environment: $TARGET_ENV"
 echo "🔧 ENVFILE set to $ENVFILE"
 
 # ── Clean previous archive artifacts ────────────────────
@@ -181,6 +193,7 @@ echo "┌───────────────────────�
 echo "│  Build Complete                          │"
 echo "├─────────────────────────────────────────┤"
 echo "│  Version: $NEW_VERSION (build $NEW_BUILD)"
+echo "│  Env:     $TARGET_ENV"
 echo "│  Archive: $ARCHIVE_PATH"
 if [[ "$SKIP_UPLOAD" == false ]]; then
 echo "│  Status:  Uploaded to App Store Connect  │"

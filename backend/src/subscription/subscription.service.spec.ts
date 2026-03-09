@@ -61,6 +61,17 @@ describe('SubscriptionService', () => {
       expect(await service.isPremium('fam-1')).toBe(false);
     });
 
+    it('returns true when subscriptionStatus is active even if expiry is stale', async () => {
+      const past = new Date(Date.now() - 86400 * 1000);
+      prisma.family.findUnique.mockResolvedValue({
+        plan: 'premium',
+        subscriptionStatus: 'active',
+        subscriptionExpiresAt: past,
+      });
+
+      expect(await service.isPremium('fam-1')).toBe(true);
+    });
+
     it('returns false for non-existent family', async () => {
       prisma.family.findUnique.mockResolvedValue(null);
 
