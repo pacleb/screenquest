@@ -43,6 +43,10 @@ services:
         sync: false  # Comma-separated additional origins (e.g. https://other.vercel.app)
       - key: FIREBASE_SERVICE_ACCOUNT
         sync: false  # JSON-stringified Firebase service account — required for FCM push notifications
+      - key: REVENUECAT_WEBHOOK_AUTH_KEY
+        sync: false  # Set to the auth key configured in RevenueCat webhook settings
+      - key: REVENUECAT_SECRET_KEY
+        sync: false  # RevenueCat secret API key (sk_...) — required for subscription sync
 
 databases:
   - name: screenquest-redis
