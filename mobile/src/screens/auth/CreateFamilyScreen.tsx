@@ -6,9 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
 import { useAuthStore } from "../../store/auth";
 import { familyService } from "../../services/family";
 import { colors, spacing, borderRadius } from "../../theme";
@@ -84,94 +88,111 @@ export default function CreateFamilyScreen() {
 
   return (
     <SafeAreaView style={styles.container} testID="create-family-screen">
-      <View style={styles.content}>
-        <Text style={styles.emoji}>👨‍👩‍👧‍👦</Text>
-        <Text style={styles.title}>Set Up Your Family</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.iconContainer}>
+            <Icon name="people-circle" size={72} color={colors.primary} />
+          </View>
+          <Text style={styles.title}>Set Up Your Family</Text>
 
-        <View style={styles.modeToggle}>
-          <TouchableOpacity
-            style={[styles.modeTab, mode === "create" && styles.modeTabActive]}
-            onPress={() => setMode("create")}
-            testID="family-create-tab"
-          >
-            <Text
-              style={[
-                styles.modeTabText,
-                mode === "create" && styles.modeTabTextActive,
-              ]}
-            >
-              Create New
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeTab, mode === "join" && styles.modeTabActive]}
-            onPress={() => setMode("join")}
-            testID="family-join-tab"
-          >
-            <Text
-              style={[
-                styles.modeTabText,
-                mode === "join" && styles.modeTabTextActive,
-              ]}
-            >
-              Join Family
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {mode === "create" ? (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Family Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="The Smith Family"
-                value={familyName}
-                onChangeText={setFamilyName}
-                autoCapitalize="words"
-                testID="family-name-input"
-              />
-            </View>
-
+          <View style={styles.modeToggle}>
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleCreate}
-              disabled={loading}
-              testID="family-create-btn"
+              style={[
+                styles.modeTab,
+                mode === "create" && styles.modeTabActive,
+              ]}
+              onPress={() => setMode("create")}
+              testID="family-create-tab"
             >
-              <Text style={styles.buttonText}>
-                {loading ? "Creating..." : "Create Family"}
+              <Text
+                style={[
+                  styles.modeTabText,
+                  mode === "create" && styles.modeTabTextActive,
+                ]}
+              >
+                Create New
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeTab, mode === "join" && styles.modeTabActive]}
+              onPress={() => setMode("join")}
+              testID="family-join-tab"
+            >
+              <Text
+                style={[
+                  styles.modeTabText,
+                  mode === "join" && styles.modeTabTextActive,
+                ]}
+              >
+                Join Family
               </Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Family Code</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="ABC12345"
-                value={familyCode}
-                onChangeText={setFamilyCode}
-                autoCapitalize="characters"
-                maxLength={8}
-                testID="family-code-input"
-              />
-            </View>
 
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleJoin}
-              disabled={loading}
-              testID="family-join-btn"
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "Joining..." : "Join Family"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+          {mode === "create" ? (
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Family Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="The Smith Family"
+                  value={familyName}
+                  onChangeText={setFamilyName}
+                  autoCapitalize="words"
+                  testID="family-name-input"
+                  returnKeyType="done"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleCreate}
+                disabled={loading}
+                testID="family-create-btn"
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Creating..." : "Create Family"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Family Code</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="ABC12345"
+                  value={familyCode}
+                  onChangeText={setFamilyCode}
+                  autoCapitalize="characters"
+                  maxLength={8}
+                  testID="family-code-input"
+                  returnKeyType="done"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleJoin}
+                disabled={loading}
+                testID="family-join-btn"
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Joining..." : "Join Family"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -181,14 +202,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  keyboardContainer: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     padding: spacing.lg,
     justifyContent: "center",
   },
-  emoji: {
-    fontSize: 64,
-    textAlign: "center",
+  iconContainer: {
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   title: {

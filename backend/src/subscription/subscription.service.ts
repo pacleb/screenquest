@@ -23,6 +23,37 @@ export class SubscriptionService {
     private redis: RedisService,
   ) {}
 
+  private extractWebhookContext(payload: RevenueCatWebhookEvent) {
+    const rawEvent: any = (payload as any)?.event ?? payload;
+    const aliases: string[] = Array.isArray(rawEvent?.aliases) ? rawEvent.aliases : [];
+    const transferredTo: string[] = Array.isArray(rawEvent?.transferred_to) ? rawEvent.transferred_to : [];
+    const transferredFrom: string[] = Array.isArray(rawEvent?.transferred_from)
+      ? rawEvent.transferred_from
+      : [];
+
+    const candidates = [
+      rawEvent?.app_user_id,
+      rawEvent?.original_app_user_id,
+      ...aliases,
+      ...transferredTo,
+      ...transferredFrom,
+    ]
+      .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+      .map((v) => v.trim());
+
+    // Keep insertion order while removing duplicates.
+    const idCandidates = [...new Set(candidates)];
+
+    return {
+      rawEvent,
+      type: rawEvent?.type as string | undefined,
+      eventId: rawEvent?.id as string | undefined,
+      expirationAtMs: rawEvent?.expiration_at_ms as number | undefined,
+      productId: rawEvent?.product_id as string | undefined,
+      idCandidates,
+    };
+  }
+
   async isPremium(familyId: string): Promise<boolean> {
     const family = await this.prisma.family.findUnique({
       where: { id: familyId },
@@ -63,34 +94,49 @@ export class SubscriptionService {
   }
 
   async handleWebhookEvent(event: RevenueCatWebhookEvent) {
-    const { type, app_user_id, expiration_at_ms, product_id } = event.event;
+    const {
+      rawEvent,
+      type,
+      eventId,
+      expirationAtMs,
+      productId,
+      idCandidates,
+    } = this.extractWebhookContext(event);
 
     // Idempotency: skip duplicate webhook events
-    const eventId = event.event.id || `${type}:${app_user_id}:${expiration_at_ms}`;
-    const idempotencyKey = `webhook:${eventId}`;
+    const eventIdentity = eventId || `${type || 'unknown'}:${idCandidates[0] || 'unknown'}:${expirationAtMs || 'na'}`;
+    const idempotencyKey = `webhook:${eventIdentity}`;
     const already = await this.redis.get(idempotencyKey);
     if (already) {
-      this.logger.log(`Webhook: duplicate event ${eventId}, skipping`);
+      this.logger.log(`Webhook: duplicate event ${eventIdentity}, skipping`);
       return;
     }
 
-    // app_user_id is the familyId we set during RevenueCat identification
+    if (idCandidates.length === 0) {
+      this.logger.warn(
+        `Webhook: no app user id in payload (type=${type || 'unknown'}, keys=${Object.keys(rawEvent || {}).join(',')})`,
+      );
+      return;
+    }
+
+    // RevenueCat recommends checking app_user_id, original_app_user_id, and aliases.
+    // We support all of them to handle identity changes and payload variations.
     const family = await this.prisma.family.findFirst({
       where: {
         OR: [
-          { id: app_user_id },
-          { revenuecatAppUserId: app_user_id },
+          { id: { in: idCandidates } },
+          { revenuecatAppUserId: { in: idCandidates } },
         ],
       },
     });
 
     if (!family) {
-      this.logger.warn(`Webhook: Family not found for app_user_id ${app_user_id}`);
+      this.logger.warn(`Webhook: Family not found for ids [${idCandidates.join(', ')}]`);
       return;
     }
 
-    const expiresAt = expiration_at_ms ? new Date(expiration_at_ms) : null;
-    const period = product_id?.includes('yearly') ? 'yearly' : 'monthly';
+    const expiresAt = expirationAtMs ? new Date(expirationAtMs) : null;
+    const period = productId?.includes('yearly') ? 'yearly' : 'monthly';
 
     switch (type) {
       case 'INITIAL_PURCHASE':
