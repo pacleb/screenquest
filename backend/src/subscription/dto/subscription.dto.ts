@@ -1,3 +1,5 @@
+import { IsOptional, IsString } from 'class-validator';
+
 export class SubscriptionStatusDto {
   plan: string;
   subscriptionStatus: string | null;
@@ -29,6 +31,8 @@ export interface RevenueCatWebhookEvent {
 }
 
 export class SyncSubscriptionDto {
+  @IsOptional()
+  @IsString()
   appUserId?: string;
 }
 
