@@ -84,17 +84,16 @@ export class SubscriptionController {
       throw new ForbiddenException('Access denied');
     }
 
-    const secretKey = this.configService.get<string>('REVENUECAT_SECRET_KEY');
+    // RevenueCat V1 REST API requires the public API key, not the V2 secret key.
     const publicKey = this.configService.get<string>('REVENUECAT_WEBHOOK_AUTH_KEY');
-    const apiKey = secretKey || publicKey;
-    if (!apiKey) {
-      this.logger.warn('No RevenueCat API key configured — sync skipped');
+    if (!publicKey) {
+      this.logger.warn('REVENUECAT_WEBHOOK_AUTH_KEY not configured — sync skipped');
       return { synced: false };
     }
 
     const synced = await this.subscriptionService.syncFromRevenueCat(
       familyId,
-      apiKey,
+      publicKey,
       body?.appUserId,
     );
     return { synced };

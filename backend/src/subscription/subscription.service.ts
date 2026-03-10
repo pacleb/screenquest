@@ -337,13 +337,14 @@ export class SubscriptionService {
     );
 
     const entitlement = entitlements?.premium;
-    if (!entitlement || !entitlement.expires_date) {
-      this.logger.log(`RevenueCat sync: no active premium entitlement for family ${familyId}`);
+    if (!entitlement) {
+      this.logger.log(`RevenueCat sync: no premium entitlement for family ${familyId}`);
       return false;
     }
 
-    const expiresAt = new Date(entitlement.expires_date);
-    if (expiresAt <= new Date()) {
+    // expires_date is null for lifetime / non-renewing purchases — treat as active.
+    const expiresAt = entitlement.expires_date ? new Date(entitlement.expires_date) : null;
+    if (expiresAt && expiresAt <= new Date()) {
       this.logger.log(`RevenueCat sync: entitlement expired at ${expiresAt.toISOString()} for family ${familyId}`);
       return false;
     }
@@ -366,7 +367,7 @@ export class SubscriptionService {
       },
     });
 
-    this.logger.log(`RevenueCat sync: updated family ${familyId} to premium, expires ${expiresAt.toISOString()}`);
+    this.logger.log(`RevenueCat sync: updated family ${familyId} to premium, expires ${expiresAt?.toISOString() ?? 'never (lifetime)'}`);
     return true;
   }
 
