@@ -204,6 +204,9 @@ export default function QuestEditScreen() {
   const tryRecoverPremiumAndRetryServerSync = async (): Promise<boolean> => {
     if (!familyId) return false;
 
+    // Ensure RevenueCat knows this user (logIn may have silently failed earlier)
+    await subscriptionService.identifyUser(familyId);
+
     // If RevenueCat confirms premium, ask backend to sync and refresh local state.
     const hasPremiumEntitlement = await subscriptionService.checkEntitlement();
     if (!hasPremiumEntitlement) return false;

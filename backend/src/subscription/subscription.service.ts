@@ -117,6 +117,10 @@ export class SubscriptionService {
       return;
     }
 
+    this.logger.log(
+      `Webhook received: type=${type}, idCandidates=[${idCandidates.join(', ')}], product=${productId}`,
+    );
+
     if (idCandidates.length === 0) {
       this.logger.warn(
         `Webhook: no app user id in payload (type=${type || 'unknown'}, keys=${Object.keys(rawEvent || {}).join(',')})`,
@@ -131,6 +135,10 @@ export class SubscriptionService {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const uuidCandidates = idCandidates.filter((c) => UUID_RE.test(c));
 
+    this.logger.log(
+      `Webhook: uuidCandidates=[${uuidCandidates.join(', ')}], non-uuid filtered=${idCandidates.length - uuidCandidates.length}`,
+    );
+
     const family = await this.prisma.family.findFirst({
       where: {
         OR: [
@@ -141,9 +149,13 @@ export class SubscriptionService {
     });
 
     if (!family) {
-      this.logger.warn(`Webhook: Family not found for ids [${idCandidates.join(', ')}]`);
+      this.logger.warn(
+        `Webhook: Family not found for ids [${idCandidates.join(', ')}] (uuid candidates: [${uuidCandidates.join(', ')}])`,
+      );
       return;
     }
+
+    this.logger.log(`Webhook: matched family ${family.id} (current plan=${(family as any).plan || 'unknown'})`);
 
     const expiresAt = expirationAtMs ? new Date(expirationAtMs) : null;
     const period = productId?.includes('yearly') ? 'yearly' : 'monthly';
@@ -151,6 +163,7 @@ export class SubscriptionService {
     switch (type) {
       case 'INITIAL_PURCHASE':
       case 'NON_RENEWING_PURCHASE': {
+        const rcUserId = idCandidates[0] ?? null;
         await this.prisma.family.update({
           where: { id: family.id },
           data: {
@@ -159,9 +172,12 @@ export class SubscriptionService {
             subscriptionExpiresAt: expiresAt,
             subscriptionPeriod: period,
             gracePeriodEndsAt: null,
+            ...(rcUserId && !family.revenuecatAppUserId
+              ? { revenuecatAppUserId: rcUserId }
+              : {}),
           },
         });
-        this.logger.log(`Family ${family.id}: initial purchase`);
+        this.logger.log(`Family ${family.id}: initial purchase (rc_user=${rcUserId})`);
         break;
       }
 
@@ -292,20 +308,21 @@ export class SubscriptionService {
     });
   }
 
-  async syncFromRevenueCat(familyId: string, secretKey: string): Promise<boolean> {
+  async syncFromRevenueCat(familyId: string, apiKey: string, overrideAppUserId?: string): Promise<boolean> {
     const family = await this.prisma.family.findUnique({ where: { id: familyId } });
     if (!family) return false;
 
-    const appUserId = family.revenuecatAppUserId || familyId;
+    const appUserId = overrideAppUserId || family.revenuecatAppUserId || familyId;
+    this.logger.log(`RevenueCat sync: querying subscriber ${appUserId} for family ${familyId}`);
 
     let subscriberData: any;
     try {
       const response = await fetch(
         `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`,
-        { headers: { Authorization: `Bearer ${secretKey}` } },
+        { headers: { Authorization: `Bearer ${apiKey}` } },
       );
       if (!response.ok) {
-        this.logger.warn(`RevenueCat sync: API returned ${response.status} for family ${familyId}`);
+        this.logger.warn(`RevenueCat sync: API returned ${response.status} for family ${familyId} (userId=${appUserId})`);
         return false;
       }
       subscriberData = await response.json();
@@ -314,7 +331,12 @@ export class SubscriptionService {
       return false;
     }
 
-    const entitlement = subscriberData?.subscriber?.entitlements?.premium;
+    const entitlements = subscriberData?.subscriber?.entitlements;
+    this.logger.log(
+      `RevenueCat sync: entitlements for family ${familyId}: ${JSON.stringify(entitlements ? Object.keys(entitlements) : 'none')}`,
+    );
+
+    const entitlement = entitlements?.premium;
     if (!entitlement || !entitlement.expires_date) {
       this.logger.log(`RevenueCat sync: no active premium entitlement for family ${familyId}`);
       return false;
@@ -337,6 +359,10 @@ export class SubscriptionService {
         subscriptionExpiresAt: expiresAt,
         subscriptionPeriod: period,
         gracePeriodEndsAt: null,
+        // Store the RC user ID so webhook lookups and future syncs work
+        ...(!family.revenuecatAppUserId && appUserId !== familyId
+          ? { revenuecatAppUserId: appUserId }
+          : {}),
       },
     });
 

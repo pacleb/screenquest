@@ -134,6 +134,16 @@ export const subscriptionService = {
     }
   },
 
+  getAppUserId: async (): Promise<string | null> => {
+    try {
+      const configured = await subscriptionService.initRevenueCat();
+      if (!configured) return null;
+      return await Purchases.getAppUserID();
+    } catch {
+      return null;
+    }
+  },
+
   getSubscriptionStatus: async (familyId: string): Promise<SubscriptionStatus> => {
     const { data } = await api.get<SubscriptionStatus>(
       `/families/${familyId}/subscription`,
@@ -143,8 +153,13 @@ export const subscriptionService = {
 
   syncFromRevenueCat: async (familyId: string): Promise<boolean> => {
     try {
+      // Send the current RC app user ID so the backend can query RC
+      // even if Purchases.logIn(familyId) silently failed and the
+      // subscriber is still registered under an anonymous ID.
+      const appUserId = await subscriptionService.getAppUserId();
       const { data } = await api.post<{ synced: boolean }>(
         `/families/${familyId}/subscription/sync`,
+        appUserId ? { appUserId } : {},
       );
       return data.synced;
     } catch {

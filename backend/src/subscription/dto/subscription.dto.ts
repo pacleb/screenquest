@@ -28,6 +28,10 @@ export interface RevenueCatWebhookEvent {
   };
 }
 
+export class SyncSubscriptionDto {
+  appUserId?: string;
+}
+
 export class ArchiveQuestsDto {
   keepQuestIds: string[];
 }

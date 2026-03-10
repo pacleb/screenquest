@@ -16,7 +16,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SubscriptionService } from './subscription.service';
-import { RevenueCatWebhookEvent, ArchiveQuestsDto } from './dto/subscription.dto';
+import { RevenueCatWebhookEvent, ArchiveQuestsDto, SyncSubscriptionDto } from './dto/subscription.dto';
 
 @Controller()
 export class SubscriptionController {
@@ -77,6 +77,7 @@ export class SubscriptionController {
   @HttpCode(200)
   async syncSubscription(
     @Param('familyId') familyId: string,
+    @Body() body: SyncSubscriptionDto,
     @Request() req: any,
   ) {
     if (req.user.familyId !== familyId) {
@@ -84,12 +85,18 @@ export class SubscriptionController {
     }
 
     const secretKey = this.configService.get<string>('REVENUECAT_SECRET_KEY');
-    if (!secretKey) {
-      this.logger.warn('REVENUECAT_SECRET_KEY not configured — sync skipped');
+    const publicKey = this.configService.get<string>('REVENUECAT_WEBHOOK_AUTH_KEY');
+    const apiKey = secretKey || publicKey;
+    if (!apiKey) {
+      this.logger.warn('No RevenueCat API key configured — sync skipped');
       return { synced: false };
     }
 
-    const synced = await this.subscriptionService.syncFromRevenueCat(familyId, secretKey);
+    const synced = await this.subscriptionService.syncFromRevenueCat(
+      familyId,
+      apiKey,
+      body?.appUserId,
+    );
     return { synced };
   }
 
