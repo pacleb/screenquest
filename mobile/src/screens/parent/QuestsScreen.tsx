@@ -38,9 +38,13 @@ export default function QuestsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("active");
-  const [questCount, setQuestCount] = useState<{ activeQuests: number; limit: number | null }>({ activeQuests: 0, limit: 3 });
+  const [questCount, setQuestCount] = useState<{
+    activeQuests: number;
+    limit: number | null;
+  }>({ activeQuests: 0, limit: 3 });
 
   const familyId = user?.familyId;
+  const subLoaded = useSubscriptionStore((s) => s.loaded);
   const subQuestLimit = useSubscriptionStore((s) => s.questLimit);
 
   const fetchQuests = useCallback(async () => {
@@ -163,11 +167,17 @@ export default function QuestsScreen() {
         <Text style={styles.title}>Quest Manager</Text>
         <View style={styles.counterRow}>
           <Text style={styles.counter}>
-            {questCount.activeQuests}{subQuestLimit !== null ? `/${subQuestLimit}` : ""} quests
+            {questCount.activeQuests}
+            {subLoaded && subQuestLimit !== null
+              ? `/${subQuestLimit}`
+              : ""}{" "}
+            quests
           </Text>
-          {subQuestLimit !== null && questCount.activeQuests >= subQuestLimit && (
-            <Text style={styles.upgradeHint}>Upgrade for unlimited</Text>
-          )}
+          {subLoaded &&
+            subQuestLimit !== null &&
+            questCount.activeQuests >= subQuestLimit && (
+              <Text style={styles.upgradeHint}>Upgrade for unlimited</Text>
+            )}
         </View>
       </View>
 
