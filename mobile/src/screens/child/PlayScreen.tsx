@@ -331,6 +331,14 @@ export default function ChildPlay() {
   const totalSeconds = session ? session.requestedSeconds : 0;
   const combinedBalanceSeconds =
     balance.stackableSeconds + balance.nonStackableSeconds;
+  const plannedTodayOnlySeconds = Math.min(
+    totalSeconds,
+    Math.max(0, balance.nonStackableSeconds),
+  );
+  const plannedStackableSeconds = Math.max(
+    0,
+    totalSeconds - plannedTodayOnlySeconds,
+  );
 
   if (loading) {
     return (
@@ -422,6 +430,10 @@ export default function ChildPlay() {
             remainingSeconds={remainingSeconds}
             totalSeconds={totalSeconds}
           />
+          <Text style={styles.sessionMixText}>
+            This session: {formatTimeLabel(plannedTodayOnlySeconds)} today +{" "}
+            {formatTimeLabel(plannedStackableSeconds)} saved
+          </Text>
 
           {/* Controls */}
           <View style={styles.controlRow}>
@@ -602,6 +614,13 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   controlRow: { flexDirection: "row", gap: spacing.lg, marginTop: spacing.xl },
+  sessionMixText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+    textAlign: "center",
+  },
   pauseBtn: {
     alignItems: "center",
     paddingHorizontal: spacing.xl,

@@ -389,6 +389,14 @@ export default function ChildHome() {
   const canPlay = !isNegativeBalance && combinedBalanceSeconds >= 60;
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
+  const plannedTodayOnlySeconds = Math.min(
+    totalSessionSeconds,
+    Math.max(0, balance.nonStackableSeconds),
+  );
+  const plannedStackableSeconds = Math.max(
+    0,
+    totalSessionSeconds - plannedTodayOnlySeconds,
+  );
 
   return (
     <SafeAreaView
@@ -538,6 +546,10 @@ export default function ChildHome() {
                   remainingSeconds={remainingSeconds}
                   totalSeconds={totalSessionSeconds}
                 />
+                <Text style={styles.sessionMixText}>
+                  This session: {formatTimeLabel(plannedTodayOnlySeconds)} today
+                  + {formatTimeLabel(plannedStackableSeconds)} saved
+                </Text>
                 <View style={styles.playControlRow}>
                   {playState === "active" ? (
                     <TouchableOpacity
@@ -773,6 +785,13 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     gap: spacing.lg,
     marginTop: spacing.lg,
+  },
+  sessionMixText: {
+    fontFamily: fonts.child.semiBold,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    textAlign: "center" as const,
   },
   pauseBtn: {
     alignItems: "center" as const,
