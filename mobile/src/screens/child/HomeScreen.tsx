@@ -270,7 +270,9 @@ export default function ChildHome() {
     }
     setActionLoading(true);
     try {
-      const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
+      const combinedBalanceSeconds =
+        balance.stackableSeconds + balance.nonStackableSeconds;
+      const requestedSecs = Math.floor(Math.min(combinedBalanceSeconds, 14400));
       if (requestedSecs < 60) {
         Alert.alert(
           "Not Enough Time",
@@ -381,8 +383,10 @@ export default function ChildHome() {
 
   const totalSessionSeconds = session ? session.requestedSeconds : 0;
 
-  const isNegativeBalance = balance.totalSeconds < 0;
-  const canPlay = !isNegativeBalance && balance.totalSeconds >= 60;
+  const combinedBalanceSeconds =
+    balance.stackableSeconds + balance.nonStackableSeconds;
+  const isNegativeBalance = combinedBalanceSeconds < 0;
+  const canPlay = !isNegativeBalance && combinedBalanceSeconds >= 60;
 
   const completedToday = quests.filter((q) => (q as any).completedToday).length;
 

@@ -216,7 +216,9 @@ export default function ChildPlay() {
     }
     setActionLoading(true);
     try {
-      const requestedSecs = Math.floor(Math.min(balance.totalSeconds, 14400));
+      const combinedBalanceSeconds =
+        balance.stackableSeconds + balance.nonStackableSeconds;
+      const requestedSecs = Math.floor(Math.min(combinedBalanceSeconds, 14400));
       if (requestedSecs < 60) {
         Alert.alert(
           "Not Enough Time",
@@ -327,6 +329,8 @@ export default function ChildPlay() {
   };
 
   const totalSeconds = session ? session.requestedSeconds : 0;
+  const combinedBalanceSeconds =
+    balance.stackableSeconds + balance.nonStackableSeconds;
 
   if (loading) {
     return (
@@ -490,7 +494,7 @@ export default function ChildPlay() {
           title="Start Playing!"
           onPress={handleRequestPlay}
           loading={actionLoading}
-          disabled={balance.totalSeconds < 60}
+          disabled={combinedBalanceSeconds < 60}
           variant="success"
           size="lg"
           childFont
