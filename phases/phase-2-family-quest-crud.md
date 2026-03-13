@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 2: Family Management & Quest CRUD
 
 > **Prerequisites:** Phase 1 complete (backend running, auth working, family creation working).
-> **Context:** Read `screen-time-app-prompt.md` for full spec. This phase adds family management features and the Quest system (parent-side CRUD only — child completion is Phase 3).
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` for full spec. This phase adds family management features and the Quest system (parent-side CRUD only — child completion is Phase 3).
 
 ---
 

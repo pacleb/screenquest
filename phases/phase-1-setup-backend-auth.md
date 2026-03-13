@@ -1,6 +1,6 @@
 # ScreenQuest — Phase 1: Project Setup, Backend Foundation & Authentication
 
-> **Context:** This is Phase 1 of building the ScreenQuest mobile app. Before starting, read the full spec in `screen-time-app-prompt.md` for complete context. This phase focuses on project scaffolding, backend API foundation, and the authentication system.
+> **Context:** This is Phase 1 of building the ScreenQuest mobile app. Before starting, read the full spec in `docs/spec/screen-time-app-prompt.md` for complete context. This phase focuses on project scaffolding, backend API foundation, and the authentication system.
 
 ---
 

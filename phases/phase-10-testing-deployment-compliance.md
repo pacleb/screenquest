@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 10: Testing, Deployment, Compliance & Launch Readiness
 
 > **Prerequisites:** Phases 1-9 complete (full app functional, styled, with subscriptions, CMS, and gamification).
-> **Context:** Read `screen-time-app-prompt.md` sections 7, 11, 12, and 7.3 for full requirements. This phase prepares the app for production launch — testing, CI/CD, compliance, monitoring, analytics, and app store submission.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` sections 7, 11, 12, and 7.3 for full requirements. This phase prepares the app for production launch — testing, CI/CD, compliance, monitoring, analytics, and app store submission.
 
 ---
 

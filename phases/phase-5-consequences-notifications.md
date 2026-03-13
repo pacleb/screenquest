@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 5: Consequences System & Push Notifications
 
 > **Prerequisites:** Phase 4 complete (play timer working, server-side scheduling in place).
-> **Context:** Read `screen-time-app-prompt.md` for full spec. This phase adds the violation/consequences system and wires up all push notifications across the entire app.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` for full spec. This phase adds the violation/consequences system and wires up all push notifications across the entire app.
 
 ---
 

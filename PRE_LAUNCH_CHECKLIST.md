@@ -83,7 +83,7 @@
 | 37  | Screenshots (iPhone, iPad, Android) | TODO   | Capture on device matrix                         |
 | 38  | App descriptions (short + long)     | PASS   | Defined in `mobile/src/constants/store.ts`       |
 | 39  | Demo accounts created for reviewers | TODO   | Create via app or seed script                    |
-| 40  | App Store review notes prepared     | PASS   | `mobile/STORE_REVIEW_NOTES.md`                   |
+| 40  | App Store review notes prepared     | PASS   | `docs/release/STORE_REVIEW_NOTES.md`                   |
 | 41  | EAS submit config ready             | PASS   | `eas.json` with preview + production profiles    |
 | 42  | Legal: privacy policy reviewed      | TODO   | Verify `https://screenquest.app/privacy` is live |
 | 43  | Legal: terms of service reviewed    | TODO   | Verify `https://screenquest.app/terms` is live   |

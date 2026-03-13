@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 4: Persistent Play Timer
 
 > **Prerequisites:** Phase 3 complete (Time Bank working, quest completions crediting balances).
-> **Context:** Read `screen-time-app-prompt.md` for full spec. This is the most technically complex phase — the Play timer must persist even when the app is closed.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` for full spec. This is the most technically complex phase — the Play timer must persist even when the app is closed.
 
 ---
 

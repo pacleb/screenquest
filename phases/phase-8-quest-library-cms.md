@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 8: Quest Library CMS (Web App)
 
 > **Prerequisites:** Phases 1-7 complete (mobile app fully functional with subscriptions).
-> **Context:** Read `screen-time-app-prompt.md` section 10.5 for full CMS spec. This is a simple admin web app for managing the built-in Quest Library.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` section 10.5 for full CMS spec. This is a simple admin web app for managing the built-in Quest Library.
 
 ---
 

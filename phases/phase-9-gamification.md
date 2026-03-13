@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 9: Gamification (Streaks, Badges, Levels)
 
 > **Prerequisites:** Phases 1-8 complete (full app launched with CMS).
-> **Context:** Read `screen-time-app-prompt.md` section 5.2 for gamification spec. This is a "fast follow" phase — the app works fully without this, but gamification increases engagement and retention.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` section 5.2 for gamification spec. This is a "fast follow" phase — the app works fully without this, but gamification increases engagement and retention.
 
 ---
 

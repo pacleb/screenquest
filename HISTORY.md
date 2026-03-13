@@ -90,7 +90,7 @@ ScreenQuest is a family screen-time management app where children earn screen ti
 - `SyncSubscriptionDto` added with optional `appUserId` for RevenueCat user identification
 - Family subscription sync script added
 - Firebase config files removed from git tracking (security hardening)
-- Android release preparation guide documented (`ANDROID_RELEASE_PREP.md`)
+- Android release preparation guide documented (`docs/release/ANDROID_RELEASE_PREP.md`)
 - All public URLs migrated to `restdayapps.com`
 - Android permissions updated for release build
 
@@ -138,5 +138,5 @@ ScreenQuest is a family screen-time management app where children earn screen ti
 
 - **iOS review:** Awaiting Apple App Store review and approval
 - **Phase 17:** Remove free trial — transition from 14-day trial to freemium model (planned)
-- **Android submission:** Android release prep is documented and ready (`mobile/ANDROID_RELEASE_PREP.md`)
+- **Android submission:** Android release prep is documented and ready (`docs/release/ANDROID_RELEASE_PREP.md`)
 - **Mobile E2E tests:** Detox test suite (Phase 16 remainder) for CI regression coverage

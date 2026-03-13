@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 7: Subscriptions & In-App Purchases
 
 > **Prerequisites:** Phases 1-6 complete (full app functional and styled).
-> **Context:** Read `screen-time-app-prompt.md` section 6 for plan details. This phase adds the payment layer.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` section 6 for plan details. This phase adds the payment layer.
 
 ---
 

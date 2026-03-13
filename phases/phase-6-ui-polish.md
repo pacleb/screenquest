@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 6: Kid-Friendly UI & Parent Dashboard Polish
 
 > **Prerequisites:** Phases 1-5 complete (all core features functional with basic UI).
-> **Context:** Read `screen-time-app-prompt.md` sections 5 (Gamification & Design) and 14 (Design Tokens) for full design spec. This phase transforms all existing screens from functional prototypes into the polished, kid-friendly experience.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` sections 5 (Gamification & Design) and 14 (Design Tokens) for full design spec. This phase transforms all existing screens from functional prototypes into the polished, kid-friendly experience.
 
 ---
 

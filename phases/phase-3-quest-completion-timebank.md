@@ -1,7 +1,7 @@
 # ScreenQuest — Phase 3: Quest Completion & Time Bank
 
 > **Prerequisites:** Phase 2 complete (quests can be created, assigned to children, quest library seeded).
-> **Context:** Read `screen-time-app-prompt.md` for full spec. This phase builds the child's quest completion flow and the Time Bank system.
+> **Context:** Read `docs/spec/screen-time-app-prompt.md` for full spec. This phase builds the child's quest completion flow and the Time Bank system.
 
 ---
 
