@@ -5,7 +5,7 @@ import axios from 'axios';
 const isBrowser = typeof window !== 'undefined';
 const API_BASE = isBrowser
   ? '/api/proxy'  // Next.js rewrite proxies this to the backend (same-origin, no CORS)
-  : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api');
+  : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.screenquest.app');
 
 console.log('[CMS DEBUG] API_BASE =', API_BASE);
 console.log('[CMS DEBUG] isBrowser =', isBrowser);

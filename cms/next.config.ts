@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 
-const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.screenquest.app';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
