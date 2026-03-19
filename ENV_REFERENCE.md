@@ -11,7 +11,7 @@
 | `REDIS_URL`          | Redis connection string                    | `redis://localhost:6379`                                                    |
 | `JWT_SECRET`         | Access token signing secret                | (random string, 32+ chars)                                                  |
 | `JWT_REFRESH_SECRET` | Refresh token signing secret               | (random string, 32+ chars)                                                  |
-| `APP_URL`            | Backend API URL                            | `https://api.screenquest.app`                                               |
+| `APP_URL`            | Backend API URL                            | `https://sqapi.restdayapps.com`                                             |
 | `FRONTEND_URL`       | Mobile app URL (for CORS)                  | `http://localhost:8081`                                                     |
 | `EMAIL_FROM`         | Sender email address                       | `noreply@screenquest.app`                                                   |
 
@@ -51,11 +51,11 @@
 
 ## CMS (`cms/.env.local`)
 
-| Variable              | Description             | Example                       |
-| --------------------- | ----------------------- | ----------------------------- |
-| `NEXT_PUBLIC_API_URL` | Backend API URL         | `https://api.screenquest.app` |
-| `NEXTAUTH_SECRET`     | NextAuth session secret | (random string)               |
-| `NEXTAUTH_URL`        | CMS public URL          | `https://cms.screenquest.app` |
+| Variable              | Description             | Example                         |
+| --------------------- | ----------------------- | ------------------------------- |
+| `NEXT_PUBLIC_API_URL` | Backend API URL         | `https://sqapi.restdayapps.com` |
+| `NEXTAUTH_SECRET`     | NextAuth session secret | (random string)                 |
+| `NEXTAUTH_URL`        | CMS public URL          | `https://cms.screenquest.app`   |
 
 ## GitHub Actions Secrets
 

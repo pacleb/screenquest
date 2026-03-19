@@ -119,9 +119,9 @@
 
 ## Key URLs
 
-| Environment    | URL                                    |
-| -------------- | -------------------------------------- |
-| Production API | https://api.screenquest.app            |
-| Health Check   | https://api.screenquest.app/api/health |
-| Sentry         | https://pacleb.sentry.io               |
-| GitHub         | https://github.com/pacleb/screenquest  |
+| Environment    | URL                                      |
+| -------------- | ---------------------------------------- |
+| Production API | https://sqapi.restdayapps.com            |
+| Health Check   | https://sqapi.restdayapps.com/api/health |
+| Sentry         | https://pacleb.sentry.io                 |
+| GitHub         | https://github.com/pacleb/screenquest    |

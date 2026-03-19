@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 const IS_PROD = process.env.APP_ENV === 'production';
 
 const getApiUrl = () => {
-  if (IS_PROD) return 'https://api.screenquest.app/api';
+  if (IS_PROD) return 'https://sqapi.restdayapps.com/api';
   return 'http://localhost:3000/api';
 };
 

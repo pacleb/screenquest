@@ -20,6 +20,6 @@ export interface EnvConfig {
 }
 
 export const ENV: EnvConfig = {
-  apiUrl: Config.API_URL ?? 'https://api.screenquest.app/api',
+  apiUrl: Config.API_URL ?? 'https://sqapi.restdayapps.com/api',
   environment: Config.APP_ENV ?? 'development',
 };
