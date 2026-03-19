@@ -7,7 +7,7 @@
  * Example:
  *   npx ts-node prisma/promote-admin.ts admin@example.com
  *
- * On staging/production, make sure DATABASE_URL is set correctly.
+ * Make sure DATABASE_URL is set correctly before running this script.
  */
 
 import { PrismaClient } from '@prisma/client';

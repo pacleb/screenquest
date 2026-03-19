@@ -19,26 +19,18 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      console.log("[CMS DEBUG] LoginPage: submitting login...");
       const ok = await login(email, password);
-      console.log("[CMS DEBUG] LoginPage: login result =", ok);
       if (ok) {
         router.push("/");
       } else {
         setError("Invalid credentials");
       }
     } catch (err: any) {
-      console.error(
-        "[CMS DEBUG] LoginPage: caught error:",
-        err.message,
-        err.response?.status,
-        err.response?.data,
-      );
       const isServerWaking =
-        err.code === 'ECONNABORTED' ||
-        err.code === 'ERR_NETWORK' ||
-        err.message === 'Network Error' ||
-        err.message === 'Request aborted';
+        err.code === "ECONNABORTED" ||
+        err.code === "ERR_NETWORK" ||
+        err.message === "Network Error" ||
+        err.message === "Request aborted";
       setError(
         isServerWaking
           ? "Server is waking up — please wait a moment and try again."

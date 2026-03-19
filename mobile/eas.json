@@ -53,8 +53,8 @@
         "buildType": "apk"
       },
       "env": {
-        "APP_ENV": "staging",
-        "ENVFILE": ".env.staging",
+        "APP_ENV": "production",
+        "ENVFILE": ".env.production",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "USE_CCACHE": "1"
       },

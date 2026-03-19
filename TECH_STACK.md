@@ -86,20 +86,20 @@
 
 ## Infrastructure / DevOps
 
-| Category           | Technology                | Details                                             |
-| ------------------ | ------------------------- | --------------------------------------------------- |
-| Monorepo           | pnpm workspaces           | pnpm ^10.x                                          |
-| Containerization   | Docker (multi-stage)      | node:22-slim base                                   |
-| Local Dev          | Docker Compose 3.8        | Postgres 16 + Redis 7 + Backend                     |
-| CI/CD              | GitHub Actions            | 3 stages: test → build → deploy                     |
-| CI Docker          | Docker (GitHub Actions)   | Image pushed to GitHub Container Registry (ghcr.io) |
-| Hosting (API)      | Render                    | Docker web service with deploy hooks                |
-| Hosting (CMS)      | Vercel                    | Next.js standalone                                  |
-| Database (Staging) | Render managed PostgreSQL | Free tier                                           |
-| Cache (Staging)    | Upstash Redis             | Free tier, TLS                                      |
-| Source Control     | GitHub                    | github.com/pacleb/screenquest                       |
-| Source Maps        | Sentry CLI v3             | Uploads during CI build stage                       |
-| Error Tracking     | Sentry                    | Org: pacleb                                         |
+| Category         | Technology              | Details                                             |
+| ---------------- | ----------------------- | --------------------------------------------------- |
+| Monorepo         | pnpm workspaces         | pnpm ^10.x                                          |
+| Containerization | Docker (multi-stage)    | node:22-slim base                                   |
+| Local Dev        | Docker Compose 3.8      | Postgres 16 + Redis 7 + Backend                     |
+| CI/CD            | GitHub Actions          | 3 stages: test → build → deploy                     |
+| CI Docker        | Docker (GitHub Actions) | Image pushed to GitHub Container Registry (ghcr.io) |
+| Hosting (API)    | Render                  | Docker web service with deploy hooks                |
+| Hosting (CMS)    | Vercel                  | Next.js standalone                                  |
+| Database         | PostgreSQL              | Production database                                 |
+| Cache            | Redis                   | Production cache                                    |
+| Source Control   | GitHub                  | github.com/pacleb/screenquest                       |
+| Source Maps      | Sentry CLI v3           | Uploads during CI build stage                       |
+| Error Tracking   | Sentry                  | Org: pacleb                                         |
 
 ## External Services
 
@@ -119,9 +119,9 @@
 
 ## Key URLs
 
-| Environment  | URL                                                     |
-| ------------ | ------------------------------------------------------- |
-| Staging API  | https://screenquest-api-staging.onrender.com            |
-| Health Check | https://screenquest-api-staging.onrender.com/api/health |
-| Sentry       | https://pacleb.sentry.io                                |
-| GitHub       | https://github.com/pacleb/screenquest                   |
+| Environment    | URL                                    |
+| -------------- | -------------------------------------- |
+| Production API | https://api.screenquest.app            |
+| Health Check   | https://api.screenquest.app/api/health |
+| Sentry         | https://pacleb.sentry.io               |
+| GitHub         | https://github.com/pacleb/screenquest  |

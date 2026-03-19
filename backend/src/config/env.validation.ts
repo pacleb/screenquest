@@ -16,7 +16,7 @@ const REQUIRED_IN_PRODUCTION = [
  */
 export function validateEnv(config: Env): Env {
   const nodeEnv = String(config.NODE_ENV ?? 'development').toLowerCase();
-  const isProductionLike = nodeEnv === 'production' || nodeEnv === 'staging';
+  const isProductionLike = nodeEnv === 'production';
 
   if (!isProductionLike) {
     return config;

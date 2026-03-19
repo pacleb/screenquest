@@ -115,7 +115,7 @@
 ### Step 10: CI/CD GitHub Actions
 
 - `.github/workflows/ci.yml` with jobs: backend (lint, type-check, unit tests, integration tests with PostgreSQL + Redis services, build, coverage upload), mobile (lint, type-check), cms (build)
-- `.github/workflows/deploy.yml` for staging (push to main) and production (tags)
+- `.github/workflows/deploy.yml` for production releases (tags)
 - Triggered on PRs + push to main
 
 ### Step 11: Sentry Integration

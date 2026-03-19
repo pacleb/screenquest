@@ -10,7 +10,7 @@
 
 ### 1. Deploy Pipelines (Section 2.4)
 
-- **Backend:** Build Docker image → push to container registry → deploy to staging → run smoke tests → promote to production
+- **Backend:** Build Docker image → push to container registry → deploy to production
 - **CMS:** Auto-deploy to Vercel on push to main (preview deploys on PRs)
 - **Mobile:** Use **EAS Build + EAS Submit** for app store submissions
   - `eas build --platform all --profile production`
@@ -18,14 +18,12 @@
 
 ### 2. Environment Strategy (Section 2.5)
 
-| Environment | Purpose      | Backend URL                | Database       |
-| ----------- | ------------ | -------------------------- | -------------- |
-| Local       | Development  | http://localhost:3000      | Docker Compose |
-| Staging     | QA + testing | https://api-staging.sq.app | Staging DB     |
-| Production  | Live app     | https://api.sq.app         | Production DB  |
+| Environment | Purpose     | Backend URL           | Database       |
+| ----------- | ----------- | --------------------- | -------------- |
+| Local       | Development | http://localhost:3000 | Docker Compose |
+| Production  | Live app    | https://api.sq.app    | Production DB  |
 
-- All environments use separate databases, Redis instances, and Firebase projects
-- Staging mirrors production config but with test RevenueCat/Stripe keys
+- Local and production use separate databases, Redis instances, and Firebase projects
 - Database migrations run automatically on deploy (with rollback plan)
 
 ### 3. Backend Hosting (Section 3.1)
@@ -110,8 +108,8 @@ Regardless of hosting choice:
 ## Done When
 
 - [ ] Docker multi-stage build for backend
-- [ ] Staging and production environments running with proper config
-- [ ] Deploy pipeline pushes to staging automatically and production on release tags
+- [ ] Production environment running with proper config
+- [ ] Deploy pipeline pushes production releases successfully
 - [ ] S3/R2 configured for proof photo storage with signed URLs
 - [ ] Database backups running and verified (test a restore)
 - [ ] SSL certificates valid and auto-renewing

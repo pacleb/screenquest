@@ -19,27 +19,21 @@ function isRetryableError(err: any): boolean {
 }
 
 export async function login(email: string, password: string): Promise<boolean> {
-  console.log('[CMS DEBUG] login() called with email:', email);
   let lastError: any;
 
   for (let attempt = 0; attempt <= MAX_LOGIN_RETRIES; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`[CMS DEBUG] login() retry attempt ${attempt}/${MAX_LOGIN_RETRIES}...`);
         await delay(RETRY_DELAY_MS);
       }
       const { data } = await api.post('/auth/login', { email, password });
-      console.log('[CMS DEBUG] login() response data keys:', Object.keys(data));
       if (data.accessToken) {
         localStorage.setItem(TOKEN_KEY, data.accessToken);
-        console.log('[CMS DEBUG] login() token stored, returning true');
         return true;
       }
-      console.warn('[CMS DEBUG] login() no accessToken in response:', data);
       return false;
     } catch (err: any) {
       lastError = err;
-      console.error(`[CMS DEBUG] login() attempt ${attempt} threw:`, err.message, err.code, err.response?.data);
       if (!isRetryableError(err) || attempt === MAX_LOGIN_RETRIES) {
         break;
       }

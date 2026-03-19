@@ -31,7 +31,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       this.useMemory = true;
       this.logger.warn(
         'REDIS_URL not set — using in-memory fallback. ' +
-        'This is fine for single-instance staging but not for production.',
+        'This is acceptable for local or temporary single-instance use, but not for production.',
       );
     }
   }

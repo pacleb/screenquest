@@ -26,13 +26,14 @@ Use **Detox** (React Native E2E testing framework):
 
 | Device Type    | iOS                 | Android                  |
 | -------------- | ------------------- | ------------------------ |
-| Small phone    | iPhone SE (3rd gen)  | Pixel 4a                 |
-| Standard phone | iPhone 14            | Pixel 7                  |
-| Large phone    | iPhone 15 Pro Max    | Samsung Galaxy S24 Ultra |
-| Tablet         | iPad (10th gen)      | Samsung Galaxy Tab S9    |
-| Older OS       | iOS 15 (minimum)     | Android 10 (minimum)     |
+| Small phone    | iPhone SE (3rd gen) | Pixel 4a                 |
+| Standard phone | iPhone 14           | Pixel 7                  |
+| Large phone    | iPhone 15 Pro Max   | Samsung Galaxy S24 Ultra |
+| Tablet         | iPad (10th gen)     | Samsung Galaxy Tab S9    |
+| Older OS       | iOS 15 (minimum)    | Android 10 (minimum)     |
 
 Verify:
+
 - Layout doesn't break on any screen size
 - Background timer works across all OS versions
 - Push notifications deliver in foreground, background, and killed states
@@ -83,7 +84,7 @@ Verify:
 - [ ] All integration tests pass
 - [ ] E2E tests pass on iOS and Android
 - [ ] CI/CD pipeline builds and deploys successfully
-- [ ] Staging environment mirrors production
+- [ ] Production deploy configuration is validated
 - [ ] Health check endpoint responds correctly
 - [ ] Sentry captures errors with source maps on both platforms
 - [ ] Push notifications work in all app states

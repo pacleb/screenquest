@@ -46,12 +46,12 @@ ScreenQuest is a family screen-time management app where children earn screen ti
 
 - **Phase 15:** Production infrastructure — Docker, GitHub Actions CI/CD, Render.com (backend), Vercel (CMS)
 - **Phase 16:** Pre-launch readiness — EAS Build configured, pre-launch checklist documented, Sentry source map uploads, environment variable reference finalized
-- Staging and production environment configs separated
+- Production deployment pipeline finalized
 
 ### Feb 17, 2026 — Environment & Build Config
 
 - `react-native-config` integrated for environment-safe API URL handling
-- `.env.staging` and `.env.production` files separated
+- `.env.production` added for release builds
 - iOS build number bumped to 2
 
 ### Mar 1, 2026 — Avatar Bug Fix (TestFlight)
@@ -106,31 +106,31 @@ ScreenQuest is a family screen-time management app where children earn screen ti
 
 ## Key Statistics
 
-| Metric | Value |
-|---|---|
-| Project start | Feb 9, 2026 |
-| iOS submission | Mar 11, 2026 |
-| Build duration | ~30 days |
-| Development phases | 16 phases + Phase 17 planned |
-| Backend modules | 15 NestJS modules |
-| Mobile screens | Parent + Child tab navigators |
-| External services | RevenueCat, Firebase/FCM, Sentry, PostHog, Resend, Render, Vercel |
+| Metric             | Value                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| Project start      | Feb 9, 2026                                                       |
+| iOS submission     | Mar 11, 2026                                                      |
+| Build duration     | ~30 days                                                          |
+| Development phases | 16 phases + Phase 17 planned                                      |
+| Backend modules    | 15 NestJS modules                                                 |
+| Mobile screens     | Parent + Child tab navigators                                     |
+| External services  | RevenueCat, Firebase/FCM, Sentry, PostHog, Resend, Render, Vercel |
 
 ---
 
 ## Milestones
 
-| Date | Milestone |
-|---|---|
-| Feb 9, 2026 | Initial commit — project born |
-| Feb 10, 2026 | Full core feature set implemented (Phases 1–8) |
-| Feb 13, 2026 | Gamification system live (Phase 9) |
-| Feb 14, 2026 | Security hardening, COPPA compliance, monitoring complete |
-| Feb 16, 2026 | Production infrastructure deployed (Render + Vercel) |
-| Mar 1, 2026 | TestFlight testing — avatar bug found and fixed |
-| Mar 3, 2026 | iOS push notifications working end-to-end |
-| Mar 9, 2026 | RevenueCat webhooks hardened; Android release prep complete |
-| Mar 11, 2026 | **iOS App Store submission** |
+| Date         | Milestone                                                   |
+| ------------ | ----------------------------------------------------------- |
+| Feb 9, 2026  | Initial commit — project born                               |
+| Feb 10, 2026 | Full core feature set implemented (Phases 1–8)              |
+| Feb 13, 2026 | Gamification system live (Phase 9)                          |
+| Feb 14, 2026 | Security hardening, COPPA compliance, monitoring complete   |
+| Feb 16, 2026 | Production infrastructure deployed (Render + Vercel)        |
+| Mar 1, 2026  | TestFlight testing — avatar bug found and fixed             |
+| Mar 3, 2026  | iOS push notifications working end-to-end                   |
+| Mar 9, 2026  | RevenueCat webhooks hardened; Android release prep complete |
+| Mar 11, 2026 | **iOS App Store submission**                                |
 
 ---
 

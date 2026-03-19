@@ -67,7 +67,6 @@ Set in GitHub > Settings > Secrets and variables > Actions:
 | `SENTRY_AUTH_TOKEN`             | Sentry CLI auth for source map uploads   | Yes       |
 | `SENTRY_ORG`                    | Sentry organization slug                 | No        |
 | `SENTRY_PROJECT_BACKEND`        | Sentry project slug (backend)            | No        |
-| `RENDER_DEPLOY_HOOK_STAGING`    | Render.com deploy webhook for staging    | Yes       |
 | `RENDER_DEPLOY_HOOK_PRODUCTION` | Render.com deploy webhook for production | Yes       |
 
 ## Android Signing (for release builds)

@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next';
 
-const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://screenquest-x30d.onrender.com/api';
+const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+
+if (!BACKEND_URL) {
+  throw new Error(
+    'CMS backend URL is not configured. Set BACKEND_URL (or NEXT_PUBLIC_API_URL) in the environment.',
+  );
+}
 
 const nextConfig: NextConfig = {
   output: 'standalone',

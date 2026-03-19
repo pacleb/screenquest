@@ -6,7 +6,6 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
 
 concurrency:
@@ -14,24 +13,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # ────────────── Deploy to Staging (on push to main) ──────────────
-
-  staging:
-    name: Deploy Staging
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: staging
-      url: https://staging-api.screenquest.app
-    steps:
-      - name: Trigger Render deploy
-        run: |
-          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}" ]; then
-            echo "::warning::RENDER_DEPLOY_HOOK_STAGING not set, skipping deploy"
-            exit 0
-          fi
-          curl -sf -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
-
   # ────────────── Deploy to Production (on tag, manual approval) ──────────────
 
   production:

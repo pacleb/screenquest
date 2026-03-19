@@ -1,11 +1,9 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
 const IS_PROD = process.env.APP_ENV === 'production';
-const IS_STAGING = process.env.APP_ENV === 'staging';
 
 const getApiUrl = () => {
   if (IS_PROD) return 'https://api.screenquest.app/api';
-  if (IS_STAGING) return 'https://screenquest-api-staging.onrender.com/api';
   return 'http://localhost:3000/api';
 };
 

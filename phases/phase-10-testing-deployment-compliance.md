@@ -148,7 +148,7 @@ Set up **GitHub Actions** CI/CD workflows:
 
 #### 2.4 Deploy Pipelines (on push to main / release tags)
 
-- **Backend:** Build Docker image → push to container registry → deploy to staging → run smoke tests → promote to production
+- **Backend:** Build Docker image → push to container registry → deploy to production
 - **CMS:** Auto-deploy to Vercel on push to main (preview deploys on PRs)
 - **Mobile:** Use **EAS Build + EAS Submit** for app store submissions
   - `eas build --platform all --profile production`
@@ -156,14 +156,12 @@ Set up **GitHub Actions** CI/CD workflows:
 
 #### 2.5 Environment Strategy
 
-| Environment | Purpose      | Backend URL                | Database       |
-| ----------- | ------------ | -------------------------- | -------------- |
-| Local       | Development  | http://localhost:3000      | Docker Compose |
-| Staging     | QA + testing | https://api-staging.sq.app | Staging DB     |
-| Production  | Live app     | https://api.sq.app         | Production DB  |
+| Environment | Purpose     | Backend URL           | Database       |
+| ----------- | ----------- | --------------------- | -------------- |
+| Local       | Development | http://localhost:3000 | Docker Compose |
+| Production  | Live app    | https://api.sq.app    | Production DB  |
 
-- All environments use separate databases, Redis instances, and Firebase projects
-- Staging mirrors production config but with test RevenueCat/Stripe keys
+- Local and production use separate databases, Redis instances, and Firebase projects
 - Database migrations run automatically on deploy (with rollback plan)
 
 ---
@@ -496,7 +494,7 @@ Final verification before go-live:
 - [ ] All integration tests pass
 - [ ] E2E tests pass on iOS and Android
 - [ ] CI/CD pipeline builds and deploys successfully
-- [ ] Staging environment mirrors production
+- [ ] Production deploy configuration is validated
 - [ ] Health check endpoint responds correctly
 - [ ] Sentry captures errors on both backend and mobile
 - [ ] Push notifications work in all app states (foreground, background, killed)
@@ -569,8 +567,8 @@ These items were identified as gaps in existing phases. They should be added to 
 - [ ] Backend has >80% test coverage on business logic with passing unit + integration tests
 - [ ] Mobile has E2E tests for all critical user flows, passing on iOS and Android
 - [ ] CI/CD pipeline runs lint, type check, tests, and build on every PR
-- [ ] Deploy pipeline pushes to staging automatically and production on release tags
-- [ ] Staging and production environments are running with proper config
+- [ ] Deploy pipeline pushes production releases successfully
+- [ ] Production environment is running with proper config
 - [ ] Sentry is capturing errors with source maps on both platforms
 - [ ] Monitoring dashboards and alerts are configured and tested
 - [ ] Analytics tracks key funnel events (server-side for child activity)

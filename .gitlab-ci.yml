@@ -210,19 +210,6 @@ sentry:backend:
 # Deploy Stage
 # ──────────────────────────────────────────────
 
-deploy:staging:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache curl
-  script:
-    - 'curl -sf -X POST "$RENDER_DEPLOY_HOOK_STAGING"'
-  environment:
-    name: staging
-    url: https://staging-api.screenquest.app
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $RENDER_DEPLOY_HOOK_STAGING
-
 deploy:production:
   stage: deploy
   image: alpine:latest
