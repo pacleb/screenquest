@@ -16,7 +16,7 @@ export function Cta() {
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           {/* App Store */}
           <a
-            href="https://apps.apple.com"
+            href="https://apps.apple.com/ph/app/screenquest-earned-play-time/id6759257648"
             className="inline-flex items-center gap-3 rounded-xl bg-white/10 backdrop-blur px-6 py-3.5 text-white border border-white/20 hover:bg-white/20 transition-colors"
           >
             <svg className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
