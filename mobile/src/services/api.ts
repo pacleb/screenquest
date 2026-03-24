@@ -36,6 +36,10 @@ const api = axios.create({
   },
 });
 
+// Shared in-flight refresh promise — prevents race condition when multiple
+// requests get 401 simultaneously and all try to rotate the refresh token.
+let refreshPromise: Promise<{ accessToken: string; refreshToken: string }> | null = null;
+
 function isRetryable(error: any): boolean {
   if (!error.response) return true; // network error
   if (error.response.status >= 500) return true; // server error
@@ -99,9 +103,19 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        });
+        // Reuse any in-flight refresh rather than firing a second rotation request.
+        // Without this, concurrent 401s each rotate the token and the 2nd+ calls
+        // send a already-deleted token, getting a 401 and triggering a logout.
+        if (!refreshPromise) {
+          refreshPromise = axios
+            .post(`${API_URL}/auth/refresh`, { refreshToken })
+            .then((res) => res.data)
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+
+        const data = await refreshPromise;
 
         await setToken('accessToken', data.accessToken);
         await setToken('refreshToken', data.refreshToken);
