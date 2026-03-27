@@ -109,16 +109,22 @@ api.interceptors.response.use(
         if (!refreshPromise) {
           refreshPromise = axios
             .post(`${API_URL}/auth/refresh`, { refreshToken })
-            .then((res) => res.data)
+            .then(async (res) => {
+              // Write new tokens inside the shared promise so that:
+              // 1. Writes happen exactly once (not once per concurrent 401 handler).
+              // 2. refreshPromise stays non-null until writes are flushed to Keychain,
+              //    closing the window where a new 401 would read the stale refresh token
+              //    and try to rotate an already-rotated token → backend 401 → logout.
+              await setToken('accessToken', res.data.accessToken);
+              await setToken('refreshToken', res.data.refreshToken);
+              return res.data;
+            })
             .finally(() => {
               refreshPromise = null;
             });
         }
 
         const data = await refreshPromise;
-
-        await setToken('accessToken', data.accessToken);
-        await setToken('refreshToken', data.refreshToken);
 
         config.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(config);
